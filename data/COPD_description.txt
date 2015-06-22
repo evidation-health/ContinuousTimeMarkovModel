@@ -1,0 +1,11 @@
+COPD.csv.gz is the synthetic data with 3968 patients. 
+
+The first column is the patient id, 
+the second column is the timestamp of the observation (the unit is three month);
+the third column is the ICD9 code of the observation;
+the fourth column is the first onset time of COPD disease.
+
+The ICD9 codes correspond to COPD are:
+
+['491', '491.0', '491.1', '491.20', '491.21', '491.22', '491.8', '491.9', 
+'492', '492.0', '492.8', '493.20', '493.21', '493.22', '496', '518.1', '518.2']
