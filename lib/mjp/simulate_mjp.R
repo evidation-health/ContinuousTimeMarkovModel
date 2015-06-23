@@ -19,7 +19,7 @@ sample_mjp <- function(T_stop, tauVec, mjp, nStates){
   
   t <- 0
   while(t <= T_stop){
-    tau <- sample(tau, size=1)
+    tau <- sample(tauVec, size=1)
     i <- mjp(t)
     j <- mjp(t+tau)
     
@@ -31,4 +31,6 @@ sample_mjp <- function(T_stop, tauVec, mjp, nStates){
 }
 
 tauVec <- c(0.01, 0.1, 1)
-system.time(sample_mjp(3.7*1e6, tauVec, mjp, 5))
+system.time(C <- sample_mjp(3.7*1e6, tauVec, mjp, 5))
+
+write.csv(C, "../../data/metzner07_example1.csv")
