@@ -16,3 +16,10 @@ with model:
     Z = Beta('Z')
     L = Beta('L')
     O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
+
+with model:
+    step1 = Metropolis(vars=[Q_raw])
+    step2 = sampleS(vars=[S])
+
+    step3 = Metropolis(vars=[B])
+    step4 = sampleX(vars=[X])
