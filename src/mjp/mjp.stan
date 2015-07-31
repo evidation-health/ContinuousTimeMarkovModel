@@ -1,3 +1,8 @@
+functions {
+  matrix get_Pt(matrix Q, real t){
+    
+  }
+}
 data {
   int<lower=1> M; // num states
   int<lower=1> r; // num jump lengths
