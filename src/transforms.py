@@ -3,12 +3,17 @@ from pymc3.distributions.transforms import Transform, ElemwiseTransform
 
 __all__ = ['rate_matrix']
 
-class RateMatrix(ElemwiseTransform):
+class ElemwiseTransformFlat(Transform):
+    def jacobian_det(self, x):
+        return tt.as_tensor_variable(0)
+
+class RateMatrix(ElemwiseTransformFlat):
     name = "ratematrix"
     def __init__(self): 
         pass
 
     def symbolic_remove_diagonal(self, x):
+        x = tt.as_tensor_variable(x)
         flat_x = x.flatten()
         indexes = tt.arange(flat_x.shape[0], dtype='int64')
         diagonal_modulo = indexes % (x.shape[0] + 1)
