@@ -23,6 +23,12 @@ X = np.array([[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 
 model = Model()
 
+Q_test = np.array([[-6, 2, 2, 1, 1], 
+   [1, -4, 0, 1, 2],
+   [1, 0, -4, 2, 1],
+   [2, 1, 0, -3, 0],
+   [1, 1, 1, 1, -4]])
+
 with model:
     Q = DiscreteObsMJP_unif_prior('Q', M=M, shape=(M,M))
     
@@ -32,11 +38,7 @@ with model:
     B = Beta('B', alpha = 1, beta = 1, shape=(K,M))
     Xobs = Comorbidities('Xobs', S=S, B0=B0,B=B, shape=(K, Tn), observed = X)
 
-    #Z = Beta('Z')
-    #L = Beta('L')
-    #O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
-
-with model:
-    step1 = Metropolis(vars=[Q])
     step2 = ForwardS(vars=[S], X=X, observed_jumps=observed_jumps)
-    step3 = Metropolis(vars=[B])
+    step2.step_sizes = np.array([0.1, 1, 100])
+    pS = step2.compute_pS(Q_test, 5)
+    print pS
