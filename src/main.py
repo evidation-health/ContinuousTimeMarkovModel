@@ -1,7 +1,7 @@
 import numpy as np
 from theano.tensor import as_tensor_variable
 from ContinuousTimeMarkovModel.src.distributions import *
-from pymc3 import Model, Metropolis, Dirichlet, Binomial, Beta
+from pymc3 import Model, sample, Metropolis, Dirichlet, Binomial, Beta
 from ContinuousTimeMarkovModel.src.forwardS import *
 
 M = 6
@@ -32,6 +32,7 @@ with model:
 
     B0 = Beta('B0', alpha = 1, beta = 1, shape=(K,M))
     B = Beta('B', alpha = 1, beta = 1, shape=(K,M))
+
     Xobs = Comorbidities('Xobs', S=S, B0=B0,B=B, shape=(K, Tn), observed = X)
 
     #Z = Beta('Z')
@@ -41,4 +42,5 @@ with model:
 with model:
     step1 = Metropolis(vars=[pi,Q])
     step2 = ForwardS(vars=[S], X=X, observed_jumps=observed_jumps)
-    step3 = Metropolis(vars=[B])
+    step3 = Metropolis(vars=[B0,B])
+    trace = sample(100, [step1, step2, step3])

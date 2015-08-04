@@ -49,9 +49,9 @@ class ForwardS(ArrayStepShared):
         return pS
 
     def computeBeta(self, Q, B0, B):
-        M = self.M = Q.shape[0]
+        M = self.M
         X = self.X
-        K = self.K = X.shape[0]
+        K = self.K
         Tn = self.Tn = X.shape[1]
         pS = self.pS = self.compute_pS(Q,M)
         observed_jumps = self.observed_jumps
@@ -86,23 +86,83 @@ class ForwardS(ArrayStepShared):
 
         return beta
         
-    def astep(self, S_current):
+    def astep(self, q0):
         
+        S = q0
+
         #paramaters are now usable
         pi,Q,B0,B=self.get_params()
-        beta = self.computeBeta(Q, B0, B)
 
         #calculate pS0(i) | X, pi, B0
-        
+        M = self.M = Q.shape[0]
+        X = self.X
+        K = self.K = X.shape[0]
         pS0 = np.zeros(M)
         for i in range(M):
             prod_psi = 1.0
-
+            for k in range(K):
+                if X[k,0] == 1:
+                    prod_psi *= B0[k,i]
+                else:
+                    prod_psi *= 1-B0[k,i]
             pS0[i] = pi[i] * prod_psi
 
-        S_next = S_current
-        
-        return S_next
+        #draw S0
+        cdf = np.cumsum(pS0)
+        r = np.random.uniform() * cdf[-1]
+        drawn_state = np.searchsorted(cdf, r)
+        S[0] = drawn_state
+
+        #calculate pS_ij | X, Q, B
+        #note: pS is probability of jump conditional on Q
+        #whereas pS_ij is also conditional on everything else in the model
+        #and is what we're looking for
+        beta = self.computeBeta(Q, B0, B)
+        Tn = self.Tn
+        observed_jumps = self.observed_jumps
+        pS = self.pS
+        pS_ij = np.zeros(M)
+        for t in range(0,Tn-1):
+            i = S[t]
+            tau = observed_jumps[t]
+            tau_ind = np.where(self.step_sizes == tau)[0][0]
+
+            for j in range(M):
+                if S[t] > j:
+                    pS_ij[j] = 0.0
+                else:
+                    prod_psi = 1.0
+                    for k in range(K):
+                        if i != j:
+                            if X[k,t+1] == 0 and X[k,t] == 0:
+                                psi = 1-B[k,j]
+                            elif X[k,t+1] == 1 and X[k,t] == 0:
+                                psi = B[k,j]
+                            else:
+                                psi = 1.0
+                        else:
+                            if X[k,t+1] == 1 and X[k,t] == 0:
+                                psi = 0.0
+                            else:
+                                psi = 1.0
+                        prod_psi *= psi
+                    #if prod_psi == 0.0:
+                    #    print "#########","t:", t, "i:", i, "j:", j
+                    pS_ij[j] = beta[j,t+1]/beta[i,t] * pS[tau_ind,i,j] \
+                                * prod_psi
+
+            if t==0:
+                print "\n\n~~~~","pS_ij:",pS_ij
+            if t==2:
+                print "~~~~","pS_ij:",pS_ij
+
+            #sample S[t+1] from pS_ij
+            cdf = np.cumsum(pS_ij)
+            r = np.random.uniform() * cdf[-1]
+            drawn_state = np.searchsorted(cdf, r)
+            S[t+1] = drawn_state
+
+        return S
 
 def evaluate_symbolic_shared(pi, Q, B0, B):
     f = theano.function([], [pi, Q, B0, B])
