@@ -1,7 +1,7 @@
 from pymc3.core import *
 from pymc3.step_methods.arraystep import ArrayStepShared
 from pymc3.theanof import make_shared_replacements
-from pymc3.distributions.transforms import logodds
+from pymc3.distributions.transforms import stick_breaking, logodds
 from .transforms import rate_matrix
 
 import theano
@@ -22,6 +22,7 @@ class ForwardS(ArrayStepShared):
         self.observed_jumps = observed_jumps
         self.step_sizes = np.sort(np.unique(observed_jumps))
 
+        pi = stick_breaking.backward(self.shared['pi_stickbreaking'])
         Q = rate_matrix.backward(self.shared['Q_ratematrix'])
         B0 = logodds.backward(self.shared['B0_logodds'])
         B = logodds.backward(self.shared['B_logodds'])
@@ -31,7 +32,7 @@ class ForwardS(ArrayStepShared):
         #at this point parameters are still symbolic so we
         #must create get_params function to actually evaluate
         #them
-        self.get_params = evaluate_symbolic_shared(Q, B0, B)
+        self.get_params = evaluate_symbolic_shared(pi, Q, B0, B)
 
     def compute_pS(self,Q,M):
         pS = np.zeros((len(self.step_sizes), M, M))
@@ -55,8 +56,9 @@ class ForwardS(ArrayStepShared):
         pS = self.pS = self.compute_pS(Q,M)
         observed_jumps = self.observed_jumps
         
-        Beta = np.zeros((M,Tn))
-        Beta[:,Tn-1] = 1
+        beta = np.zeros((M,Tn))
+        beta[:,Tn-1] = 1
+        #print "t\ti\tj\tbeta\tpS_ij\tprod"
         for t in np.arange(Tn-1, 0, -1):
             tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
             for i in range(M):
@@ -78,21 +80,30 @@ class ForwardS(ArrayStepShared):
                                 psi = 1.0
 
                         prod_psi *= psi
-                    Beta[i,t-1] += Beta[j,t]*pS[tau_ind,i,j]*prod_psi
+                    #print t-1,"\t",i,"\t",j,"\t",beta[j,t],"\t",pS[tau_ind,i,j],"\t",prod_psi
+                    beta[i,t-1] += beta[j,t]*pS[tau_ind,i,j]*prod_psi
+                #print "###beta:", beta[i,t-1]
 
-        return Beta
+        return beta
         
     def astep(self, S_current):
         
         #paramaters are now usable
-        Q,B0,B=self.get_params()
+        pi,Q,B0,B=self.get_params()
+        beta = self.computeBeta(Q, B0, B)
+
+        #calculate pS0(i) | X, pi, B0
         
-        Beta = self.computeBeta(Q, B0, B)
+        pS0 = np.zeros(M)
+        for i in range(M):
+            prod_psi = 1.0
+
+            pS0[i] = pi[i] * prod_psi
 
         S_next = S_current
         
         return S_next
 
-def evaluate_symbolic_shared(Q, B0, B):
-    f = theano.function([], [Q, B0, B])
+def evaluate_symbolic_shared(pi, Q, B0, B):
+    f = theano.function([], [pi, Q, B0, B])
     return f

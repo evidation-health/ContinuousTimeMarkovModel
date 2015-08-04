@@ -1,4 +1,5 @@
 from pymc3 import Continuous
+from pymc3.distributions.discrete import Binomial
 from .transforms import rate_matrix
 import numpy as np
 import theano.tensor as T
@@ -17,8 +18,9 @@ class DiscreteObsMJP_unif_prior(Continuous):
 
 class DiscreteObsMJP(Continuous):
 
-    def __init__(self, Q, observed_jumps, *args, **kwargs):
+    def __init__(self, pi, Q, observed_jumps, *args, **kwargs):
         super(DiscreteObsMJP, self).__init__(dtype='int32',*args, **kwargs)
+        self.pi = pi
         self.Q = Q
         self.observed_jumps = observed_jumps
         self.step_sizes = np.unique(observed_jumps)
@@ -55,13 +57,19 @@ class DiscreteObsMJP(Continuous):
         return C
         
     def logp(self, S):
+    	l = 0.0
+
+    	#add prior
+    	pi = self.pi
+    	l += pi[S[0]]
+
+    	#add likelihood
         Q = self.Q
         step_sizes = self.step_sizes
 
         Q_complex = T.cast(Q, 'complex64')
         C = self.computeC(S)
 
-        l = 0.0
         for i in range(0, len(step_sizes)):
             #get P(tau)
             lambdas, U = eig(Q_complex)
@@ -76,4 +84,35 @@ class DiscreteObsMJP(Continuous):
             #compute likelihood in terms of P(tau)
             l += T.sum(C[:,:,i]*T.log(P))
             
+        return l
+
+class Comorbidities(Continuous):
+    def __init__(self, S, B0, B, shape, *args, **kwargs):
+        super(Comorbidities, self).__init__(shape = shape, dtype='int8',*args, **kwargs)
+        X = np.ones(shape)
+        self.K = shape[0]
+        self.Tn = shape[1]
+        self.S = S
+        self.B0 = B0
+        self.B = B
+        self.mode = X
+
+    def logp(self, X):
+        K = self.K
+        Tn = self.Tn
+        S = self.S
+        B0 = self.B0
+        B = self.B
+        
+        l = 0.0
+        for k in range(K):
+            l += Binomial.dist(n=1, p=B0[k,S[0]]).logp(X[k,0])
+            
+        for t in range(1,Tn):
+            for k in range(K):
+                if T.eq(S[t],S[t-1]) or X[k,t-1] == 1:
+                    l += 0.0
+                else:
+                    l += Binomial.dist(n=1, p=B[k,S[t]]).logp(X[k,t])
+        
         return l
