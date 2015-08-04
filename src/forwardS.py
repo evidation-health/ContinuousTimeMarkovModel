@@ -64,13 +64,19 @@ class ForwardS(ArrayStepShared):
                 for j in range(M):
                     prod_psi = 1.0
                     for k in range(K):
-                        psi = 1.0
-                        if X[k,t-1]==1 or i==j:
-                            psi = 1.0
-                        elif X[k,t]==1:
-                            psi = B[k,j]
+                        if i != j:
+                            if X[k,t] == 0 and X[k,t-1] == 0:
+                                psi = 1-B[k,j]
+                            elif X[k,t] == 1 and X[k,t-1] == 0:
+                                psi = B[k,j]
+                            else:
+                                psi = 1.0
                         else:
-                            psi = 1-B[k,j]
+                            if X[k,t] == 1 and X[k,t-1] == 0:
+                                psi = 0.0
+                            else:
+                                psi = 1.0
+
                         prod_psi *= psi
                     Beta[i,t-1] += Beta[j,t]*pS[tau_ind,i,j]*prod_psi
 
