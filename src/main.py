@@ -39,8 +39,26 @@ with model:
     #L = Beta('L')
     #O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
 
+Q_raw_log = np.log(np.array([[1.0000, 0.0001, 0.0001, 0.0001, 0.0001], 
+                             [0.0001, 1.0000, 0.0001, 0.0001, 0.0001],
+                             [0.0001, 0.0001, 1.0000, 0.0001, 0.0001],
+                             [0.0001, 0.0001, 0.0001, 1.0000, 0.0001],
+                             [0.0001, 0.0001, 0.0001, 0.0001, 1.0000],
+                             [0.0001, 0.0001, 0.0001, 0.0001, 0.0001]]))
+start = {'Q_ratematrix': Q_raw_log}
+
 with model:
     step1 = Metropolis(vars=[pi,Q])
     step2 = ForwardS(vars=[S], X=X, observed_jumps=observed_jumps)
     step3 = Metropolis(vars=[B0,B])
-    trace = sample(100, [step1, step2, step3])
+    trace = sample(300, [step1, step2, step3], start=start)
+
+pi = trace[pi]
+Q = trace[Q]
+S = trace[S]
+np.set_printoptions(2);np.set_printoptions(linewidth=160)
+for i in range(30):
+    print pi[i,:]
+    print Q[i,:,:]
+    print S[i,:]
+    print "\n"

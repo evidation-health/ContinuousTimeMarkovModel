@@ -6,6 +6,8 @@ from .transforms import rate_matrix
 
 import theano
 
+import time
+
 class ForwardS(ArrayStepShared):
     """
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
@@ -87,18 +89,31 @@ class ForwardS(ArrayStepShared):
         return beta
         
     def astep(self, q0):
-        
+
         S = q0
 
         #paramaters are now usable
         pi,Q,B0,B=self.get_params()
 
-        #calculate pS0(i) | X, pi, B0
         M = self.M = Q.shape[0]
         X = self.X
         K = self.K = X.shape[0]
+
+        #X change points are the points in time where at least 
+        #one comorbidity gets turned on. it's important to track
+        #these because we have to make sure constrains on sampling
+        #S are upheld. Namely S only goes up in time, and S changes
+        #whenever there is an X change point. If we don't keep
+        #track of how many change points are left we can't enforce
+        #both of these constraints.
+        n_change_points_left = len(np.where(np.sum(np.diff(X), axis=0) > 0)[0])
+
+        #calculate pS0(i) | X, pi, B0
         pS0 = np.zeros(M)
         for i in range(M):
+            if (M-1) - i < n_change_points_left:
+                pS0[i] = 0.0
+                continue
             prod_psi = 1.0
             for k in range(K):
                 if X[k,0] == 1:
@@ -122,39 +137,37 @@ class ForwardS(ArrayStepShared):
         observed_jumps = self.observed_jumps
         pS = self.pS
         pS_ij = np.zeros(M)
+
         for t in range(0,Tn-1):
-            i = S[t]
+            i = S[t].astype(np.int)
             tau = observed_jumps[t]
             tau_ind = np.where(self.step_sizes == tau)[0][0]
 
-            for j in range(M):
-                if S[t] > j:
+            pS_ij[range(i)] = 0.0
+            for j in range(i,M):
+                if (M-1) - j < n_change_points_left:
                     pS_ij[j] = 0.0
-                else:
-                    prod_psi = 1.0
-                    for k in range(K):
-                        if i != j:
-                            if X[k,t+1] == 0 and X[k,t] == 0:
-                                psi = 1-B[k,j]
-                            elif X[k,t+1] == 1 and X[k,t] == 0:
-                                psi = B[k,j]
-                            else:
-                                psi = 1.0
-                        else:
-                            if X[k,t+1] == 1 and X[k,t] == 0:
-                                psi = 0.0
-                            else:
-                                psi = 1.0
-                        prod_psi *= psi
-                    #if prod_psi == 0.0:
-                    #    print "#########","t:", t, "i:", i, "j:", j
-                    pS_ij[j] = beta[j,t+1]/beta[i,t] * pS[tau_ind,i,j] \
-                                * prod_psi
+                    continue
 
-            if t==0:
-                print "\n\n~~~~","pS_ij:",pS_ij
-            if t==2:
-                print "~~~~","pS_ij:",pS_ij
+                prod_psi = 1.0
+                for k in range(K):
+                    if i != j:
+                        if X[k,t+1] == 0 and X[k,t] == 0:
+                            psi = 1-B[k,j]
+                        elif X[k,t+1] == 1 and X[k,t] == 0:
+                            psi = B[k,j]
+                        else:
+                            psi = 1.0
+                    else:
+                        if X[k,t+1] == 1 and X[k,t] == 0:
+                            psi = 0.0
+                        else:
+                            psi = 1.0
+                    prod_psi *= psi
+                if prod_psi == 0.0:
+                    n_change_points_left -= 1
+                pS_ij[j] = beta[j,t+1]/beta[i,t] * pS[tau_ind,i,j] \
+                            * prod_psi
 
             #sample S[t+1] from pS_ij
             cdf = np.cumsum(pS_ij)
