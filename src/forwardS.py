@@ -56,26 +56,14 @@ class ForwardS(ArrayStepShared):
 
     #calculate p( X_t | S_t=j, S_{t-1}=i )
     def compute_pXt_GIVEN_St_St1(self,t,i,j):
-        K = self.K
         X = self.X
         B = self.B
 
-        pXt_GIVEN_St_St1 = 1.0
-        for k in range(K):
-            if i != j:
-                if X[k,t] == 0 and X[k,t-1] == 0:
-                    pXt_GIVEN_St_St1 = 1-B[k,j]
-                elif X[k,t] == 1 and X[k,t-1] == 0:
-                    pXt_GIVEN_St_St1 = B[k,j]
-                else:
-                    pXt_GIVEN_St_St1 = 1.0
-            else:
-                if X[k,t] == 1 and X[k,t-1] == 0:
-                    pXt_GIVEN_St_St1 = 0.0
-                else:
-                    pXt_GIVEN_St_St1 = 1.0
-
-        return pXt_GIVEN_St_St1
+        was_changed = X[:,t] != X[:,t-1]
+        if i != j:
+            return np.prod(B[was_changed,j]) * np.prod(1-B[~was_changed,j])
+        else:
+            return float(not np.any(was_changed))
 
     def computeBeta(self, Q, B0, B):
         M = self.M
@@ -88,8 +76,8 @@ class ForwardS(ArrayStepShared):
         beta[:,Tn-1] = 1
         for t in np.arange(Tn-1, 0, -1):
             tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
-            for i in range(M):
-                for j in range(M):
+            for i in xrange(M):
+                for j in xrange(M):
                     pXt_GIVEN_St_St1 = self.compute_pXt_GIVEN_St_St1(t,i,j)
                     beta[i,t-1] += beta[j,t]*pS[tau_ind,i,j]*pXt_GIVEN_St_St1
 
@@ -108,23 +96,18 @@ class ForwardS(ArrayStepShared):
         B0 = self.B0
         pS0 = np.zeros(M)
         X = self.X
+
         for i in range(M):
             if (M-1) - i < n_change_points_left:
                 pS0[i] = 0.0
                 continue
-            pX0 = 1.0
-            for k in range(K):
-                if X[k,0] == 1:
-                    pX0 *= B0[k,i]
-                else:
-                    pX0 *= 1-B0[k,i]
+            pX0 = np.prod(B0[X[:,0] == 1, i]) * np.prod(1-B0[X[:,0] != 1, i])
             pS0[i] = pi[i] * pX0
 
         return pS0
 
-    def compute_pSt_GIVEN_St1(self, i, t, n_change_points_left):
+    def compute_pSt_GIVEN_St1(self, i, t, beta, n_change_points_left):
         M = self.M
-        beta = self.computeBeta(self.Q, self.B0, self.B)
         pS = self.pS
 
         pSt_GIVEN_St1 = np.zeros(M)
@@ -166,9 +149,10 @@ class ForwardS(ArrayStepShared):
         #note: pS is probability of jump conditional on Q
         #whereas pS_ij is also conditional on everything else in the model
         #and is what we're looking for
+        beta = self.beta = self.computeBeta(self.Q, self.B0, self.B)
         for t in range(0,Tn-1):
             i = S[t].astype(np.int)
-            pSt_GIVEN_St1, n_change_points_left = self.compute_pSt_GIVEN_St1(i, t, n_change_points_left)
+            pSt_GIVEN_St1, n_change_points_left = self.compute_pSt_GIVEN_St1(i, t, beta, n_change_points_left)
             S[t+1] = self.drawState(pSt_GIVEN_St1)
 
         return S

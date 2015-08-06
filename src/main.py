@@ -57,7 +57,7 @@ pi = trace[pi]
 Q = trace[Q]
 S = trace[S]
 np.set_printoptions(2);np.set_printoptions(linewidth=160)
-for i in range(30):
+for i in range(300):
     print pi[i,:]
     print Q[i,:,:]
     print S[i,:]
