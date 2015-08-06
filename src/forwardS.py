@@ -3,6 +3,7 @@ from pymc3.step_methods.arraystep import ArrayStepShared
 from pymc3.theanof import make_shared_replacements
 from pymc3.distributions.transforms import stick_breaking, logodds
 from .transforms import rate_matrix
+from scipy import linalg
 
 import theano
 
@@ -30,40 +31,20 @@ class ForwardS(ArrayStepShared):
         B = logodds.backward(self.shared['B_logodds'])
         #when we add last layer X will be evaluated the same way as Q, B0, B
         self.X = X
-        self.M = Q.shape[0]
-        K = self.K = X.shape[0]
 
         #at this point parameters are still symbolic so we
         #must create get_params function to actually evaluate them
         self.get_params = evaluate_symbolic_shared(pi, Q, B0, B)
-        self.pi, self.Q, self.B0, self.B=self.get_params()
-        self.M = self.Q.shape[0]
-        self.Tn = self.X.shape[1]
 
     def compute_pS(self,Q,M):
         pS = np.zeros((len(self.step_sizes), M, M))
 
-        lambdas, U = np.linalg.eig(Q)
         for tau in self.step_sizes:
-            exp_tD = np.diag(np.exp(lambdas*tau))
-            U_inv = np.linalg.inv(U)
-            pS_tau = np.dot(np.dot(U, exp_tD), U_inv)
-
+            pS_tau = linalg.expm(tau*Q)
             tau_ind = np.where(self.step_sizes == tau)[0][0]
             pS[tau_ind,:,:] = pS_tau
 
         return pS
-
-    #calculate p( X_t | S_t=j, S_{t-1}=i )
-    def compute_pXt_GIVEN_St_St1(self,t,i,j):
-        X = self.X
-        B = self.B
-
-        was_changed = X[:,t] != X[:,t-1]
-        if i != j:
-            return np.prod(B[was_changed,j]) * np.prod(1-B[~was_changed,j])
-        else:
-            return float(not np.any(was_changed))
 
     def computeBeta(self, Q, B0, B):
         M = self.M
@@ -76,10 +57,11 @@ class ForwardS(ArrayStepShared):
         beta[:,Tn-1] = 1
         for t in np.arange(Tn-1, 0, -1):
             tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
-            for i in xrange(M):
-                for j in xrange(M):
-                    pXt_GIVEN_St_St1 = self.compute_pXt_GIVEN_St_St1(t,i,j)
-                    beta[i,t-1] += beta[j,t]*pS[tau_ind,i,j]*pXt_GIVEN_St_St1
+            was_changed = X[:,t] != X[:,t-1]
+            pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+            pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
+            np.fill_diagonal(pXt_GIVEN_St_St1, float(not np.any(was_changed)))
+            beta[:,t-1] = np.sum(beta[:,t]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
 
         return beta
     
@@ -114,8 +96,7 @@ class ForwardS(ArrayStepShared):
 
         tau = self.observed_jumps[t]
         tau_ind = np.where(self.step_sizes == tau)[0][0]
-        pSt_GIVEN_St1[range(i)] = 0.0
-        for j in range(i,M):
+        for j in xrange(i,M):
             if (M-1) - j < n_change_points_left:
                 pSt_GIVEN_St1[j] = 0.0
                 continue
@@ -135,9 +116,11 @@ class ForwardS(ArrayStepShared):
         #whenever there is an X change point. If we don't keep
         #track of how many change points are left we can't enforce
         #both of these constraints.
-        M = self.M
+        self.pi, self.Q, self.B0, self.B=self.get_params()
+        K = self.K = self.X.shape[0]
+        M = self.M = self.Q.shape[0]
+        Tn = self.Tn = self.X.shape[1]
         X = self.X
-        Tn = self.Tn
         S = np.zeros(Tn, dtype=np.int8)
         n_change_points_left = len(np.where(np.sum(np.diff(X), axis=0) > 0)[0])
 
@@ -150,9 +133,26 @@ class ForwardS(ArrayStepShared):
         #whereas pS_ij is also conditional on everything else in the model
         #and is what we're looking for
         beta = self.beta = self.computeBeta(self.Q, self.B0, self.B)
-        for t in range(0,Tn-1):
+        B = self.B
+        observed_jumps = self.observed_jumps
+        pS = self.pS
+        for t in xrange(0,Tn-1):
             i = S[t].astype(np.int)
-            pSt_GIVEN_St1, n_change_points_left = self.compute_pSt_GIVEN_St1(i, t, beta, n_change_points_left)
+
+            was_changed = X[:,t+1] != X[:,t]
+
+            pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+            pXt_GIVEN_St_St1[i] = float(not np.any(was_changed))
+
+            tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
+            pSt_GIVEN_St1 = (beta[:,t+1]/beta[i,t]) * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+
+            #make sure not to go backward or forward too far
+            pSt_GIVEN_St1[0:i] = 0.0
+            pSt_GIVEN_St1[M - np.array(range(0,M)) < n_change_points_left] = 0.0
+            if np.any(was_changed):
+                n_change_points_left -= 1
+
             S[t+1] = self.drawState(pSt_GIVEN_St1)
 
         return S
