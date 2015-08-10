@@ -1,10 +1,11 @@
 from pymc3 import Continuous
-from pymc3.distributions.discrete import Binomial
+from pymc3.distributions.discrete import Categorical, Binomial
 from .transforms import rate_matrix
 import numpy as np
 import theano.tensor as T
 from theano.tensor.nlinalg import eig, matrix_inverse
 from theano.compile.sharedvalue import shared
+import theano.tensor.slinalg
 
 class DiscreteObsMJP_unif_prior(Continuous):
 
@@ -19,7 +20,7 @@ class DiscreteObsMJP_unif_prior(Continuous):
 class DiscreteObsMJP(Continuous):
 
     def __init__(self, pi, Q, observed_jumps, *args, **kwargs):
-        super(DiscreteObsMJP, self).__init__(dtype='int32',*args, **kwargs)
+        super(DiscreteObsMJP, self).__init__(dtype='int8',*args, **kwargs)
         self.pi = pi
         self.Q = Q
         self.observed_jumps = observed_jumps
@@ -61,7 +62,7 @@ class DiscreteObsMJP(Continuous):
 
     	#add prior
     	pi = self.pi
-    	l += pi[S[0]]
+    	l += Categorical.dist(p=pi).logp(S[0])
 
     	#add likelihood
         Q = self.Q
@@ -72,15 +73,9 @@ class DiscreteObsMJP(Continuous):
 
         for i in range(0, len(step_sizes)):
             #get P(tau)
-            lambdas, U = eig(Q_complex)
-            
+            #lambdas, U = eig(Q_complex)
             tau = step_sizes[i]
-            exp_tD = T.diag(T.exp(tau*lambdas))
-
-            U_inv = matrix_inverse(U)
-
-            P = U.dot(exp_tD).dot(U_inv)
-        
+            P = T.slinalg.expm(tau*Q)
             #compute likelihood in terms of P(tau)
             l += T.sum(C[:,:,i]*T.log(P))
             
