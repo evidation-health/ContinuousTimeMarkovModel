@@ -102,7 +102,7 @@ class ForwardS(ArrayStepShared):
         return pS0
 
     def compute_pSt_GIVEN_St1(self, i, t, beta, n_change_points_left):
-        assert 1==0
+        assert 1==0 # Not used, error out if ever called for now
         M = self.M
         pS = self.pS
 

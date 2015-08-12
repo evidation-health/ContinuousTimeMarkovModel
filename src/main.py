@@ -5,20 +5,20 @@ from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Bet
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.src.forwardS import *
 
-N = 100
-M = 6
-K = 10
-D = 250
-min_obs = 10
-max_obs = 30
+N = 100 # Number of patients
+M = 6 # Number of hidden states
+K = 10 # Number of comorbidities
+D = 250 # Number of claims
+min_obs = 10 # Minimum number of observed claims per patient
+max_obs = 30 # Maximum number of observed claims per patient
 
+# Load pre-generated data
 from pickle import load
 T = load(open('../data/X_layer_100_patients/T.pkl', 'rb'))
 obs_jumps = load(open('../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
 X = load(open('../data/X_layer_100_patients/X_input.pkl', 'rb'))
 
 model = Model()
-
 with model:
     pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), shape=M)
     pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .1, -np.inf, 0))
