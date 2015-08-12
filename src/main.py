@@ -23,7 +23,7 @@ with model:
     pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), shape=M)
     pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .1, -np.inf, 0))
 
-    Q = DiscreteObsMJP_unif_prior('Q', M=M, shape=(M,M))
+    Q = DiscreteObsMJP_unif_prior('Q', M=M, lower=0.0, upper=1.0, shape=(M,M))
     
     S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, N=N, observed_jumps=obs_jumps, T=T, shape=(N,max_obs))
 
@@ -36,7 +36,8 @@ with model:
     #L = Beta('L')
     #O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
 
-Q_raw_log = np.log(np.array([[0.631921, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
+import scipy.special
+Q_raw_log = scipy.special.logit(np.array([[0.631921, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
                              [0.0000001, 0.229485, 0.0000001, 0.0000001, 0.0000001],
                              [0.0000001, 0.0000001, 0.450538, 0.0000001, 0.0000001],
                              [0.0000001, 0.0000001, 0.0000001, 0.206042, 0.0000001],
@@ -84,7 +85,7 @@ with model:
     step2 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, X=X, observed_jumps=obs_jumps)
     step3 = Metropolis(vars=[B0])
     step4 = Metropolis(vars=[B])
-    trace = sample(1001, [step1, step2, step3, step4], start=start, random_seed=1991)
+    trace = sample(1001, [step1, step2, step3, step4], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

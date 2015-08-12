@@ -29,7 +29,9 @@ class ForwardS(ArrayStepShared):
         self.step_sizes = np.sort(np.unique(observed_jumps))
 
         pi = stick_breaking.backward(self.shared['pi_stickbreaking'])
-        Q = rate_matrix.backward(self.shared['Q_ratematrix'])
+        lower = model.free_RVs[1].distribution.dist.lower
+        upper = model.free_RVs[1].distribution.dist.upper
+        Q = rate_matrix(lower, upper).backward(self.shared['Q_ratematrix'])
         B0 = logodds.backward(self.shared['B0_logodds'])
         B = logodds.backward(self.shared['B_logodds'])
         #when we add last layer X will be evaluated the same way as Q, B0, B
