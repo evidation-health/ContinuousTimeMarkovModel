@@ -14,7 +14,10 @@ class ForwardS(ArrayStepShared):
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
     given Q, B, and X constant.
     """
-    def __init__(self, vars, X, observed_jumps, model=None):
+    def __init__(self, vars, N, T, max_obs, X, observed_jumps, model=None):
+        self.N = N
+        self.T = T
+        self.max_obs = max_obs
 
         model = modelcontext(model)
         vars = inputvars(vars)
@@ -49,46 +52,57 @@ class ForwardS(ArrayStepShared):
     def computeBeta(self, Q, B0, B):
         M = self.M
         X = self.X
-        Tn = self.Tn = X.shape[1]
+        T = self.T
         pS = self.pS = self.compute_pS(Q,M)
         observed_jumps = self.observed_jumps
         
-        beta = np.zeros((M,Tn))
-        beta[:,Tn-1] = 1
-        for t in np.arange(Tn-1, 0, -1):
-            tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
-            was_changed = X[:,t] != X[:,t-1]
-            pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
-            pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
-            np.fill_diagonal(pXt_GIVEN_St_St1, float(not np.any(was_changed)))
-            beta[:,t-1] = np.sum(beta[:,t]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
+        beta = np.ones((M,self.max_obs,self.N))
+        for n in xrange(self.N):
+            for t in np.arange(T[n]-1, 0, -1):
+                tau_ind = np.where(self.step_sizes==observed_jumps[n,t-1])[0][0]
+                was_changed = X[:,t,n] != X[:,t-1,n]
+                pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+                pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
+                if np.any(was_changed):
+                    np.fill_diagonal(pXt_GIVEN_St_St1,0.0)
+                beta[:,t-1,n] = np.sum(beta[:,t,n]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
 
         return beta
     
     def drawState(self, pS):
+        cdf = np.cumsum(pS, axis=1)
+        r = np.random.uniform(size=self.N) * cdf[:,-1]
+        drawn_state = np.zeros(self.N)
+        for n in range(self.N):
+            drawn_state[n] = np.searchsorted(cdf[n,:], r[n])
+        return drawn_state
+
+    def drawStateSingle(self, pS):
         cdf = np.cumsum(pS)
         r = np.random.uniform() * cdf[-1]
         drawn_state = np.searchsorted(cdf, r)
         return drawn_state
 
-    def compute_S0_GIVEN_X0(self, n_change_points_left):
+    def compute_S0_GIVEN_X0(self):
+        N = self.N
         M = self.M
         K = self.K
         pi = self.pi
         B0 = self.B0
-        pS0 = np.zeros(M)
         X = self.X
 
-        for i in range(M):
-            if (M-1) - i < n_change_points_left:
-                pS0[i] = 0.0
-                continue
-            pX0 = np.prod(B0[X[:,0] == 1, i]) * np.prod(1-B0[X[:,0] != 1, i])
-            pS0[i] = pi[i] * pX0
+        pS0 = np.zeros((N,M))
+        for n in xrange(N):
+            on = X[:,0,n] == 1
+            off = np.invert(on)
+            pX0 = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
+            pS0[n,:] = pi * pX0
 
+        #import pdb; pdb.set_trace()
         return pS0
 
     def compute_pSt_GIVEN_St1(self, i, t, beta, n_change_points_left):
+        assert 1==0
         M = self.M
         pS = self.pS
 
@@ -119,14 +133,13 @@ class ForwardS(ArrayStepShared):
         self.pi, self.Q, self.B0, self.B=self.get_params()
         K = self.K = self.X.shape[0]
         M = self.M = self.Q.shape[0]
-        Tn = self.Tn = self.X.shape[1]
+        T = self.T
         X = self.X
-        S = np.zeros(Tn, dtype=np.int8)
-        n_change_points_left = len(np.where(np.sum(np.diff(X), axis=0) > 0)[0])
+        S = np.zeros((self.N,self.max_obs), dtype=np.int8) - 1
 
         #calculate pS0(i) | X, pi, B0
-        pS0_GIVEN_X0 = self.compute_S0_GIVEN_X0(n_change_points_left)
-        S[0] = self.drawState(pS0_GIVEN_X0)
+        pS0_GIVEN_X0 = self.compute_S0_GIVEN_X0()
+        S[:,0] = self.drawState(pS0_GIVEN_X0)
 
         #calculate p(S_t=i | S_{t=1}=j, X, Q, B)
         #note: pS is probability of jump conditional on Q
@@ -136,24 +149,26 @@ class ForwardS(ArrayStepShared):
         B = self.B
         observed_jumps = self.observed_jumps
         pS = self.pS
-        for t in xrange(0,Tn-1):
-            i = S[t].astype(np.int)
+        
+        for n in xrange(self.N):
+            for t in xrange(0,T[n]-1):
+                #import pdb; pdb.set_trace()
+                i = S[n,t].astype(np.int)
 
-            was_changed = X[:,t+1] != X[:,t]
+                was_changed = X[:,t+1,n] != X[:,t,n]
 
-            pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
-            pXt_GIVEN_St_St1[i] = float(not np.any(was_changed))
+                pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+                if np.any(was_changed):
+                    pXt_GIVEN_St_St1[i] = 0.0
 
-            tau_ind = np.where(self.step_sizes==observed_jumps[t-1])[0][0]
-            pSt_GIVEN_St1 = (beta[:,t+1]/beta[i,t]) * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+                tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
+                pSt_GIVEN_St1 = (beta[:,t+1,n]/beta[i,t,n]) * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
 
-            #make sure not to go backward or forward too far
-            pSt_GIVEN_St1[0:i] = 0.0
-            pSt_GIVEN_St1[M - np.array(range(0,M)) < n_change_points_left] = 0.0
-            if np.any(was_changed):
-                n_change_points_left -= 1
+                #make sure not to go backward or forward too far
+                #pSt_GIVEN_St1[0:i] = 0.0
+                
 
-            S[t+1] = self.drawState(pSt_GIVEN_St1)
+                S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
         return S
 
