@@ -10,9 +10,12 @@ from theano.tensor.extra_ops import bincount
 
 class DiscreteObsMJP_unif_prior(Continuous):
 
-    def __init__(self, M,transform=rate_matrix, *args, **kwargs):
-        super(DiscreteObsMJP_unif_prior, self).__init__(transform=transform, *args, **kwargs)
-        Q = np.ones((M, M), np.float64)
+    def __init__(self, M, lower=0, upper=100, *args, **kwargs):
+        self.lower = lower
+        self.upper = upper
+        super(DiscreteObsMJP_unif_prior, self).__init__(transform=rate_matrix(lower=lower, upper=upper), 
+            *args, **kwargs)
+        Q = np.ones((M, M), np.float64) - 0.5
         self.mode = Q
 
     def logp(self, value):
