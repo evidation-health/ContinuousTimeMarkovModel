@@ -85,7 +85,7 @@ with model:
     step2 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, X=X, observed_jumps=obs_jumps)
     step3 = Metropolis(vars=[B0])
     step4 = Metropolis(vars=[B])
-    trace = sample(1001, [step1, step2, step3, step4], start=start, random_seed=1992)
+    trace = sample(11, [step1, step2, step3, step4], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]
