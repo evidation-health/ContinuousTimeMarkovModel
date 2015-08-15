@@ -65,8 +65,7 @@ class ForwardS(ArrayStepShared):
                 was_changed = X[:,t,n] != X[:,t-1,n]
                 pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
-                if np.any(was_changed):
-                    np.fill_diagonal(pXt_GIVEN_St_St1,0.0)
+                np.fill_diagonal(pXt_GIVEN_St_St1,np.float(not np.any(was_changed)))
                 beta[:,t-1,n] = np.sum(beta[:,t,n]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
 
         return beta
