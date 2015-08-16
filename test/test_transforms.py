@@ -36,4 +36,4 @@ def check_matrix_transform_identity(transform, domain):
     return check_transform_identity(transform, domain, t.dmatrix, test=rate_matrix_test)
 
 def test_rate_matrix_one_way():
-	check_matrix_transform_identity(ctrans.rate_matrix_one_way(0,100), RateMatrixDomain)
+	check_matrix_transform_identity(ctrans.rate_matrix_one_way(0,1), RateMatrixDomain)

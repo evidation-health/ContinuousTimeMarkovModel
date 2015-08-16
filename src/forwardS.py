@@ -2,7 +2,7 @@ from pymc3.core import *
 from pymc3.step_methods.arraystep import ArrayStepShared
 from pymc3.theanof import make_shared_replacements
 from pymc3.distributions.transforms import stick_breaking, logodds
-from .transforms import rate_matrix
+from .transforms import rate_matrix, rate_matrix_one_way
 from scipy import linalg
 
 import theano
@@ -26,12 +26,13 @@ class ForwardS(ArrayStepShared):
         super(ForwardS, self).__init__(vars, shared)
         
         self.observed_jumps = observed_jumps
-        self.step_sizes = np.sort(np.unique(observed_jumps))
+        step_sizes = np.sort(np.unique(observed_jumps))
+        self.step_sizes = step_sizes = step_sizes[step_sizes > 0]
 
         pi = stick_breaking.backward(self.shared['pi_stickbreaking'])
         lower = model.free_RVs[1].distribution.dist.lower
         upper = model.free_RVs[1].distribution.dist.upper
-        Q = rate_matrix(lower, upper).backward(self.shared['Q_ratematrix'])
+        Q = rate_matrix_one_way(lower, upper).backward(self.shared['Q_ratematrixoneway'])
         B0 = logodds.backward(self.shared['B0_logodds'])
         B = logodds.backward(self.shared['B_logodds'])
         #when we add last layer X will be evaluated the same way as Q, B0, B
@@ -62,6 +63,8 @@ class ForwardS(ArrayStepShared):
         for n in xrange(self.N):
             for t in np.arange(T[n]-1, 0, -1):
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t-1])[0][0]
+                if t==6:
+                    import pdb; pdb.set_trace()
                 was_changed = X[:,t,n] != X[:,t-1,n]
                 pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
@@ -132,6 +135,8 @@ class ForwardS(ArrayStepShared):
         #track of how many change points are left we can't enforce
         #both of these constraints.
         self.pi, self.Q, self.B0, self.B=self.get_params()
+        import pdb; pdb.set_trace()
+
         K = self.K = self.X.shape[0]
         M = self.M = self.Q.shape[0]
         T = self.T

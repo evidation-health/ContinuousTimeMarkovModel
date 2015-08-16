@@ -1,6 +1,7 @@
 import theano.tensor as TT
 from pymc3.distributions.transforms import Transform, ElemwiseTransform
 from pymc3.distributions.transforms import interval
+import numpy as np
 
 class RateMatrix(Transform):
     name = "ratematrix"
@@ -44,7 +45,7 @@ def rate_matrix(lower, upper):
 
 
 class RateMatrixOneWay(Transform):
-    name = "ratematrix"
+    name = "ratematrixoneway"
     def __init__(self, lower, upper):
         self.interval_transform = interval(lower,upper)
 
@@ -61,12 +62,12 @@ class RateMatrixOneWay(Transform):
     def symbolic_rates_to_full_matrix(self, x):
         zero = TT.as_tensor_variable(np.array([0.0]))
         rates = TT.concatenate([x, zero])
-        result_length = (rates.shape[0]+1)**2
+        result_length = (rates.shape[0])**2
         indexes = TT.arange(result_length, dtype='int64')
         diagonal_modulo = indexes % (rates.shape[0] + 1)
         result = TT.zeros((result_length,), dtype=x.dtype)
         result = TT.set_subtensor(result[TT.eq(diagonal_modulo, 0).nonzero()], -rates)
-        result = TT.set_subtensor(result[TT.eq(diagonal_modulo, 1).nonzero()], rates[-1])
+        result = TT.set_subtensor(result[TT.eq(diagonal_modulo, 1).nonzero()], rates[:-1])
         return result.reshape((rates.shape[0], rates.shape[0]))
     
     def backward(self, Q_raw_log):

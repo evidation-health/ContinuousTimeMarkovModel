@@ -1,6 +1,6 @@
 from pymc3 import Continuous
 from pymc3.distributions.discrete import Categorical, Binomial
-from .transforms import rate_matrix
+from .transforms import rate_matrix, rate_matrix_one_way
 import numpy as np
 import theano.tensor as TT
 from theano.tensor.nlinalg import eig, matrix_inverse
@@ -13,7 +13,7 @@ class DiscreteObsMJP_unif_prior(Continuous):
     def __init__(self, M, lower=0, upper=100, *args, **kwargs):
         self.lower = lower
         self.upper = upper
-        super(DiscreteObsMJP_unif_prior, self).__init__(transform=rate_matrix(lower=lower, upper=upper), 
+        super(DiscreteObsMJP_unif_prior, self).__init__(transform=rate_matrix_one_way(lower=lower, upper=upper), 
             *args, **kwargs)
         Q = np.ones((M, M), np.float64) - 0.5
         self.mode = Q

@@ -37,12 +37,7 @@ with model:
     #O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
 
 import scipy.special
-Q_raw_log = scipy.special.logit(np.array([[0.631921, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
-                             [0.0000001, 0.229485, 0.0000001, 0.0000001, 0.0000001],
-                             [0.0000001, 0.0000001, 0.450538, 0.0000001, 0.0000001],
-                             [0.0000001, 0.0000001, 0.0000001, 0.206042, 0.0000001],
-                             [0.0000001, 0.0000001, 0.0000001, 0.0000001, 0.609582],
-                             [0.0000001, 0.0000001, 0.0000001, 0.0000001, 0.0000001]]))
+Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
 
 from scipy.special import logit
 B_lo = logit(np.array([
@@ -77,7 +72,7 @@ Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001],
                              [0.0000001, 0.0000001, 0.0000001, 0.0000001, 0.0000001]]))
 '''
 
-start = {'Q_ratematrix': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo}
+start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo}
 
 with model:
     #import pdb; pdb.set_trace()
