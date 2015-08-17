@@ -65,7 +65,10 @@ class RateMatrixOneWay(Transform):
         result_length = (rates.shape[0])**2
         indexes = TT.arange(result_length, dtype='int64')
         diagonal_modulo = indexes % (rates.shape[0] + 1)
-        result = TT.zeros((result_length,), dtype=x.dtype)
+        #result = TT.zeros((result_length,), dtype=x.dtype)
+        result = TT.zeros_like(indexes, dtype=rates.dtype)
+        #this line is here because otherwise zeros_like doesn't actually return a vector with zeros
+        result = TT.set_subtensor(result[TT.neq(diagonal_modulo, 0).nonzero()], 0.0)
         result = TT.set_subtensor(result[TT.eq(diagonal_modulo, 0).nonzero()], -rates)
         result = TT.set_subtensor(result[TT.eq(diagonal_modulo, 1).nonzero()], rates[:-1])
         return result.reshape((rates.shape[0], rates.shape[0]))

@@ -76,11 +76,12 @@ start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo}
 
 with model:
     #import pdb; pdb.set_trace()
-    step1 = Metropolis(vars=[pi,Q], scaling=0.1)
-    step2 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, X=X, observed_jumps=obs_jumps)
-    step3 = Metropolis(vars=[B0])
-    step4 = Metropolis(vars=[B])
-    trace = sample(11, [step1, step2, step3, step4], start=start, random_seed=1992)
+    step1 = Metropolis(vars=[pi], scaling=0.1)
+    step2 = Metropolis(vars=[Q], scaling=0.1)
+    step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, X=X, observed_jumps=obs_jumps)
+    step4 = Metropolis(vars=[B0])
+    step5 = Metropolis(vars=[B])
+    trace = sample(1001, [step1, step2, step3, step4, step5], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

@@ -70,7 +70,7 @@ class DiscreteObsMJP(Continuous):
 
     	#add prior
     	pi = self.pi
-    	l += TT.sum(TT.log(pi[S[:,0]]))
+        l += TT.sum(TT.log(pi[S[:,0]]))
 
     	#add likelihood
         Q = self.Q
@@ -83,9 +83,12 @@ class DiscreteObsMJP(Continuous):
             tau = step_sizes[i]
             P = TT.slinalg.expm(tau*Q)
             
+            stabilizer = TT.tril(TT.alloc(0.0, *P.shape)+0.1, k=-1)
+            logP = TT.log(P + stabilizer)
+
             #compute likelihood in terms of P(tau)
-            l += TT.sum(C[i,:,:]*TT.log(P))
-            
+            l += TT.sum(C[i,:,:]*logP)
+          
         return l
 
 from theano.compile.ops import as_op

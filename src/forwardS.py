@@ -63,8 +63,6 @@ class ForwardS(ArrayStepShared):
         for n in xrange(self.N):
             for t in np.arange(T[n]-1, 0, -1):
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t-1])[0][0]
-                if t==6:
-                    import pdb; pdb.set_trace()
                 was_changed = X[:,t,n] != X[:,t-1,n]
                 pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
@@ -100,31 +98,10 @@ class ForwardS(ArrayStepShared):
             on = X[:,0,n] == 1
             off = np.invert(on)
             pX0 = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
-            pS0[n,:] = pi * pX0
+            pX_GIVEN_S0 = self.beta[:,0,n]
+            pS0[n,:] = pi * pX_GIVEN_S0 * pX0
 
-        #import pdb; pdb.set_trace()
         return pS0
-
-    def compute_pSt_GIVEN_St1(self, i, t, beta, n_change_points_left):
-        assert 1==0 # Not used, error out if ever called for now
-        M = self.M
-        pS = self.pS
-
-        pSt_GIVEN_St1 = np.zeros(M)
-
-        tau = self.observed_jumps[t]
-        tau_ind = np.where(self.step_sizes == tau)[0][0]
-        for j in xrange(i,M):
-            if (M-1) - j < n_change_points_left:
-                pSt_GIVEN_St1[j] = 0.0
-                continue
-
-            pXt_GIVEN_St_St1 = self.compute_pXt_GIVEN_St_St1(t+1,i,j)
-            if pXt_GIVEN_St_St1 == 0.0:
-                n_change_points_left -= 1
-            pSt_GIVEN_St1[j] = beta[j,t+1]/beta[i,t] * pS[tau_ind,i,j] * pXt_GIVEN_St_St1
-
-        return pSt_GIVEN_St1, n_change_points_left
 
     def astep(self, q0):
         #X change points are the points in time where at least 
@@ -135,7 +112,6 @@ class ForwardS(ArrayStepShared):
         #track of how many change points are left we can't enforce
         #both of these constraints.
         self.pi, self.Q, self.B0, self.B=self.get_params()
-        import pdb; pdb.set_trace()
 
         K = self.K = self.X.shape[0]
         M = self.M = self.Q.shape[0]
@@ -144,6 +120,7 @@ class ForwardS(ArrayStepShared):
         S = np.zeros((self.N,self.max_obs), dtype=np.int8) - 1
 
         #calculate pS0(i) | X, pi, B0
+        beta = self.beta = self.computeBeta(self.Q, self.B0, self.B)
         pS0_GIVEN_X0 = self.compute_S0_GIVEN_X0()
         S[:,0] = self.drawState(pS0_GIVEN_X0)
 
@@ -151,7 +128,6 @@ class ForwardS(ArrayStepShared):
         #note: pS is probability of jump conditional on Q
         #whereas pS_ij is also conditional on everything else in the model
         #and is what we're looking for
-        beta = self.beta = self.computeBeta(self.Q, self.B0, self.B)
         B = self.B
         observed_jumps = self.observed_jumps
         pS = self.pS
@@ -166,14 +142,17 @@ class ForwardS(ArrayStepShared):
                 pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 if np.any(was_changed):
                     pXt_GIVEN_St_St1[i] = 0.0
+                else:
+                    pXt_GIVEN_St_St1 = 1.0
 
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
-                pSt_GIVEN_St1 = (beta[:,t+1,n]/beta[i,t,n]) * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+                
+                #don't divide by beta_t it's just a constant anyway
+                pSt_GIVEN_St1 = beta[:,t+1,n] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
 
                 #make sure not to go backward or forward too far
                 #pSt_GIVEN_St1[0:i] = 0.0
                 
-
                 S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
         return S
