@@ -154,3 +154,19 @@ class Comorbidities(Continuous):
 
         
         return l
+
+class Claims(Continuous):
+    def __init__(self, X, Z, L, shape, *args, **kwargs):
+        super(Claims, self).__init__(shape = shape, dtype='int32',*args, **kwargs)
+        self.X = X
+        self.Z = Z
+        self.L = L
+
+        O = np.ones(shape, dtype='int32')
+        self.mode = O
+
+    def logp(self, O):
+        
+        l = np.float64(0.0)
+
+        return l

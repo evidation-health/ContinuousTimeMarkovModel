@@ -8,7 +8,8 @@ from ContinuousTimeMarkovModel.src.forwardS import *
 N = 100 # Number of patients
 M = 6 # Number of hidden states
 K = 10 # Number of comorbidities
-D = 250 # Number of claims
+D = 721 # Number of claims
+Dd = 80 # Maximum number of claims that can occur at once
 min_obs = 10 # Minimum number of observed claims per patient
 max_obs = 30 # Maximum number of observed claims per patient
 
@@ -16,7 +17,8 @@ max_obs = 30 # Maximum number of observed claims per patient
 from pickle import load
 T = load(open('../data/X_layer_100_patients/T.pkl', 'rb'))
 obs_jumps = load(open('../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
-X = load(open('../data/X_layer_100_patients/X_input.pkl', 'rb'))
+#X = load(open('../data/X_layer_100_patients/X_input.pkl', 'rb'))
+O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
 
 model = Model()
 with model:
@@ -30,11 +32,11 @@ with model:
     B0 = Beta('B0', alpha = 1, beta = 1, shape=(K,M))
     B = Beta('B', alpha = 1, beta = 1, shape=(K,M))
 
-    Xobs = Comorbidities('Xobs', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N), observed = X)
+    X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N))
 
-    #Z = Beta('Z')
-    #L = Beta('L')
-    #O = Observations('O', X=X, Z=Z, L=L, shape=(D, T_n))
+    Z = Beta('Z', alpha = 0.1, beta = 1, shape=(K,D))
+    L = Beta('L', alpha = 1, beta = 1, shape=D)
+    O_obs = Claims('O_obs', X=X, Z=Z, L=L, shape=(Dd,max_obs,N), observed=O)
 
 import scipy.special
 Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
@@ -78,10 +80,10 @@ with model:
     #import pdb; pdb.set_trace()
     step1 = Metropolis(vars=[pi], scaling=0.1)
     step2 = Metropolis(vars=[Q], scaling=0.1)
-    step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, X=X, observed_jumps=obs_jumps)
+    step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
     step4 = Metropolis(vars=[B0])
     step5 = Metropolis(vars=[B])
-    trace = sample(1001, [step1, step2, step3, step4, step5], start=start, random_seed=1992)
+    trace = sample(2, [step1, step2, step3, step4, step5], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]
