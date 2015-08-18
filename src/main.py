@@ -4,6 +4,7 @@ from ContinuousTimeMarkovModel.src.distributions import *
 from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.src.forwardS import *
+from ContinuousTimeMarkovModel.src.forwardX import *
 
 N = 100 # Number of patients
 M = 6 # Number of hidden states
@@ -36,7 +37,7 @@ with model:
 
     Z = Beta('Z', alpha = 0.1, beta = 1, shape=(K,D))
     L = Beta('L', alpha = 1, beta = 1, shape=D)
-    O_obs = Claims('O_obs', X=X, Z=Z, L=L, shape=(Dd,max_obs,N), observed=O)
+    O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, shape=(Dd,max_obs,N), observed=O)
 
 import scipy.special
 Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
@@ -83,13 +84,19 @@ with model:
     step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
     step4 = Metropolis(vars=[B0])
     step5 = Metropolis(vars=[B])
-    trace = sample(2, [step1, step2, step3, step4, step5], start=start, random_seed=1992)
+    step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
+    step7 = Metropolis(vars=[Z])
+    step8 = Metropolis(vars=[L])
+    trace = sample(2, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]
 S = trace[S]
 S0 = S[:,:,0]
 B0 = trace[B0]
+X = trace[X]
+Z = trace[Z]
+L = trace[L]
 np.set_printoptions(2);np.set_printoptions(linewidth=160)
 '''
 for i in range(1001):

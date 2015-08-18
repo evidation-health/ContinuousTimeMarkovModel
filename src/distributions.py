@@ -184,6 +184,7 @@ class Claims(Continuous):
 
     def logp(self, O):
         l = np.float64(0.0)
-        l = logp_numpy_claims(l,self.N,self.T,self.Z,self.L,self.X,O)
+        l = logp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
+            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,O)
 
         return l
