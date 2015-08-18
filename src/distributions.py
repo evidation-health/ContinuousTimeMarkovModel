@@ -95,7 +95,7 @@ from theano.compile.ops import as_op
 
 X_theano_type = TT.TensorType('int8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
-def logp_numpy(l,N,B0,B,X,S,T):
+def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
 	for n in xrange(N):
 		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
 		l += np.log(pX0)
@@ -134,7 +134,7 @@ class Comorbidities(Continuous):
 
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
-        l = logp_numpy(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
+        l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
         for n in xrange(N):
         	#likelihood of X0
@@ -155,18 +155,35 @@ class Comorbidities(Continuous):
         
         return l
 
+O_theano_type = TT.TensorType('int32', [False, False, False])
+@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type], otypes=[TT.dscalar])
+def logp_numpy_claims(l,N,T,Z,L,X,O):
+    for n in xrange(N):
+        for t in range(1,T[n]):
+            O_tn_padded = O[:,t,n]
+            O_tn = O_tn_padded[O_tn_padded != -1]
+            pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
+            l += np.log(np.prod(pO[O_tn]))
+            
+            not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
+            l += np.log(np.prod(1-pO[not_on]))
+
+        return l
+
 class Claims(Continuous):
-    def __init__(self, X, Z, L, shape, *args, **kwargs):
+    def __init__(self, X, Z, L, T, shape, *args, **kwargs):
         super(Claims, self).__init__(shape = shape, dtype='int32',*args, **kwargs)
         self.X = X
+        self.N = shape[2]
         self.Z = Z
         self.L = L
+        self.T = T
 
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
     def logp(self, O):
-        
         l = np.float64(0.0)
+        l = logp_numpy_claims(l,self.N,self.T,self.Z,self.L,self.X,O)
 
         return l
