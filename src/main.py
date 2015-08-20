@@ -87,7 +87,7 @@ with model:
     step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
     step7 = Metropolis(vars=[Z])
     step8 = Metropolis(vars=[L])
-    trace = sample(2, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    trace = sample(10, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

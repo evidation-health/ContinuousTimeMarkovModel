@@ -5,6 +5,8 @@ from pymc3.distributions.transforms import logodds
 
 from theano import function
 
+import ContinuousTimeMarkovModel.src.cython.compute_prod_other_k as compute_prod_other_k
+
 class ForwardX(ArrayStepShared):
     """
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
@@ -16,6 +18,11 @@ class ForwardX(ArrayStepShared):
         self.D = D
         self.O = O
         self.max_obs = max_obs
+
+        self.pos_O_idx = np.zeros((D,max_obs,N), dtype=np.bool_)
+        for n in xrange(N):
+            for t in xrange(0,self.T[n]-1):
+                self.pos_O_idx[:,t,n] = np.in1d(np.arange(self.D), self.O[:,t,n])
 
         model = modelcontext(model)
         vars = inputvars(vars)
@@ -34,87 +41,93 @@ class ForwardX(ArrayStepShared):
         #must create get_params function to actually evaluate them
         self.get_params = evaluate_symbolic_shared(S, B0, B, Z, L)
 
-    def compute_pOt_GIVEN_Xt(self, n, k, t):
-        not_k_idx = np.arange(self.K) != k
-        pos_O_idx = np.in1d(np.arange(self.D), self.O[:,t,n])
+    def sampleState(self, pX):
+        tot_prob = np.sum(pX, axis=0)
+        r = np.random.uniform(self.K) * tot_prob
+        drawn_state = np.greater_equal(r, pX[0,:])
+        return drawn_state.astype(np.int8)
 
-        pOt_GIVEN_Xt = np.zeros(2)
-        
-        #Z's corresponding to positive and negative claims respectively
-        Z_pos = self.Z[:,pos_O_idx]
-        Z_neg = self.Z[:,~pos_O_idx]
-        other_k = np.prod(1-self.X_prev[not_k_idx,t,n]* \
-                    Z_pos[not_k_idx,:].T, axis=1)
-
-        pOt_GIVEN_Xt = np.zeros(2)
-        pOt_GIVEN_Xt[0] = np.prod(1-(1-self.L[pos_O_idx])*other_k)
-        pOt_GIVEN_Xt[1] = np.prod(1-Z_neg[k,:]) * \
-                            np.prod(1-(1-self.L[pos_O_idx])*(1-Z_pos[k,:]) * \
-                                other_k)
-        return pOt_GIVEN_Xt
-
-    #computes beta for a single comorbidity k
-    def computeBeta(self, n, k):
-        beta = np.ones((2,self.max_obs))
-        for t in np.arange(self.T[n]-1, 0, -1):
-            
-            Psi = np.zeros((2,2))
-            Psi[1,1] = 1.0
-            if self.S[n,t] == self.S[n,t-1]:
-                Psi[0,0] = 1.0
-                Psi[0,1] = 0.0
-            else:
-                Psi[0,0] = self.B[k,self.S[n,t]]
-                Psi[0,1] = 1-self.B[k,self.S[n,t]]
-
-            pOt_GIVEN_Xt = self.compute_pOt_GIVEN_Xt(n,k,t)
-
-            beta[:,t-1] = np.sum(beta[:,t]*Psi*pOt_GIVEN_Xt, axis=1)
-
-        return beta
-
-    def compute_pX0_GIVEN_O0(self, k , n, beta):
-        pOt_GIVEN_X0 = self.compute_pOt_GIVEN_Xt(n,k,0)
-
-        pX0_GIVEN_O0 = beta[:,0] * pOt_GIVEN_X0 * \
-                        np.array([self.B0[k,self.S[n,0]],1-self.B0[k,self.S[n,0]]])
-        return pX0_GIVEN_O0
-
-    def drawStateSingle(self, pX):
-        cdf = np.cumsum(pX)
-        r = np.random.uniform() * cdf[-1]
-        drawn_state = np.searchsorted(cdf, r)
-        return drawn_state
-
-    def astep(self, X_previous):
+    def astep(self, X):
         self.S, self.B0, self.B, self.Z, self.L = self.get_params()
         self.K = self.B.shape[0]
-        self.X_prev = np.reshape(X_previous, (self.K,self.max_obs,self.N))
+        self.X = np.reshape(X, (self.K,self.max_obs,self.N))
 
-        X = np.zeros((self.K,self.max_obs,self.N), dtype=np.int8) - 1
+        X_new = np.zeros((self.K,self.max_obs,self.N), dtype=np.int8) - 1
 
+        #note we keep Psi and pOt_GIVEN_Xt because they are used
+        #in the computation of beta ADN then again in the sampling forward of X
+        beta = np.ones((2,self.K,self.max_obs))
+        Psi = np.zeros((2,2,self.K,self.max_obs))
+        pOt_GIVEN_Xt = np.zeros((2,self.K,self.max_obs))
         for n in xrange(self.N):
-            for k in xrange(self.K):
-                beta = self.computeBeta(n,k)
-                pX0_GIVEN_O0 = self.compute_pX0_GIVEN_O0(k,n,beta)
-                X[k,0,n] = self.drawStateSingle(pX0_GIVEN_O0)
-                for t in xrange(0,self.T[n]-1):
-                    Psi = np.zeros(2)
-                    if self.S[n,t+1] == self.S[n,t]:
-                        if X[k,t,n] != 1:
-                            Psi[0] = 1.0
-                        else:
-                            Psi[1] = 1.0
-                    else:
-                        Psi[0] = self.B[k,self.S[n,t+1]]
-                        Psi[1] = 1-self.B[k,self.S[n,t+1]]
+            Xn = self.X[:,:,n]
+            pos_O_idx_n = self.pos_O_idx[:,:,n]
+            pos_O_idx_n[0] = True
+            pos_O_idx_n[1] = True
+            
+            #(1)compute beta a.k.a. the backwards variables a.k.a. 
+            #likelihood of X given the entire time series of observations
+            for t in np.arange(self.T[n]-1, -1, -1):
+                #(A) Compute Psi which is the probability of jumping to state X_{t+1}=j
+                #given you're in state X_{t}=i and S_{t}=m. Note the probability of
+                #getting the comorbidity once you already have it is one. The prob.
+                #of not having the comorbidity once you've already had it is zero
+                Psi[1,1,:,t] = 1.0
 
-                    pOt1_GIVEN_Xt1 = self.compute_pOt_GIVEN_Xt(n,k,t+1)
-                    
-                    pXt1 = beta[:,t+1] * Psi * pOt1_GIVEN_Xt1
-                    X[k,t+1,n] = self.drawStateSingle(pXt1)
+                #if you did NOT change state the probability of getting a new
+                #comorbidity is zero. If you did change state the new state
+                #has comordbity onsets associated with it i.e. B
+                if self.S[n,t] == self.S[n,t-1]:
+                    Psi[0,0,:,t] = 1.0
+                    Psi[0,1,:,t] = 0.0
+                else:
+                    Psi[0,0,:,t] = self.B[:,self.S[n,t]]
+                    Psi[0,1,:,t] = 1-self.B[:,self.S[n,t]]
 
-        return X
+                #(B) Compute pOt_GIVEN_Xt i.e. the likelihood of X_t,k given Ot and all
+                #other X_t,l where l =/= k
+                pos_O_idx_n_t = pos_O_idx_n[:,t]
+                Z_pos = self.Z[:,pos_O_idx_n_t]
+                
+                #compute prod_other_k which is product term in eq. 13 over k' \neq k
+                #we compute it for all k, i.e. the kth row is the product of all k's
+                #except that k. we use Cython here
+                XZ_t = (Xn[:,t]*Z_pos.T).T
+                n_pos_O = np.sum(pos_O_idx_n_t)
+                prod_other_k = np.zeros((self.K, n_pos_O))
+
+                prod_other_k = compute_prod_other_k.compute(XZ_t, n_pos_O, self.K)
+                
+                pOt_GIVEN_Xt[0,:,t] = np.prod(1-self.L[pos_O_idx_n_t]* \
+                             prod_other_k, axis=1)
+                pOt_GIVEN_Xt[1,:,t] = np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1) * \
+                        np.prod(1 - (1-self.L[pos_O_idx_n_t])* \
+                            (1-Z_pos)*prod_other_k, axis=1)
+
+                #(C) Now actually set the beta (finally)
+                #we want this loop to go down to zero so we compute pOt_GIVEN_Xt[0]
+                #which we need in section (2) to sample the initial X, but obviously
+                #we won't want to go down to beta[-1] so we skip this part. Just
+                # a little trick to not have to repeat that code to get pOt_GIVEN_Xt[0]
+                if t < 0:
+                    break
+                beta[:,:,t-1] = np.sum(beta[:,:,t] * Psi[:,:,:,t] * \
+                    pOt_GIVEN_Xt[:,:,t], axis=1)
+
+            #(2)sample X_new
+            #(A) Sample starting comorbidities
+            pX0_GIVEN_O0 = beta[:,:,0] * \
+                np.array([self.B0[:,self.S[n,0]],1-self.B0[:,self.S[n,0]]]) * \
+                pOt_GIVEN_Xt[:,:,0]
+            X_new[:,0,n] = self.sampleState(pX0_GIVEN_O0)
+
+            #(B) Sample rest of X's through time
+            for t in xrange(0,self.T[n]-1):
+                Xnt = X_new[:,t,n]
+                pXt_next = beta[:,:,t+1] * Psi[Xnt,:,0,t+1].T * pOt_GIVEN_Xt[:,:,t+1]
+                X_new[:,t+1,n] = self.sampleState(pXt_next)
+
+        return X_new
 
 def evaluate_symbolic_shared(S,B0,B,Z,L):
     f = function([], [S,B0,B,Z,L])
