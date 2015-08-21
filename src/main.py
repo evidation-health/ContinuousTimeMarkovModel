@@ -10,7 +10,7 @@ N = 100 # Number of patients
 M = 6 # Number of hidden states
 K = 10 # Number of comorbidities
 D = 721 # Number of claims
-Dd = 80 # Maximum number of claims that can occur at once
+Dd = 100 # Maximum number of claims that can occur at once
 min_obs = 10 # Minimum number of observed claims per patient
 max_obs = 30 # Maximum number of observed claims per patient
 
@@ -18,7 +18,10 @@ max_obs = 30 # Maximum number of observed claims per patient
 from pickle import load
 T = load(open('../data/X_layer_100_patients/T.pkl', 'rb'))
 obs_jumps = load(open('../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
-#X = load(open('../data/X_layer_100_patients/X_input.pkl', 'rb'))
+S_start = load(open('../data/X_layer_100_patients/S.pkl', 'rb'))
+X_start = load(open('../data/X_layer_100_patients/X.pkl', 'rb'))
+Z_start = load(open('../data/X_layer_100_patients/Z.pkl', 'rb'))
+L_start = load(open('../data/X_layer_100_patients/L.pkl', 'rb'))
 O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
 
 model = Model()
@@ -66,6 +69,9 @@ B0_lo = logit(np.array([
 [0.185422,0.185422,0.185422,0.185422,0.185422,0.185422],
 [0.171973,0.171973,0.171973,0.171973,0.171973,0.171973],
 [0.152277,0.152277,0.152277,0.152277,0.152277,0.152277]]))
+
+Z_lo = logit(Z_start)
+L_lo = logit(L_start)
 '''
 Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
                              [0.0000001, 1, 0.0000001, 0.0000001, 0.0000001],
@@ -75,7 +81,7 @@ Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001],
                              [0.0000001, 0.0000001, 0.0000001, 0.0000001, 0.0000001]]))
 '''
 
-start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo}
+start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
 
 with model:
     #import pdb; pdb.set_trace()
@@ -87,7 +93,7 @@ with model:
     step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
     step7 = Metropolis(vars=[Z])
     step8 = Metropolis(vars=[L])
-    trace = sample(10, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    trace = sample(1000, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

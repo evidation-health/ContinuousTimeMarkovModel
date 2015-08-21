@@ -21,7 +21,7 @@ class ForwardX(ArrayStepShared):
 
         self.pos_O_idx = np.zeros((D,max_obs,N), dtype=np.bool_)
         for n in xrange(N):
-            for t in xrange(0,self.T[n]-1):
+            for t in xrange(self.T[n]):
                 self.pos_O_idx[:,t,n] = np.in1d(np.arange(self.D), self.O[:,t,n])
 
         model = modelcontext(model)
@@ -42,9 +42,9 @@ class ForwardX(ArrayStepShared):
         self.get_params = evaluate_symbolic_shared(S, B0, B, Z, L)
 
     def sampleState(self, pX):
-        tot_prob = np.sum(pX, axis=0)
-        r = np.random.uniform(self.K) * tot_prob
-        drawn_state = np.greater_equal(r, pX[0,:])
+        pX_norm = pX/np.sum(pX, axis=0)
+        r = np.random.uniform(size=self.K)
+        drawn_state = np.greater_equal(r, pX_norm[0,:])
         return drawn_state.astype(np.int8)
 
     def astep(self, X):
@@ -62,8 +62,6 @@ class ForwardX(ArrayStepShared):
         for n in xrange(self.N):
             Xn = self.X[:,:,n]
             pos_O_idx_n = self.pos_O_idx[:,:,n]
-            pos_O_idx_n[0] = True
-            pos_O_idx_n[1] = True
             
             #(1)compute beta a.k.a. the backwards variables a.k.a. 
             #likelihood of X given the entire time series of observations
@@ -98,7 +96,7 @@ class ForwardX(ArrayStepShared):
 
                 prod_other_k = compute_prod_other_k.compute(XZ_t, n_pos_O, self.K)
                 
-                pOt_GIVEN_Xt[0,:,t] = np.prod(1-self.L[pos_O_idx_n_t]* \
+                pOt_GIVEN_Xt[0,:,t] = np.prod(1-(1-self.L[pos_O_idx_n_t])* \
                              prod_other_k, axis=1)
                 pOt_GIVEN_Xt[1,:,t] = np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1) * \
                         np.prod(1 - (1-self.L[pos_O_idx_n_t])* \
@@ -109,10 +107,14 @@ class ForwardX(ArrayStepShared):
                 #which we need in section (2) to sample the initial X, but obviously
                 #we won't want to go down to beta[-1] so we skip this part. Just
                 # a little trick to not have to repeat that code to get pOt_GIVEN_Xt[0]
-                if t < 0:
+                if t < 1:
                     break
+                #beta[:,:,t] = beta[:,:,t] / np.sum(beta[:,:,t],axis=0)
+                #pOt_GIVEN_Xt[:,:,t] = pOt_GIVEN_Xt[:,:,t] / np.sum(pOt_GIVEN_Xt[:,:,t], axis=0)
                 beta[:,:,t-1] = np.sum(beta[:,:,t] * Psi[:,:,:,t] * \
                     pOt_GIVEN_Xt[:,:,t], axis=1)
+                beta[:,:,t-1] = beta[:,:,t-1] / np.sum(beta[:,:,t-1],axis=0)
+
 
             #(2)sample X_new
             #(A) Sample starting comorbidities
