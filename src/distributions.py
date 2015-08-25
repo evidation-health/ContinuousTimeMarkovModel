@@ -155,23 +155,24 @@ class Comorbidities(Continuous):
         
         return l
 
-O_theano_type = TT.TensorType('int32', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type], otypes=[TT.dscalar])
-def logp_numpy_claims(l,N,T,Z,L,X,O):
+#O_theano_type = TT.TensorType('int32', [False, False, False])
+O_theano_type = TT.TensorType('uint8', [False, False, False])
+@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
+def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     for n in xrange(N):
         for t in range(1,T[n]):
-            O_tn_padded = O[:,t,n]
-            O_tn = O_tn_padded[O_tn_padded != -1]
+            #O_tn_padded = O[:,t,n]
+            #O_tn = O_tn_padded[O_tn_padded != -1]
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
-            l += np.log(np.prod(pO[O_tn]))
+            l += np.sum(np.log(pO[O_on[:,t,n]]))
             
-            not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
-            l += np.log(np.prod(1-pO[not_on]))
+            #not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
+            l += np.sum(np.log(1-pO[O_off[:,t,n]]))
 
-        return l
+    return l
 
 class Claims(Continuous):
-    def __init__(self, X, Z, L, T, shape, *args, **kwargs):
+    def __init__(self, X, Z, L, T, D, max_obs, O_input, shape, *args, **kwargs):
         super(Claims, self).__init__(shape = shape, dtype='int32',*args, **kwargs)
         self.X = X
         self.N = shape[2]
@@ -179,12 +180,18 @@ class Claims(Continuous):
         self.L = L
         self.T = T
 
+        self.pos_O_idx = np.zeros((D,max_obs,self.N), dtype=np.bool_)
+        for n in xrange(self.N):
+            for t in xrange(self.T[n]):
+                self.pos_O_idx[:,t,n] = np.in1d(np.arange(D), O_input[:,t,n])
+        self.neg_O_idx = np.logical_not(self.pos_O_idx)
+
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
     def logp(self, O):
         l = np.float64(0.0)
         l = logp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
-            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,O)
+            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
 
         return l

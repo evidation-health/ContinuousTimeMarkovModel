@@ -10,7 +10,7 @@ N = 100 # Number of patients
 M = 6 # Number of hidden states
 K = 10 # Number of comorbidities
 D = 721 # Number of claims
-Dd = 100 # Maximum number of claims that can occur at once
+Dd = 80 # Maximum number of claims that can occur at once
 min_obs = 10 # Minimum number of observed claims per patient
 max_obs = 30 # Maximum number of observed claims per patient
 
@@ -40,7 +40,7 @@ with model:
 
     Z = Beta('Z', alpha = 0.1, beta = 1, shape=(K,D))
     L = Beta('L', alpha = 1, beta = 1, shape=D)
-    O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, shape=(Dd,max_obs,N), observed=O)
+    O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 
 import scipy.special
 Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
@@ -92,8 +92,8 @@ with model:
     step5 = Metropolis(vars=[B])
     step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
     step7 = Metropolis(vars=[Z])
-    step8 = Metropolis(vars=[L])
-    trace = sample(1000, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    step8 = Metropolis(vars=[L],scaling=0.1)
+    trace = sample(24, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]
@@ -103,7 +103,7 @@ B0 = trace[B0]
 X = trace[X]
 Z = trace[Z]
 L = trace[L]
-np.set_printoptions(2);np.set_printoptions(linewidth=160)
+#np.set_printoptions(2);np.set_printoptions(linewidth=160)
 '''
 for i in range(1001):
     print "~~~",i ,"~~~"

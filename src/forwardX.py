@@ -95,7 +95,7 @@ class ForwardX(ArrayStepShared):
                 prod_other_k = np.zeros((self.K, n_pos_O))
 
                 prod_other_k = compute_prod_other_k.compute(XZ_t, n_pos_O, self.K)
-                
+
                 pOt_GIVEN_Xt[0,:,t] = np.prod(1-(1-self.L[pos_O_idx_n_t])* \
                              prod_other_k, axis=1)
                 pOt_GIVEN_Xt[1,:,t] = np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1) * \
@@ -114,7 +114,6 @@ class ForwardX(ArrayStepShared):
                 beta[:,:,t-1] = np.sum(beta[:,:,t] * Psi[:,:,:,t] * \
                     pOt_GIVEN_Xt[:,:,t], axis=1)
                 beta[:,:,t-1] = beta[:,:,t-1] / np.sum(beta[:,:,t-1],axis=0)
-
 
             #(2)sample X_new
             #(A) Sample starting comorbidities
