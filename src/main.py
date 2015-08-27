@@ -24,6 +24,8 @@ Z_start = load(open('../data/X_layer_100_patients/Z.pkl', 'rb'))
 L_start = load(open('../data/X_layer_100_patients/L.pkl', 'rb'))
 O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
 
+X_start[:,:,5] = 1
+
 model = Model()
 with model:
     pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), shape=M)
@@ -91,9 +93,9 @@ with model:
     step4 = Metropolis(vars=[B0])
     step5 = Metropolis(vars=[B])
     step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
-    step7 = Metropolis(vars=[Z])
+    step7 = Metropolis(vars=[Z], scaling=10)
     step8 = Metropolis(vars=[L],scaling=0.1)
-    trace = sample(24, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    trace = sample(26, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

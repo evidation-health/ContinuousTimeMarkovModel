@@ -50,7 +50,7 @@ class ForwardX(ArrayStepShared):
     def astep(self, X):
         self.S, self.B0, self.B, self.Z, self.L = self.get_params()
         self.K = self.B.shape[0]
-        self.X = np.reshape(X, (self.K,self.max_obs,self.N))
+        self.X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
 
         X_new = np.zeros((self.K,self.max_obs,self.N), dtype=np.int8) - 1
 
@@ -65,7 +65,8 @@ class ForwardX(ArrayStepShared):
             
             #(1)compute beta a.k.a. the backwards variables a.k.a. 
             #likelihood of X given the entire time series of observations
-            for t in np.arange(self.T[n]-1, -1, -1):
+            for t in np.arange(1):
+            #for t in np.arange(self.T[n]-1, -1, -1):
                 #(A) Compute Psi which is the probability of jumping to state X_{t+1}=j
                 #given you're in state X_{t}=i and S_{t}=m. Note the probability of
                 #getting the comorbidity once you already have it is one. The prob.
@@ -79,8 +80,8 @@ class ForwardX(ArrayStepShared):
                     Psi[0,0,:,t] = 1.0
                     Psi[0,1,:,t] = 0.0
                 else:
-                    Psi[0,0,:,t] = self.B[:,self.S[n,t]]
-                    Psi[0,1,:,t] = 1-self.B[:,self.S[n,t]]
+                    Psi[0,0,:,t] = 1-self.B[:,self.S[n,t]]
+                    Psi[0,1,:,t] = self.B[:,self.S[n,t]]
 
                 #(B) Compute pOt_GIVEN_Xt i.e. the likelihood of X_t,k given Ot and all
                 #other X_t,l where l =/= k
@@ -96,11 +97,53 @@ class ForwardX(ArrayStepShared):
 
                 prod_other_k = compute_prod_other_k.compute(XZ_t, n_pos_O, self.K)
 
+                ####
+                self.L[pos_O_idx_n_t] = 0.01
+                ####
+
                 pOt_GIVEN_Xt[0,:,t] = np.prod(1-(1-self.L[pos_O_idx_n_t])* \
                              prod_other_k, axis=1)
                 pOt_GIVEN_Xt[1,:,t] = np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1) * \
                         np.prod(1 - (1-self.L[pos_O_idx_n_t])* \
                             (1-Z_pos)*prod_other_k, axis=1)
+                '''
+                prob = pOt_GIVEN_Xt[:,:,t] / np.sum(pOt_GIVEN_Xt[:,:,t])
+                r = np.random.uniform(size=self.K)
+                drawn_state = np.greater_equal(r, prob[0,:])
+                Xn[:,t] = drawn_state
+                '''
+                #if n==5 and t==0:
+                #    print Xn[:,t], '\n'
+                '''
+                for k in range(self.K):
+                    X_on = np.copy(Xn[:,t])
+                    X_on[k] = 1
+                    XZ_on = (X_on*self.Z.T).T
+                    
+                    X_off = np.copy(Xn[:,t])
+                    X_off[k] = 0
+                    XZ_off = (X_off*self.Z.T).T
+
+                    pOt_GIVEN_Xt[0,k,t] = np.prod(1-(1-self.L[pos_O_idx_n_t])*np.prod(1-XZ_off[:,pos_O_idx_n_t],axis=0))*\
+                        np.prod((1-self.L[np.logical_not(pos_O_idx_n_t)])*np.prod(1-XZ_off[:,np.logical_not(pos_O_idx_n_t)],axis=0))
+                    pOt_GIVEN_Xt[1,k,t] = np.prod(1-(1-self.L[pos_O_idx_n_t])*np.prod(1-XZ_on[:,pos_O_idx_n_t],axis=0))*np.prod((1-self.L[np.logical_not(pos_O_idx_n_t)])*np.prod(1-XZ_on[:,np.logical_not(pos_O_idx_n_t)],axis=0))
+
+                    prob = pOt_GIVEN_Xt[:,k,t] / np.sum(pOt_GIVEN_Xt[:,k,t])
+                    r = np.random.uniform()
+                    drawn_state = np.greater_equal(r, prob[0])
+                    Xn[k,t] = drawn_state
+                '''
+
+
+                if n==5 and t==0:
+                    import pdb; pdb.set_trace()
+                    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nX0:\n',Xn[:,t],'\nZ_pos:\n',Z_pos,'\nXZ_t:\n',XZ_t,'\nprod_other_k:\n',prod_other_k,'\n1-L:\n',(1-self.L[pos_O_idx_n_t]),'\nunmult_off\n',1-(1-self.L[pos_O_idx_n_t])* prod_other_k,'\npOFF:\n',pOt_GIVEN_Xt[0,:,t],'\nZ_factor\n',np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1),'\nunmult_ON:\n', (1 - (1-self.L[pos_O_idx_n_t])*(1-Z_pos)*prod_other_k),'\npON\n',np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1)*np.prod(1 - (1-self.L[pos_O_idx_n_t])*(1-Z_pos)*prod_other_k, axis=1),'\nnorm:\n',pOt_GIVEN_Xt[:,:,0] / np.sum(pOt_GIVEN_Xt[:,:,0],axis=0), '\nbeta\n', beta, '\n'
+                    #print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n:L', self.L[pos_O_idx_n_t], '\nX0', Xn[:,t], '\n'
+                    #print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!nX0', Xn[:,t], '\n'
+                    #print pOt_GIVEN_Xt[:,:,0] / np.sum(pOt_GIVEN_Xt[:,:,0],axis=0), '\nZ[0:10,0]:', Z_pos[0:10,0], '\nL[0:10]', self.L[pos_O_idx_n_t][0:10],'\n', 'Z_factor:', np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1),'\n1-L:', (1-self.L[pos_O_idx_n_t])[0:10], '\n'
+                    #print '\nother_k: ', prod_other_k
+                    #print 'Z_factor:', np.prod(1-self.Z[:,np.logical_not(pos_O_idx_n_t)], axis=1)
+                    #print 'pO', pOt_GIVEN_Xt[:,:,0]
 
                 #(C) Now actually set the beta (finally)
                 #we want this loop to go down to zero so we compute pOt_GIVEN_Xt[0]
@@ -118,9 +161,16 @@ class ForwardX(ArrayStepShared):
             #(2)sample X_new
             #(A) Sample starting comorbidities
             pX0_GIVEN_O0 = beta[:,:,0] * \
-                np.array([self.B0[:,self.S[n,0]],1-self.B0[:,self.S[n,0]]]) * \
+                np.array([1-self.B0[:,self.S[n,0]],self.B0[:,self.S[n,0]]]) * \
                 pOt_GIVEN_Xt[:,:,0]
             X_new[:,0,n] = self.sampleState(pX0_GIVEN_O0)
+
+            #if n==5:
+                #print '\nbeta', beta[:,:,0]
+                #print 'pS', np.array([self.B0[:,self.S[n,0]],1-self.B0[:,self.S[n,0]]])
+            #    print 'pO', pOt_GIVEN_Xt[:,:,0]
+                #print 'p', pX0_GIVEN_O0
+                #print 'X_new', X_new[:,0,n]
 
             #(B) Sample rest of X's through time
             for t in xrange(0,self.T[n]-1):
