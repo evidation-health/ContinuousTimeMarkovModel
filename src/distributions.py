@@ -171,7 +171,15 @@ def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
             #not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
             l += np.sum(np.log(1-pO[O_off[:,t,n]]))
             #print 'Second sum:', l, np.sum(np.log(1-pO[O_off[:,t,n]]))
+    
+    #XZ = (X*Z.T[:,:,np.newaxis,np.newaxis]).T
+    #XZ = (X.T*Z.T[:,np.newaxis,np.newaxis,:])
+    #pO = 1-(1-L)*np.prod(1-XZ,axis=3).T
 
+    #on_mask = np.ones((N,30,721))
+    #off_mask = np.ones((N,30,721))
+    #l += np.sum(np.log(pO))
+    #l += np.sum(np.log(pO))
     #print '\n\n\n~~~~l:', l
     return l
 

@@ -23,9 +23,18 @@ X_start = load(open('../data/X_layer_100_patients/X.pkl', 'rb'))
 Z_start = load(open('../data/X_layer_100_patients/Z.pkl', 'rb'))
 L_start = load(open('../data/X_layer_100_patients/L.pkl', 'rb'))
 O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
+'''
 
-X_start[:,:,5] = 1
+T = load(open('../data/synthetic2000/T.pkl', 'rb'))
+obs_jumps = load(open('../data/synthetic2000/obs_jumps.pkl', 'rb'))
+S_start = load(open('../data/synthetic2000/S.pkl', 'rb'))
+X_start = load(open('../data/synthetic2000/X.pkl', 'rb'))
+Z_start = load(open('../data/synthetic2000/Z.pkl', 'rb'))
+L_start = load(open('../data/synthetic2000/L.pkl', 'rb'))
+O = load(open('../data/synthetic2000/O_input.pkl', 'rb'))
+'''
 
+#X_start[:,:,5] = 1
 model = Model()
 with model:
     pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), shape=M)
@@ -88,14 +97,14 @@ start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 
 with model:
     #import pdb; pdb.set_trace()
     step1 = Metropolis(vars=[pi], scaling=0.1)
-    step2 = Metropolis(vars=[Q], scaling=0.1)
+    step2 = Metropolis(vars=[Q], scaling=0.2)
     step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
-    step4 = Metropolis(vars=[B0])
-    step5 = Metropolis(vars=[B])
-    step6 = ForwardX(vars=[X], N=N, T=T, D=D, O=O, max_obs=max_obs)
-    step7 = Metropolis(vars=[Z], scaling=10)
+    step4 = Metropolis(vars=[B0], scaling=0.5)
+    step5 = Metropolis(vars=[B], scaling=0.5)
+    step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
+    step7 = Metropolis(vars=[Z], scaling=0.1)
     step8 = Metropolis(vars=[L],scaling=0.1)
-    trace = sample(26, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    trace = sample(10001, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]
