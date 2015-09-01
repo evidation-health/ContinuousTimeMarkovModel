@@ -115,11 +115,11 @@ class ForwardX(ArrayStepShared):
         for k in range(self.K):
             LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
             
-            for t in range(self.max_obs-1,0,-1):
-                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=1)
+            for t in range(self.max_obs-1,0,-1):                    
+                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
                 beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
                 beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
-            
+
             pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,t,:]
             X[k,0,:] = self.sampleState(pX0)
             for t in range(self.max_obs-1):

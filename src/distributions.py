@@ -159,17 +159,19 @@ class Comorbidities(Continuous):
 O_theano_type = TT.TensorType('uint8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
+    #import pdb;pdb.set_trace()
+    ll = np.array(0.0)
     for n in xrange(N):
         for t in range(1,T[n]):
             #O_tn_padded = O[:,t,n]
             #O_tn = O_tn_padded[O_tn_padded != -1]
             #print 'L before we sum:', l
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
-            l += np.sum(np.log(pO[O_on[:,t,n]]))
+            ll += np.sum(np.log(pO[O_on[:,t,n]]))
             #print 'First sum:', l, np.sum(np.log(pO[O_on[:,t,n]]))
 
             #not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
-            l += np.sum(np.log(1-pO[O_off[:,t,n]]))
+            ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
             #print 'Second sum:', l, np.sum(np.log(1-pO[O_off[:,t,n]]))
     
     #XZ = (X*Z.T[:,:,np.newaxis,np.newaxis]).T
@@ -181,7 +183,8 @@ def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     #l += np.sum(np.log(pO))
     #l += np.sum(np.log(pO))
     #print '\n\n\n~~~~l:', l
-    return l
+    #import pdb; pdb.set_trace()
+    return ll
 
 class Claims(Continuous):
     def __init__(self, X, Z, L, T, D, max_obs, O_input, shape, *args, **kwargs):
@@ -203,6 +206,7 @@ class Claims(Continuous):
 
     def logp(self, O):
         l = np.float64(0.0)
+        #import pdb; pdb.set_trace()
         l = logp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
         #import theano.printing
