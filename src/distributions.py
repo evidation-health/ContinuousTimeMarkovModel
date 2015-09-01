@@ -95,7 +95,7 @@ from theano.compile.ops import as_op
 
 X_theano_type = TT.TensorType('int8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
-def logp_numpy(l,N,B0,B,X,S,T):
+def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
 	for n in xrange(N):
 		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
 		l += np.log(pX0)
@@ -107,7 +107,7 @@ def logp_numpy(l,N,B0,B,X,S,T):
 				l += np.log(np.prod(B[turned_on, S[n,t]]))
 				l += np.log(np.prod(1-B[stayed_off, S[n,t]]))
 
-		return l
+	return l
 		#for t in range(1,T[n]):
 
 class Comorbidities(Continuous):
@@ -134,7 +134,7 @@ class Comorbidities(Continuous):
 
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
-        l = logp_numpy(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
+        l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
         for n in xrange(N):
         	#likelihood of X0
@@ -153,4 +153,63 @@ class Comorbidities(Continuous):
 	    '''
 
         
+        return l
+
+#O_theano_type = TT.TensorType('int32', [False, False, False])
+O_theano_type = TT.TensorType('uint8', [False, False, False])
+@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
+def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
+    #import pdb;pdb.set_trace()
+    ll = np.array(0.0)
+    for n in xrange(N):
+        for t in range(1,T[n]):
+            #O_tn_padded = O[:,t,n]
+            #O_tn = O_tn_padded[O_tn_padded != -1]
+            #print 'L before we sum:', l
+            pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
+            ll += np.sum(np.log(pO[O_on[:,t,n]]))
+            #print 'First sum:', l, np.sum(np.log(pO[O_on[:,t,n]]))
+
+            #not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
+            ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
+            #print 'Second sum:', l, np.sum(np.log(1-pO[O_off[:,t,n]]))
+    
+    #XZ = (X*Z.T[:,:,np.newaxis,np.newaxis]).T
+    #XZ = (X.T*Z.T[:,np.newaxis,np.newaxis,:])
+    #pO = 1-(1-L)*np.prod(1-XZ,axis=3).T
+
+    #on_mask = np.ones((N,30,721))
+    #off_mask = np.ones((N,30,721))
+    #l += np.sum(np.log(pO))
+    #l += np.sum(np.log(pO))
+    #print '\n\n\n~~~~l:', l
+    #import pdb; pdb.set_trace()
+    return ll
+
+class Claims(Continuous):
+    def __init__(self, X, Z, L, T, D, max_obs, O_input, shape, *args, **kwargs):
+        super(Claims, self).__init__(shape = shape, dtype='int32',*args, **kwargs)
+        self.X = X
+        self.N = shape[2]
+        self.Z = Z
+        self.L = L
+        self.T = T
+
+        self.pos_O_idx = np.zeros((D,max_obs,self.N), dtype=np.bool_)
+        for n in xrange(self.N):
+            for t in xrange(self.T[n]):
+                self.pos_O_idx[:,t,n] = np.in1d(np.arange(D), O_input[:,t,n])
+        self.neg_O_idx = np.logical_not(self.pos_O_idx)
+
+        O = np.ones(shape, dtype='int32')
+        self.mode = O
+
+    def logp(self, O):
+        l = np.float64(0.0)
+        #import pdb; pdb.set_trace()
+        l = logp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
+            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
+        #import theano.printing
+        #print_before_return_op=theano.printing.Print('l before return')
+        #return print_before_return_op(l)
         return l

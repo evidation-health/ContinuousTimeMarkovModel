@@ -14,7 +14,7 @@ class ForwardS(ArrayStepShared):
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
     given Q, B, and X constant.
     """
-    def __init__(self, vars, N, T, max_obs, X, observed_jumps, model=None):
+    def __init__(self, vars, N, T, max_obs, observed_jumps, model=None):
         self.N = N
         self.T = T
         self.max_obs = max_obs
@@ -35,12 +35,11 @@ class ForwardS(ArrayStepShared):
         Q = rate_matrix_one_way(lower, upper).backward(self.shared['Q_ratematrixoneway'])
         B0 = logodds.backward(self.shared['B0_logodds'])
         B = logodds.backward(self.shared['B_logodds'])
-        #when we add last layer X will be evaluated the same way as Q, B0, B
-        self.X = X
+        X = self.shared['X']
 
         #at this point parameters are still symbolic so we
         #must create get_params function to actually evaluate them
-        self.get_params = evaluate_symbolic_shared(pi, Q, B0, B)
+        self.get_params = evaluate_symbolic_shared(pi, Q, B0, B, X)
 
     def compute_pS(self,Q,M):
         pS = np.zeros((len(self.step_sizes), M, M))
@@ -111,7 +110,7 @@ class ForwardS(ArrayStepShared):
         #whenever there is an X change point. If we don't keep
         #track of how many change points are left we can't enforce
         #both of these constraints.
-        self.pi, self.Q, self.B0, self.B=self.get_params()
+        self.pi, self.Q, self.B0, self.B, self.X=self.get_params()
 
         K = self.K = self.X.shape[0]
         M = self.M = self.Q.shape[0]
@@ -155,8 +154,9 @@ class ForwardS(ArrayStepShared):
                 
                 S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
-        return S
+        #return S
+        return q0
 
-def evaluate_symbolic_shared(pi, Q, B0, B):
-    f = theano.function([], [pi, Q, B0, B])
+def evaluate_symbolic_shared(pi, Q, B0, B, X):
+    f = theano.function([], [pi, Q, B0, B, X])
     return f
