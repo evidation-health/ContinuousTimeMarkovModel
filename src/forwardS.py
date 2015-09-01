@@ -154,8 +154,8 @@ class ForwardS(ArrayStepShared):
                 
                 S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
-        #return S
-        return q0
+        return S
+        #return q0
 
 def evaluate_symbolic_shared(pi, Q, B0, B, X):
     f = theano.function([], [pi, Q, B0, B, X])

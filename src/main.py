@@ -6,18 +6,18 @@ import theano.tensor as TT
 from ContinuousTimeMarkovModel.src.forwardS import *
 from ContinuousTimeMarkovModel.src.forwardX import *
 
-N = 2 # Number of patients
-M = 4 # Number of hidden states
-K = 4 # Number of comorbidities
-D = 16 # Number of claims
-Dd = 16 # Maximum number of claims that can occur at once
+N = 100 # Number of patients
+M = 6 # Number of hidden states
+K = 10 # Number of comorbidities
+D = 721 # Number of claims
+Dd = 80 # Maximum number of claims that can occur at once
 min_obs = 10 # Minimum number of observed claims per patient
-max_obs = 10 # Maximum number of observed claims per patient
+max_obs = 30 # Maximum number of observed claims per patient
 
 # Load pre-generated data
 from pickle import load
 
-'''
+
 T = load(open('../data/X_layer_100_patients/T.pkl', 'rb'))
 obs_jumps = load(open('../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
 S_start = load(open('../data/X_layer_100_patients/S.pkl', 'rb'))
@@ -26,6 +26,7 @@ Z_start = load(open('../data/X_layer_100_patients/Z.pkl', 'rb'))
 L_start = load(open('../data/X_layer_100_patients/L.pkl', 'rb'))
 O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
 
+'''
 T = load(open('../data/synthetic2000/T.pkl', 'rb'))
 obs_jumps = load(open('../data/synthetic2000/obs_jumps.pkl', 'rb'))
 S_start = load(open('../data/synthetic2000/S.pkl', 'rb'))
@@ -33,7 +34,7 @@ X_start = load(open('../data/synthetic2000/X.pkl', 'rb'))
 Z_start = load(open('../data/synthetic2000/Z.pkl', 'rb'))
 L_start = load(open('../data/synthetic2000/L.pkl', 'rb'))
 O = load(open('../data/synthetic2000/O_input.pkl', 'rb'))
-'''
+
 
 T = load(open('../data/small_model/data/T.pkl', 'rb'))
 obs_jumps = load(open('../data/small_model/data/obs_jumps.pkl', 'rb'))
@@ -42,10 +43,10 @@ X_start = load(open('../data/small_model/data/X.pkl', 'rb'))
 Z_start = load(open('../data/small_model/data/Z.pkl', 'rb'))
 L_start = load(open('../data/small_model/data/L.pkl', 'rb'))
 O = load(open('../data/small_model/data/O_input.pkl', 'rb'))
-
+'''
 model = Model()
 with model:
-    pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5]), shape=M)
+    pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5,0.5]), shape=M)
     pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .1, -np.inf, 0))
 
     Q = DiscreteObsMJP_unif_prior('Q', M=M, lower=0.0, upper=1.0, shape=(M,M))
@@ -62,10 +63,10 @@ with model:
     O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 
 import scipy.special
-Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538]))
+Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
 
 from scipy.special import logit
-'''
+
 B_lo = logit(np.array([
 [0.000001,0.760000,0.720000,0.570000,0.700000,0.610000],
 [0.000001,0.460000,0.390000,0.220000,0.200000,0.140000],
@@ -101,6 +102,7 @@ B0_lo = logit(np.array([
 [0.240983,0.240983,0.240983,0.240983],
 [0.339714,0.339714,0.339714,0.339714],
 [0.130415,0.130415,0.130415,0.130415]]))
+'''
 
 Z_lo = logit(Z_start)
 L_lo = logit(L_start)
@@ -117,7 +119,7 @@ start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 
 
 with model:
     #import pdb; pdb.set_trace()
-    '''
+    
     step1 = Metropolis(vars=[pi], scaling=0.058, tune=False)
     step2 = Metropolis(vars=[Q], scaling=1.386, tune=False)
     step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
@@ -125,7 +127,9 @@ with model:
     step5 = Metropolis(vars=[B], scaling=0.198, tune=False)
     step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
     step7 = Metropolis(vars=[Z], scaling=0.132, tune=False)
+    #step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
     step8 = Metropolis(vars=[L],scaling=0.18641, tune=False)
+    
     '''
     step1 = Metropolis(vars=[pi], scaling=10.0, tune=False)
     step2 = Metropolis(vars=[Q], scaling=10.0, tune=False)
@@ -135,7 +139,8 @@ with model:
     step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
     step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
     step8 = Metropolis(vars=[L],scaling=100.0, tune=False)
-    trace = sample(1001, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    '''
+    trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
 
 pi = trace[pi]
 Q = trace[Q]

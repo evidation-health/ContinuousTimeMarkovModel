@@ -159,10 +159,11 @@ class Comorbidities(Continuous):
 O_theano_type = TT.TensorType('uint8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
-    #import pdb;pdb.set_trace()
     ll = np.array(0.0)
+    O_on = O_on.astype(np.bool)
+    O_off = O_off.astype(np.bool)
     for n in xrange(N):
-        for t in range(1,T[n]):
+        for t in range(0,T[n]):
             #O_tn_padded = O[:,t,n]
             #O_tn = O_tn_padded[O_tn_padded != -1]
             #print 'L before we sum:', l
