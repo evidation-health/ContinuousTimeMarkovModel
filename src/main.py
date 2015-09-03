@@ -1,7 +1,7 @@
 import numpy as np
 from theano.tensor import as_tensor_variable
 from ContinuousTimeMarkovModel.src.distributions import *
-from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta
+from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.src.forwardS import *
 from ContinuousTimeMarkovModel.src.forwardX import *
@@ -53,14 +53,16 @@ with model:
     
     S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, N=N, observed_jumps=obs_jumps, T=T, shape=(N,max_obs))
 
-    B0 = Beta('B0', alpha = 1, beta = 1, shape=(K,M))
-    B = Beta('B', alpha = 1, beta = 1, shape=(K,M))
+    B0 = Beta('B0', alpha = 1., beta = 1., shape=(K,M))
+    B = Beta('B', alpha = 1., beta = 1., shape=(K,M))
 
     X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N))
 
-    Z = Beta('Z', alpha = 0.1, beta = 1, shape=(K,D))
-    L = Beta('L', alpha = 1, beta = 1, shape=D)
+    Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+    L = Beta('L', alpha = 1., beta = 1., shape=D)
+
     O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
+#import pdb; pdb.set_trace()
 
 import scipy.special
 Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
@@ -106,6 +108,7 @@ B0_lo = logit(np.array([
 
 Z_lo = logit(Z_start)
 L_lo = logit(L_start)
+#L_lo = np.ones_like(L_start)*-4.0
 '''
 Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
                              [0.0000001, 1, 0.0000001, 0.0000001, 0.0000001],
@@ -116,33 +119,25 @@ Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001],
 '''
 
 start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
+#start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_start}
 
 with model:
     #import pdb; pdb.set_trace()
-    
-    step1 = Metropolis(vars=[pi], scaling=0.06253038, tune=False)
-    step2 = Metropolis(vars=[Q], scaling=0.31179474, tune=False)
-    step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
-    step4 = Metropolis(vars=[B0], scaling=0.20834612, tune=False)
-    step5 = Metropolis(vars=[B], scaling=0.263538, tune=False)
-    step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
-    step7 = Metropolis(vars=[Z], scaling=0.0132, tune=False)
-    #step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
-    step8 = Metropolis(vars=[L],scaling=0.0322102, tune=False)
-    
-    '''
-    step1 = Metropolis(vars=[pi], scaling=10.0, tune=False)
-    step2 = Metropolis(vars=[Q], scaling=10.0, tune=False)
-    step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
-    step4 = Metropolis(vars=[B0], scaling=10.0, tune=False)
-    step5 = Metropolis(vars=[B], scaling=10.0, tune=False)
-    step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
-    step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
-    step8 = Metropolis(vars=[L],scaling=100.0, tune=False)
-    '''
-    trace = sample(30001, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1994)
-    #trace = sample(1001, [step8], start=start, random_seed=1992)
 
+    steps = []
+    steps.append(Metropolis(vars=[pi], scaling=0.058, tune=False))
+    steps.append(Metropolis(vars=[Q], scaling=1.386, tune=False))
+    steps.append(ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps))
+    steps.append(Metropolis(vars=[B0], scaling=0.2, tune=False))
+    steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
+    steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs))
+    steps.append(Metropolis(vars=[Z], scaling=0.132, tune=False))
+    #steps.append(Metropolis(vars=[L],scaling=0.18641, tune=False))
+    steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
+    #steps.append(Slice(vars=[L],tune=True, w=0.1))
+    
+    #trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=111,progressbar=False)
+    trace = sample(1001, steps, start=start, random_seed=111,progressbar=True)
 
 pi = trace[pi]
 Q = trace[Q]
