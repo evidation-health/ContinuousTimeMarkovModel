@@ -96,18 +96,19 @@ from theano.compile.ops import as_op
 X_theano_type = TT.TensorType('int8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
+        ll = np.float64(0.0)
 	for n in xrange(N):
 		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
-		l += np.log(pX0)
+		ll += np.log(pX0)
 
 		for t in range(1,T[n]):
 			if S[n,t] != S[n,t-1]:
 				turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
 				stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
-				l += np.log(np.prod(B[turned_on, S[n,t]]))
-				l += np.log(np.prod(1-B[stayed_off, S[n,t]]))
+				ll += np.log(np.prod(B[turned_on, S[n,t]]))
+				ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
 
-	return l
+	return ll
 		#for t in range(1,T[n]):
 
 class Comorbidities(Continuous):
@@ -158,33 +159,19 @@ class Comorbidities(Continuous):
 #O_theano_type = TT.TensorType('int32', [False, False, False])
 O_theano_type = TT.TensorType('uint8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
-def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
+def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     ll = np.array(0.0)
     O_on = O_on.astype(np.bool)
     O_off = O_off.astype(np.bool)
+    #import pdb; pdb.set_trace()
     for n in xrange(N):
         for t in range(0,T[n]):
-            #O_tn_padded = O[:,t,n]
-            #O_tn = O_tn_padded[O_tn_padded != -1]
-            #print 'L before we sum:', l
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
             ll += np.sum(np.log(pO[O_on[:,t,n]]))
-            #print 'First sum:', l, np.sum(np.log(pO[O_on[:,t,n]]))
 
-            #not_on = [idx for idx in range(len(pO)) if idx not in O_tn]
             ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
-            #print 'Second sum:', l, np.sum(np.log(1-pO[O_off[:,t,n]]))
     
-    #XZ = (X*Z.T[:,:,np.newaxis,np.newaxis]).T
-    #XZ = (X.T*Z.T[:,np.newaxis,np.newaxis,:])
-    #pO = 1-(1-L)*np.prod(1-XZ,axis=3).T
-
-    #on_mask = np.ones((N,30,721))
-    #off_mask = np.ones((N,30,721))
-    #l += np.sum(np.log(pO))
-    #l += np.sum(np.log(pO))
-    #print '\n\n\n~~~~l:', l
-    #import pdb; pdb.set_trace()
+    #print "\tLmax, Lmean, logp: ", L.max(), L.mean(), ll
     return ll
 
 class Claims(Continuous):
@@ -208,8 +195,9 @@ class Claims(Continuous):
     def logp(self, O):
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
-        l = logp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
+        l = oldlogp_numpy_claims(TT.as_tensor_variable(l),TT.as_tensor_variable(self.N),
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
+        #import pdb; pdb.set_trace()
         #import theano.printing
         #print_before_return_op=theano.printing.Print('l before return')
         #return print_before_return_op(l)
