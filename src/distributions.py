@@ -159,15 +159,22 @@ class Comorbidities(Continuous):
 O_theano_type = TT.TensorType('uint8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
+    #import pdb; pdb.set_trace()
+    #print '\n SUM OF L:', sum(L)
     ll = np.array(0.0)
     O_on = O_on.astype(np.bool)
     O_off = O_off.astype(np.bool)
+    pO_0 = 0.0
     for n in xrange(N):
         for t in range(0,T[n]):
             #O_tn_padded = O[:,t,n]
             #O_tn = O_tn_padded[O_tn_padded != -1]
             #print 'L before we sum:', l
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
+            if O_on[0,t,n]:
+                pO_0 += np.log(pO[0])
+            else:
+                pO_0 += np.log(1-pO[0])
             ll += np.sum(np.log(pO[O_on[:,t,n]]))
             #print 'First sum:', l, np.sum(np.log(pO[O_on[:,t,n]]))
 
@@ -175,6 +182,7 @@ def logp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
             ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
             #print 'Second sum:', l, np.sum(np.log(1-pO[O_off[:,t,n]]))
     
+    #print 'pO_0:', pO_0
     #XZ = (X*Z.T[:,:,np.newaxis,np.newaxis]).T
     #XZ = (X.T*Z.T[:,np.newaxis,np.newaxis,:])
     #pO = 1-(1-L)*np.prod(1-XZ,axis=3).T

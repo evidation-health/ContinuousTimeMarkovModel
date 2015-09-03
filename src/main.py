@@ -59,7 +59,7 @@ with model:
     X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N))
 
     Z = Beta('Z', alpha = 0.1, beta = 1, shape=(K,D))
-    L = Beta('L', alpha = 0.1, beta = 1, shape=D)
+    L = Beta('L', alpha = 1, beta = 1, shape=D)
     O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 
 import scipy.special
@@ -120,15 +120,15 @@ start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 
 with model:
     #import pdb; pdb.set_trace()
     
-    step1 = Metropolis(vars=[pi], scaling=0.058, tune=False)
-    step2 = Metropolis(vars=[Q], scaling=1.386, tune=False)
+    step1 = Metropolis(vars=[pi], scaling=0.06253038, tune=False)
+    step2 = Metropolis(vars=[Q], scaling=0.31179474, tune=False)
     step3 = ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
-    step4 = Metropolis(vars=[B0], scaling=0.2, tune=False)
-    step5 = Metropolis(vars=[B], scaling=0.198, tune=False)
+    step4 = Metropolis(vars=[B0], scaling=0.20834612, tune=False)
+    step5 = Metropolis(vars=[B], scaling=0.263538, tune=False)
     step6 = ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
-    step7 = Metropolis(vars=[Z], scaling=0.132, tune=False)
+    step7 = Metropolis(vars=[Z], scaling=0.0132, tune=False)
     #step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
-    step8 = Metropolis(vars=[L],scaling=0.18641, tune=False)
+    step8 = Metropolis(vars=[L],scaling=0.0322102, tune=False)
     
     '''
     step1 = Metropolis(vars=[pi], scaling=10.0, tune=False)
@@ -140,7 +140,9 @@ with model:
     step7 = Metropolis(vars=[Z], scaling=10.0, tune=False)
     step8 = Metropolis(vars=[L],scaling=100.0, tune=False)
     '''
-    trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1992)
+    trace = sample(30001, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=1994)
+    #trace = sample(1001, [step8], start=start, random_seed=1992)
+
 
 pi = trace[pi]
 Q = trace[Q]

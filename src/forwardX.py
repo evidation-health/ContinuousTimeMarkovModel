@@ -109,7 +109,7 @@ class ForwardX(ArrayStepShared):
     def astep(self,X):
         S, B0, B, Z, L = self.get_params()
         X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
-        
+
         Psi = self.computePsi(S,B)
         beta = np.ones((self.max_obs,self.N,2))
         for k in range(self.K):
