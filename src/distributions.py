@@ -97,6 +97,7 @@ X_theano_type = TT.TensorType('int8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
         ll = np.float64(0.0)
+        #import pdb; pdb.set_trace()
 	for n in xrange(N):
 		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
 		ll += np.log(pX0)
@@ -167,10 +168,10 @@ def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     for n in xrange(N):
         for t in range(0,T[n]):
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
-            if O_on[0,t,n]:
-                pO_0 += np.log(pO[0])
-            else:
-                pO_0 += np.log(1-pO[0])
+#            if O_on[0,t,n]:
+#                pO_0 += np.log(pO[0])
+#            else:
+#                pO_0 += np.log(1-pO[0])
             ll += np.sum(np.log(pO[O_on[:,t,n]]))
 
             ll += np.sum(np.log(1-pO[O_off[:,t,n]]))

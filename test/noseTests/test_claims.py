@@ -54,13 +54,13 @@ class logpTests(unittest.TestCase):
    [1, 1, 2, 2],
    [0, 2, 2, 2],
    [0, 0, 0, 1]], dtype=np.int32), 'B0_logodds': np.array([[ 0.,  1.,  0.],
-   [ 0.,  0.,  1.]]), 'X': np.array([[[1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1],
+   [ 0.,  0.,  1.]]), 'X': np.array([[[0, 1, 1, 1, 1],
+    [0, 1, 1, 1, 1],
     [1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1]],
 
-   [[1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1],
+   [[1, 1, 0, 0, 1],
+    [1, 1, 0, 1, 1],
     [1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1]]], dtype=np.int8), 'L_logodds': np.array([ 0.1,  0.1,  0.1,  0.1,  0.01,  0.01,  0.01,  0.01,  0.0011,  0.0011,  0.0011,  0.0011,  0.0011,
     0.,  0.0101,  0.0101,  0.0101,  0.01,  0.01,  0.01]), 'B_logodds': np.array([[ 1.,  0.,  1.],
@@ -107,8 +107,8 @@ class logpTests(unittest.TestCase):
     def test_claims_X_same_as_old(self):
         with self.model:
             X_LL = self.X.logp(self.myTestPoint)
-            import pdb; pdb.set_trace()
-            X_LL_Correct = -6.1717008195160084
+            #import pdb; pdb.set_trace()
+            X_LL_Correct = -8.2511423611958445
             #X_LL_Correct = -13.10317262511546
             np.testing.assert_almost_equal(X_LL, X_LL_Correct, decimal = 6, err_msg="logp of X is incorrect")
 
