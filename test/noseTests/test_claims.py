@@ -144,5 +144,33 @@ class logpTests(unittest.TestCase):
             stepS_Correct = np.array([[ 2,  2,  2,  2],[ 0,  1, -1, -1],[ 2,  2,  2, -1],[ 2,  2,  2,  2],[ 2,  2, -1, -1]], dtype=np.int8)
             np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="second forwardS test off")
 
+    def test_forwardX_same_as_old(self):
+        with self.model:
+            np.random.seed(1933)
+            stepX_Test = self.forX.step(self.myTestPoint)['X']
+            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1]],
+
+       [[0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0]]], dtype=np.int8) 
+            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="first forwardX test off")
+
+            np.random.seed(19)
+            stepX_Test = self.forX.step(self.myTestPoint)['X']
+            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 1, 0]],
+
+       [[0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 1]]], dtype=np.int8)
+            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="second forwardX test off")
+
 if __name__ == '__main__':
     unittest.main()
