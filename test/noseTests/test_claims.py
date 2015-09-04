@@ -42,6 +42,10 @@ class logpTests(unittest.TestCase):
             #L = Uniform('L', lower = 0.0, upper = 1.0, shape=D)
             self.testClaims = Claims('O_obs', X=self.X, Z=self.Z, L=self.L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 
+            self.forS = ForwardS(vars=[self.S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps)
+            self.forX = ForwardX(vars=[self.X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs)
+
+        #import pdb; pdb.set_trace()
         self.myTestPoint = {'Z_logodds': np.array([[-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
     -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
     -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
@@ -65,9 +69,8 @@ class logpTests(unittest.TestCase):
     [1, 1, 1, 1, 1]]], dtype=np.int8), 'L_logodds': np.array([ 0.1,  0.1,  0.1,  0.1,  0.01,  0.01,  0.01,  0.01,  0.0011,  0.0011,  0.0011,  0.0011,  0.0011,
     0.,  0.0101,  0.0101,  0.0101,  0.01,  0.01,  0.01]), 'B_logodds': np.array([[ 1.,  0.,  1.],
    [ 0.,  1.,  0.]])}
-
-
         #import pdb; pdb.set_trace()
+
 
     def test_claims_pi_same_as_old(self):
         pi_LL = self.pi.transformed.logp(self.myTestPoint)
@@ -123,10 +126,23 @@ class logpTests(unittest.TestCase):
             defaultVal = self.testClaims.logp(self.model.test_point)
             defaultCorrect = -258.46778148992826
             claims_LL = self.testClaims.logp(self.myTestPoint)
-            claims_LL_Correct = -260.7074409023564
+            claims_LL_Correct = -252.1491658970591
 
             np.testing.assert_almost_equal(defaultVal, defaultCorrect, decimal = 6, err_msg="logp of O is incorrect for default input")
             np.testing.assert_almost_equal(claims_LL, claims_LL_Correct, decimal = 6, err_msg="logp of O is incorrect")
+
+    def test_forwardS_same_as_old(self):
+        with self.model:
+            #import pdb; pdb.set_trace()
+            np.random.seed(1933)
+            stepS_Test = self.forS.astep(self.myTestPoint)
+            stepS_Correct = np.array([[ 0,  2,  2,  2],[ 0,  0, -1, -1],[ 2,  2,  2, -1],[ 0,  2,  2,  2],[ 0,  0, -1, -1]], dtype=np.int8)
+            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="first forwardS test off")
+
+            np.random.seed(13)
+            stepS_Test = self.forS.astep(self.myTestPoint)
+            stepS_Correct = np.array([[ 2,  2,  2,  2],[ 0,  1, -1, -1],[ 2,  2,  2, -1],[ 2,  2,  2,  2],[ 2,  2, -1, -1]], dtype=np.int8)
+            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="second forwardS test off")
 
 if __name__ == '__main__':
     unittest.main()
