@@ -44,6 +44,24 @@ Z_start = load(open('../data/small_model/data/Z.pkl', 'rb'))
 L_start = load(open('../data/small_model/data/L.pkl', 'rb'))
 O = load(open('../data/small_model/data/O_input.pkl', 'rb'))
 '''
+
+#DES: nObs is total number of observations
+nObs = T.sum()
+#compress n and t indices
+# S is (nObs) vector
+S_start = np.concatenate([S_start[i,0:T[i]] for i in range(N)])
+# add 0 to start for intial steps
+obs_jumps = np.hstack([np.zeros((N,1),dtype='int8'),obs_jumps])
+obs_jumps = np.concatenate([obs_jumps[i,0:T[i]] for i in range(N)])
+# X is now (nObs,K)
+X_start = np.concatenate([X_start[:,0:T[i],i].T for i in range(N)])
+# O is now (nObs, Dd)
+# TODO: implement this with sparse matrices
+O = np.concatenate([O[:,0:T[i],i].T for i in range(N)])
+
+#import pdb; pdb.set_trace()
+
+
 model = Model()
 with model:
     pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5,0.5]), shape=M)
@@ -51,16 +69,19 @@ with model:
 
     Q = DiscreteObsMJP_unif_prior('Q', M=M, lower=0.0, upper=1.0, shape=(M,M))
     
-    S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, N=N, observed_jumps=obs_jumps, T=T, shape=(N,max_obs))
+    S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, nObs=nObs, observed_jumps=obs_jumps, T=T, shape=(nObs))
+    #S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, N=N, observed_jumps=obs_jumps, T=T, shape=(N,max_obs))
 
     B0 = Beta('B0', alpha = 1., beta = 1., shape=(K,M))
     B = Beta('B', alpha = 1., beta = 1., shape=(K,M))
 
-    X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N))
+    X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(nObs, K))
+    #X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(K, max_obs, N))
 
     Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
     L = Beta('L', alpha = 1., beta = 1., shape=D)
-    O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
+    O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, O_input=O, shape=(nObs,Dd), observed=O)
+    #O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 #import pdb; pdb.set_trace()
 
 import scipy.special
