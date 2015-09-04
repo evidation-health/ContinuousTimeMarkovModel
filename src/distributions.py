@@ -135,7 +135,7 @@ class Comorbidities(Continuous):
         B = self.B
 
         l = np.float64(0.0)
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
         for n in xrange(N):

@@ -1,4 +1,5 @@
 import unittest
+from scipy.stats import logistic
 import numpy as np
 from theano.tensor import as_tensor_variable
 from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
@@ -13,6 +14,7 @@ class logpTests(unittest.TestCase):
         #test Claims
         N = 5 # Number of patients
         M = 3 # Number of hidden states
+        self.M = M
         K = 2 # Number of comorbidities
         D = 20 # Number of claims
         Dd = 4 # Maximum number of claims that can occur at once
@@ -132,45 +134,57 @@ class logpTests(unittest.TestCase):
             np.testing.assert_almost_equal(claims_LL, claims_LL_Correct, decimal = 6, err_msg="logp of O is incorrect")
 
     def test_forwardS_same_as_old(self):
-        with self.model:
-            #import pdb; pdb.set_trace()
-            np.random.seed(1933)
-            stepS_Test = self.forS.astep(self.myTestPoint)
-            stepS_Correct = np.array([[ 0,  2,  2,  2],[ 0,  0, -1, -1],[ 2,  2,  2, -1],[ 0,  2,  2,  2],[ 0,  0, -1, -1]], dtype=np.int8)
-            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="first forwardS test off")
-
-            np.random.seed(13)
-            stepS_Test = self.forS.astep(self.myTestPoint)
-            stepS_Correct = np.array([[ 2,  2,  2,  2],[ 0,  1, -1, -1],[ 2,  2,  2, -1],[ 2,  2,  2,  2],[ 2,  2, -1, -1]], dtype=np.int8)
-            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="second forwardS test off")
+        #import pdb; pdb.set_trace()
+        Qtest = np.array([[-3.,2.,1.],[3.,-6.,3.],[1.,1.,-2.]])
+        pS_Test = self.forS.compute_pS(Qtest,self.M)
+        pS_Correct = np.array([[[ 0.36139104,  0.19639045,  0.44221851],[ 0.34890514,  0.19355079,  0.45754407],[ 0.33357958,  0.18872767,  0.47769275]]])
+        np.testing.assert_array_almost_equal(pS_Test, pS_Correct, err_msg="forwardS test off",decimal = 6)
+#        with self.model:
+#            #import pdb; pdb.set_trace()
+#            np.random.seed(1933)
+#            stepS_Test = self.forS.astep(self.myTestPoint)
+#            stepS_Correct = np.array([[ 0,  2,  2,  2],[ 0,  0, -1, -1],[ 2,  2,  2, -1],[ 0,  2,  2,  2],[ 0,  0, -1, -1]], dtype=np.int8)
+#            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="first forwardS test off")
+#
+#            np.random.seed(13)
+#            stepS_Test = self.forS.astep(self.myTestPoint)
+#            stepS_Correct = np.array([[ 2,  2,  2,  2],[ 0,  1, -1, -1],[ 2,  2,  2, -1],[ 2,  2,  2,  2],[ 2,  2, -1, -1]], dtype=np.int8)
+#            np.testing.assert_array_equal(stepS_Test, stepS_Correct, err_msg="second forwardS test off")
 
     def test_forwardX_same_as_old(self):
-        with self.model:
-            np.random.seed(1933)
-            stepX_Test = self.forX.step(self.myTestPoint)['X']
-            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1]],
-
-       [[0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0]]], dtype=np.int8) 
-            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="first forwardX test off")
-
-            np.random.seed(19)
-            stepX_Test = self.forX.step(self.myTestPoint)['X']
-            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 1, 0]],
-
-       [[0, 1, 0, 0, 0],
-        [0, 1, 0, 0, 0],
-        [0, 1, 0, 0, 0],
-        [0, 1, 0, 0, 1]]], dtype=np.int8)
-            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="second forwardX test off")
+        pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+        pX_Correct = np.array([[[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.07595709,  0.01703846],[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02448445]],
+       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445]]])
+        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
+#        with self.model:
+#            np.random.seed(1933)
+#            stepX_Test = self.forX.step(self.myTestPoint)['X']
+#            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+#        [0, 0, 0, 0, 0],
+#        [0, 0, 0, 0, 0],
+#        [0, 0, 0, 0, 1]],
+#
+#       [[0, 0, 0, 0, 0],
+#        [0, 0, 0, 0, 0],
+#        [1, 0, 0, 0, 0],
+#        [1, 0, 0, 0, 0]]], dtype=np.int8) 
+#            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="first forwardX test off")
+#
+#            np.random.seed(19)
+#            stepX_Test = self.forX.step(self.myTestPoint)['X']
+#            stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+#        [0, 0, 0, 1, 0],
+#        [0, 0, 0, 1, 0],
+#        [0, 0, 0, 1, 0]],
+#
+#       [[0, 1, 0, 0, 0],
+#        [0, 1, 0, 0, 0],
+#        [0, 1, 0, 0, 0],
+#        [0, 1, 0, 0, 1]]], dtype=np.int8)
+#            np.testing.assert_array_equal(stepX_Test, stepX_Correct, err_msg="second forwardX test off")
 
 if __name__ == '__main__':
     unittest.main()
