@@ -96,7 +96,8 @@ from theano.compile.ops import as_op
 X_theano_type = TT.TensorType('int8', [False, False, False])
 @as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
-        ll = np.float64(0.0)
+        ll = np.array(0.0)
+        #ll = np.float64(0.0)
         #import pdb; pdb.set_trace()
 	for n in xrange(N):
 		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
@@ -135,7 +136,7 @@ class Comorbidities(Continuous):
         B = self.B
 
         l = np.float64(0.0)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
         for n in xrange(N):
