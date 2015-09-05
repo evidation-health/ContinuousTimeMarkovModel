@@ -139,7 +139,6 @@ class ForwardS(ArrayStepShared):
         
         for n in xrange(self.N):
             for t in xrange(0,T[n]-1):
-                #import pdb; pdb.set_trace()
                 i = S[n,t].astype(np.int)
 
                 was_changed = X[:,t+1,n] != X[:,t,n]
@@ -149,7 +148,7 @@ class ForwardS(ArrayStepShared):
                 if np.any(was_changed):
                     pXt_GIVEN_St_St1[i] = 0.0
                 else:
-                    pXt_GIVEN_St_St1 = 1.0
+                    pXt_GIVEN_St_St1[i] = 1.0
 
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
                 
