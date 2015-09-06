@@ -115,7 +115,7 @@ from theano.compile.ops import as_op
 #@as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 @as_op(itypes=[TT.dscalar, TT.lscalar, TT.dmatrix, TT.dmatrix, TT.bmatrix, TT.ivector, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,nObs,B0,B,X,S,T):
-        logLike = np.float64(0.0)
+        logLike = np.array(0.0)
 
         #Unwrap t=0 points for B0
         zeroIndices = np.roll(T.cumsum(),1)

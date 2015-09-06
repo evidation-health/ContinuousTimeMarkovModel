@@ -1,4 +1,5 @@
 import unittest
+from scipy.stats import logistic
 import numpy as np
 from theano.tensor import as_tensor_variable
 from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
@@ -12,7 +13,9 @@ class logpTests(unittest.TestCase):
     def setUp(self):
         #test Claims
         N = 5 # Number of patients
+        self.N = N
         M = 3 # Number of hidden states
+        self.M = M
         K = 2 # Number of comorbidities
         D = 20 # Number of claims
         Dd = 4 # Maximum number of claims that can occur at once
@@ -21,6 +24,7 @@ class logpTests(unittest.TestCase):
         #obs_jumps = np.ones((N,max_obs-1))
         obs_jumps = np.array([[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1]])
         T = np.array([4,2,3,4,2])
+        self.T = T
         nObs = T.sum()
         obs_jumps = np.hstack([np.zeros((N,1),dtype='int8'),obs_jumps])
         obs_jumps = np.concatenate([obs_jumps[i,0:T[i]] for i in range(N)])
@@ -48,6 +52,8 @@ class logpTests(unittest.TestCase):
             #L = Uniform('L', lower = 0.0, upper = 1.0, shape=D)
             self.testClaims = Claims('O_obs', X=self.X, Z=self.Z, L=self.L, T=T, D=D, O_input=O, shape=(nObs,Dd), observed=O)
 
+            self.forS = ForwardS(vars=[self.S], N=N, T=T, nObs=nObs, observed_jumps=obs_jumps)
+            self.forX = ForwardX(vars=[self.X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs)
 
         self.myTestPoint = {'Z_logodds': np.array([[-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
     -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
@@ -74,6 +80,25 @@ class logpTests(unittest.TestCase):
    [ 0.,  1.,  0.]])}
         self.myTestPoint['S'] = np.concatenate([self.myTestPoint['S'][i,0:T[i]] for i in range(N)])
         self.myTestPoint['X'] = np.concatenate([self.myTestPoint['X'][:,0:T[i],i].T for i in range(N)])
+        stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1]],
+
+   [[0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0]]], dtype=np.int8) 
+
+        stepX_Correct = np.array([[[0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0]],
+
+   [[0, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 0, 1]]], dtype=np.int8)
 
         #import pdb; pdb.set_trace()
 
@@ -109,7 +134,8 @@ class logpTests(unittest.TestCase):
     def test_claims_Z_same_as_old(self):
         with self.model:
             Z_LL = self.Z.transformed.logp(self.myTestPoint)
-            Z_LL_Correct = -105.50739200312837
+            Z_LL_Correct = -330.8951778864186
+            #Z_LL_Correct = -105.50739200312837
             np.testing.assert_almost_equal(Z_LL, Z_LL_Correct, decimal = 6, err_msg="logp of Z is incorrect")
 
     def test_claims_X_same_as_old(self):
@@ -134,6 +160,25 @@ class logpTests(unittest.TestCase):
 
             np.testing.assert_almost_equal(defaultVal, defaultCorrect, decimal = 6, err_msg="logp of O is incorrect for default input")
             np.testing.assert_almost_equal(claims_LL, claims_LL_Correct, decimal = 6, err_msg="logp of O is incorrect")
+
+    def test_forwardS_same_as_old(self):
+        #import pdb; pdb.set_trace()
+        Qtest = np.array([[-3.,2.,1.],[3.,-6.,3.],[1.,1.,-2.]])
+        pS_Test = self.forS.compute_pS(Qtest,self.M)
+        pS_Correct = np.array([[[ 0.36139104,  0.19639045,  0.44221851],[ 0.34890514,  0.19355079,  0.45754407],[ 0.33357958,  0.18872767,  0.47769275]]])
+        np.testing.assert_array_almost_equal(pS_Test, pS_Correct, err_msg="forwardS test off",decimal = 6)
+
+    def test_forwardX_same_as_old(self):
+        pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+        pX_Correct = np.array([[[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.07595709,  0.01703846],[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+       [[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02448445]],
+       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445]]])
+        #import pdb; pdb.set_trace()
+        pX_Correct = np.concatenate([pX_Correct[i,0:self.T[i],:] for i in range(self.N)])
+        
+        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
 
 if __name__ == '__main__':
     unittest.main()

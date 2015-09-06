@@ -12,31 +12,39 @@ class ForwardX(ArrayStepShared):
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
     given Q, B, and X constant.
     """
-    def __init__(self, vars, N, T, K, D, Dd, O, max_obs, model=None):
+    def __init__(self, vars, N, T, K, D, Dd, O, nObs, model=None):
         self.N = N
         self.T = T
         self.K = K
         self.D = D
         self.Dd = Dd
         self.O = O
-        self.max_obs = max_obs
+        self.nObs = nObs
+        #self.max_obs = max_obs
+        self.zeroIndices = np.roll(self.T.cumsum(),1)
+        self.zeroIndices[0] = 0
 
         #self.pos_O_idx = np.zeros((D,max_obs,N), dtype=np.bool_)
         #for n in xrange(N):
         #    for t in xrange(self.T[n]):
         #        self.pos_O_idx[:,t,n] = np.in1d(np.arange(self.D), self.O[:,t,n])
 
-        self.OO = np.zeros((self.Dd,self.N,self.max_obs),dtype=np.int)
-        self.negMask = np.zeros((self.N,self.max_obs,D),dtype=np.int)
+        self.OO = np.zeros((self.nObs,self.Dd),dtype=np.int)
+        #self.OO = np.zeros((self.Dd,self.N,self.max_obs),dtype=np.int)
+        self.negMask = np.zeros((self.nObs,D),dtype=np.int)
+        #self.negMask = np.zeros((self.N,self.max_obs,D),dtype=np.int)
         for n in range(self.N):
-            for t in range(self.max_obs):
-                self.OO[:,n,t] = self.O[:,t,n]
-                self.negMask[n,t,:] = 1-np.in1d(np.arange(self.D), self.O[:,t,n]).astype(np.int)
-        self.posMask = (self.OO != -1).astype(np.int)
+            n0 = self.zeroIndices[n]
+            for t in range(self.T[n]):
+            #for t in range(self.max_obs):
+                self.OO[n0+t,:] = self.O[n0+t,:]
+                self.negMask[n0+t,:] = 1-np.in1d(np.arange(self.D), self.O[n0+t,:]).astype(np.int)
+        self.posMask = (self.OO.T != -1).astype(np.int)
+        #self.posMask = (self.OO != -1).astype(np.int)
 
-        self.betaMask = np.zeros((max_obs,N,2))
-        for n in range(self.N):
-            self.betaMask[:(T[n]-1),n,:] = 1
+        #self.betaMask = np.zeros((max_obs,N,2))
+        #for n in range(self.N):
+        #    self.betaMask[:(T[n]-1),n,:] = 1
 
         model = modelcontext(model)
         vars = inputvars(vars)
@@ -61,7 +69,8 @@ class ForwardX(ArrayStepShared):
         #drawn_state = np.greater_equal(r, pX_norm[0,:])
         
         pX_norm = (pX.T/np.sum(pX,axis=1))
-        r = np.random.uniform(size=self.N)
+        r = np.random.uniform(size=self.nObs)
+        #r = np.random.uniform(size=self.N)
         drawn_state = np.greater_equal(r, pX_norm[0,:])
         return drawn_state.astype(np.int8)
 
@@ -72,60 +81,89 @@ class ForwardX(ArrayStepShared):
         #set the prob. of staying in 0 given you're in 0 to 1.0. We then
         #change this to the appropriate B prob. for all instances where there
         #was a state change
-        Psi = np.zeros((self.K,self.N,self.max_obs,2,2))
-        Psi[:,:,:,0,0] = 1.0
-        Psi[:,:,:,1,1] = 1.0
+        Psi = np.ones((self.nObs,self.K,2,2),dtype=float)
+        #Psi = np.zeros((self.K,self.N,self.max_obs,2,2))
+        #Psi[:,:,:,0,0] = 1.0
+        #Psi[:,:,:,1,1] = 1.0
 
         #use diff to see if state increased, if so prob. are based on B. Note
         #we have to insert at the beginning of S to get a diff that is the same
         #size as Psi in the time dimension
-        state_change_idx = np.diff(np.insert(S[:,:],0,1000,axis=1),axis=1) > 0
-        Psi[:,state_change_idx,0,0] = 1-B[:,S[state_change_idx]]
-        Psi[:,state_change_idx,0,1] = B[:,S[state_change_idx]]
+        state_change_idx = np.insert(S[1:]-S[:-1],0,0)
+        state_change_idx[self.zeroIndices] = 0
+        Psi[state_change_idx.nonzero()][:,:,0,0] = (1-B[:,S[state_change_idx.nonzero()]]).T
+        Psi[state_change_idx.nonzero()][:,:,0,1] = B[:,S[state_change_idx.nonzero()]].T
+        #state_change_idx = np.diff(np.insert(S[:,:],0,1000,axis=1),axis=1) > 0
+        #Psi[:,state_change_idx,0,0] = 1-B[:,S[state_change_idx]]
+        #Psi[:,state_change_idx,0,1] = B[:,S[state_change_idx]]
 
         return Psi
 
     def computeLikelihoodOfXk(self, k, X, Z, L):
-        LikelihoodOfXk = np.zeros((self.N,self.max_obs,2))
+        LikelihoodOfXk = np.zeros((self.nObs,2))
+        #LikelihoodOfXk = np.zeros((self.N,self.max_obs,2))
         
-        Z_pos = Z.T[self.OO]
-        Z_neg = np.tile(Z[k,:],(self.N,self.max_obs,1))
-        XZ = X.T*Z_pos
-        prod_other_k = np.prod((1-XZ[:,:,:,np.arange(self.K) != k]),axis=3)
+        #import pdb; pdb.set_trace()
+        Z_pos = Z.T[self.OO.T]
+        #Z_pos = Z.T[self.OO]
+        Z_neg = np.tile(Z[k,:],(self.nObs,1))
+        #Z_neg = np.tile(Z[k,:],(self.N,self.max_obs,1))
+        XZ = X*Z_pos
+        #XZ = X.T*Z_pos
+        prod_other_k = np.prod((1-XZ[:,:,np.arange(self.K) != k]),axis=2)
+        #prod_other_k = np.prod((1-XZ[:,:,:,np.arange(self.K) != k]),axis=3)
 
-        posTerms = (1-(1-L[self.OO])*prod_other_k)
+        posTerms = (1-(1-L[self.OO.T])*prod_other_k)
+        #posTerms = (1-(1-L[self.OO])*prod_other_k)
         posTermsMasked = posTerms*self.posMask + (1-self.posMask)
-        LikelihoodOfXk[:,:,0] = np.prod(posTermsMasked,axis=0)
+        LikelihoodOfXk[:,0] = np.prod(posTermsMasked,axis=0)
+        #LikelihoodOfXk[:,:,0] = np.prod(posTermsMasked,axis=0)
 
-        posTerms = 1-(1-L[self.OO])*(1-Z_pos[:,:,:,k])*prod_other_k
+        #import pdb; pdb.set_trace()
+        posTerms = 1-(1-L[self.OO.T])*(1-Z_pos[:,:,k])*prod_other_k
+        #posTerms = 1-(1-L[self.OO])*(1-Z_pos[:,:,:,k])*prod_other_k
         posTermsMasked = posTerms*self.posMask + (1-self.posMask)
         negTerms = 1-Z_neg
         negTermsMasked = negTerms*self.negMask + (1-self.negMask)
-        LikelihoodOfXk[:,:,1] = np.prod(negTermsMasked,axis=2)*\
-            np.prod(posTermsMasked,axis=0)
+        LikelihoodOfXk[:,1] = np.prod(negTermsMasked,axis=1)*np.prod(posTermsMasked,axis=0)
+        #LikelihoodOfXk[:,:,1] = np.prod(negTermsMasked,axis=2)*\
+        #    np.prod(posTermsMasked,axis=0)
         
         return LikelihoodOfXk
 
     def astep(self,X):
         S, B0, B, Z, L = self.get_params()
-        X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
-        
+        X = np.reshape(X, (self.nObs,self.K)).astype(np.int8)
+        #X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
+
         Psi = self.computePsi(S,B)
-        beta = np.ones((self.max_obs,self.N,2))
+        beta = np.ones((self.nObs,2))
+        #beta = np.ones((self.max_obs,self.N,2))
         for k in range(self.K):
             LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
             
-            for t in range(self.max_obs-1,0,-1):                    
-                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
-                beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
-                beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
+            for n in range(self.N):
+                n0 = self.zeroIndices[n]
+                for t in range(self.T[n]-1,0,-1):
+                    beta[n0+t-1,:] = np.sum(beta[n0+t,np.newaxis,:]*Psi[n0+t,k,:,:]*LikelihoodOfXk[n0+t,np.newaxis,:],axis=1)
+                    beta[n0+t-1,:] = (beta[n0+t-1,:].T/np.sum(beta[n0+t-1,:])).T
+#            for t in range(self.max_obs-1,0,-1):                    
+#                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
+#                beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
+#                beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
 
-            pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,t,:]
-            X[k,0,:] = self.sampleState(pX0)
-            for t in range(self.max_obs-1):
-                Xtk = X[k,t,:]
-                pXt = beta[t+1,:,:]*Psi[k,np.arange(self.N),t+1,Xtk,:]*LikelihoodOfXk[:,t+1,:]
-                X[k,t+1,:] = self.sampleState(pXt)
+            #TODO: double check this zeroIndices+1 here
+            pX0 = beta[self.zeroIndices]*np.array([1-B0[k,S[self.zeroIndices]],B0[k,S[self.zeroIndices]]]).T*LikelihoodOfXk[self.zeroIndices+1,:]
+            #DES: What is the t variable doing here??
+            #pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,t,:]
+            pXt = beta[:,:]*Psi[np.arange(self.nObs),k,X[:,k],:]*LikelihoodOfXk[:,:]
+            pXt[self.zeroIndices] = pX0
+            X[:,k] = self.sampleState(pXt)
+            #X[self.zeroIndices,k] = self.sampleState(pX0)
+#            for t in range(self.max_obs-1):
+#                Xtk = X[k,t,:]
+#                pXt = beta[t+1,:,:]*Psi[k,np.arange(self.N),t+1,Xtk,:]*LikelihoodOfXk[:,t+1,:]
+#                X[k,t+1,:] = self.sampleState(pXt)
 
         return X
 

@@ -146,11 +146,12 @@ with model:
 
     steps = []
     steps.append(Metropolis(vars=[pi], scaling=0.058, tune=False))
-    steps.append(Metropolis(vars=[Q], scaling=1.386, tune=False))
-    steps.append(ForwardS(vars=[S], N=N, T=T, max_obs=max_obs, observed_jumps=obs_jumps))
+    steps.append(Metropolis(vars=[Q], scaling=0.4, tune=False))
+    #steps.append(Metropolis(vars=[Q], scaling=1.386, tune=False))
+    steps.append(ForwardS(vars=[S], nObs=nObs, T=T, N=N, observed_jumps=obs_jumps))
     steps.append(Metropolis(vars=[B0], scaling=0.2, tune=False))
     steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
-    steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs))
+    steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs))
     steps.append(Metropolis(vars=[Z], scaling=0.132, tune=False))
     #steps.append(Metropolis(vars=[L],scaling=0.18641, tune=False))
     steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
@@ -177,12 +178,12 @@ with model:
     step8 = Metropolis(vars=[L],scaling=100.0, tune=False)
     '''
     #trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=111,progressbar=False)
-    trace = sample(1001, steps, start=start, random_seed=111,progressbar=True)
+    trace = sample(301, steps, start=start, random_seed=111,progressbar=True)
 
 pi = trace[pi]
 Q = trace[Q]
 S = trace[S]
-S0 = S[:,:,0]
+S0 = S[:,0]
 B0 = trace[B0]
 B = trace[B]
 X = trace[X]
