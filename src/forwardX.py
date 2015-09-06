@@ -7,6 +7,8 @@ from theano import function
 
 #import ContinuousTimeMarkovModel.src.cython.forwardX_cython as cy
 
+from profilingUtil import timefunc
+
 class ForwardX(ArrayStepShared):
     """
     Use forward sampling (equation 10) to sample a realization of S_t, t=1,...,T_n
@@ -106,6 +108,7 @@ class ForwardX(ArrayStepShared):
         
         return LikelihoodOfXk
 
+    #@timefunc
     def astep(self,X):
         S, B0, B, Z, L = self.get_params()
         X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)

@@ -8,6 +8,8 @@ from theano.compile.sharedvalue import shared
 import theano.tensor.slinalg
 from theano.tensor.extra_ops import bincount
 
+from profilingUtil import timefunc
+
 class DiscreteObsMJP_unif_prior(Continuous):
 
     def __init__(self, M, lower=0, upper=100, *args, **kwargs):
@@ -65,6 +67,7 @@ class DiscreteObsMJP(Continuous):
         
         return C
         
+    #@timefunc
     def logp(self, S):
     	l = 0.0
 
@@ -126,6 +129,7 @@ class Comorbidities(Continuous):
         self.B = B
         self.mode = X
 
+    @timefunc
     def logp(self, X):
         K = self.K
         max_obs = self.max_obs
@@ -197,6 +201,7 @@ class Claims(Continuous):
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
+    @timefunc
     def logp(self, O):
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
