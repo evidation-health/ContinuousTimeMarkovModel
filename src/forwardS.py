@@ -72,10 +72,13 @@ class ForwardS(ArrayStepShared):
             for t in np.arange(T[n]-1, 0, -1):
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t-1])[0][0]
                 was_changed = X[:,t,n] != X[:,t-1,n]
-                pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+                not_on_yet = np.logical_not(X[:,t-1,n].astype(np.bool))
+                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed)&not_on_yet,:], axis=0)
+                #pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
                 np.fill_diagonal(pXt_GIVEN_St_St1,np.float(not np.any(was_changed)))
-                beta[:,t-1,n] = np.sum(beta[:,t,n]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
+                beta[:,t-1,n] = np.sum(beta[:,t,n]*(pS[tau_ind,:,:]*pXt_GIVEN_St_St1), axis=1)
+                #beta[:,t-1,n] = np.sum(beta[:,t,n]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
 
         return beta
     
@@ -147,12 +150,14 @@ class ForwardS(ArrayStepShared):
                 i = S[n,t].astype(np.int)
 
                 was_changed = X[:,t+1,n] != X[:,t,n]
+                not_on_yet = np.logical_not(X[:,t,n].astype(np.bool))
 
-                pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+                #pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed) & not_on_yet,:], axis=0)
                 if np.any(was_changed):
                     pXt_GIVEN_St_St1[i] = 0.0
                 else:
-                    pXt_GIVEN_St_St1 = 1.0
+                    pXt_GIVEN_St_St1[i] = 1.0
 
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
                 
