@@ -6,6 +6,7 @@ from pymc3.distributions.transforms import logodds
 from theano import function
 
 #import ContinuousTimeMarkovModel.src.cython.forwardX_cython as cy
+import profilingUtil
 
 class ForwardX(ArrayStepShared):
     """
@@ -39,8 +40,7 @@ class ForwardX(ArrayStepShared):
             #for t in range(self.max_obs):
                 self.OO[n0+t,:] = self.O[n0+t,:]
                 self.negMask[n0+t,:] = 1-np.in1d(np.arange(self.D), self.O[n0+t,:]).astype(np.int)
-        self.posMask = (self.OO.T != -1).astype(np.int)
-        #self.posMask = (self.OO != -1).astype(np.int)
+        self.posMask = (self.OO != -1).astype(np.int)
 
         #self.betaMask = np.zeros((max_obs,N,2))
         #for n in range(self.N):
@@ -68,10 +68,12 @@ class ForwardX(ArrayStepShared):
         #r = np.random.uniform(size=self.K)
         #drawn_state = np.greater_equal(r, pX_norm[0,:])
         
-        pX_norm = (pX.T/np.sum(pX,axis=1))
-        r = np.random.uniform(size=self.nObs)
+        pX_norm = (pX.T/np.sum(pX.T,axis=0)).T
+        #pX_norm = (pX.T/np.sum(pX,axis=1))
+        r = np.random.uniform(size=(self.nObs,self.K))
         #r = np.random.uniform(size=self.N)
-        drawn_state = np.greater_equal(r, pX_norm[0,:])
+        drawn_state = np.greater_equal(r, pX_norm[:,:,0])
+        #drawn_state = np.greater_equal(r, pX_norm[0,:])
         return drawn_state.astype(np.int8)
 
     def computePsi(self, S, B):
@@ -99,71 +101,125 @@ class ForwardX(ArrayStepShared):
 
         return Psi
 
+    #@do_profile()
+    def computeLikelihoodOfX(self,X,Z,L):
+        LikelihoodOfX = np.zeros((self.nObs,self.K,2))
+        O_on = np.zeros((self.nObs,self.D+1), dtype='int8')
+        O_on[np.arange(self.nObs),self.O.T] = 1
+        O_on = O_on[:,:-1]
+        Z_on = Z.T[self.OO.T]
+        XZprod_on =  (1. - X.reshape(1,self.nObs,self.K)*(Z_on))
+        otherKProduct_on = np.zeros((self.Dd,self.nObs,self.K))
+        for k in xrange(self.K):
+            otherKProduct_on[:,:,k] = XZprod_on[:,:,:k].prod(axis=2)*XZprod_on[:,:,k+1:].prod(axis=2)
+        probGivenOnX0 = (1-L[self.OO.T])[:,:,np.newaxis]*otherKProduct_on
+        probGivenOnX1 = probGivenOnX0.copy()
+        probGivenOnX0 = (1.-probGivenOnX0).T*self.posMask + (1-self.posMask)
+        LikelihoodOfX[:,:,0] = (probGivenOnX0).prod(axis=2).T
+        probGivenOnX1 = probGivenOnX1*(1.-Z_on)
+        probGivenOnX1 = (1.-probGivenOnX1).T*self.posMask + (1-self.posMask)
+        probGivenOffX1 = np.tile((1.-Z.T).reshape(self.D,1,self.K),(1,self.nObs,1))
+        # Divide by Z_on values so assumes none are 0 at the moment!
+        #TODO: Get this working for Z having 0 values
+        #import pdb; pdb.set_trace()
+        totalZ = (1.-Z).prod(axis=1)
+        Z_on_mask = (1.-Z_on).T*self.posMask + (1-self.posMask)
+        probGivenOffX1 = totalZ/(Z_on_mask).prod(axis=2).T
+        
+        #probGivenOffX1 = probGivenOffX1.T*self.negMask + (1-self.negMask)
+        LikelihoodOfX[:,:,1] = (probGivenOnX1).prod(axis=2).T*probGivenOffX1
+#        XZprod =  (1. - X.reshape(self.nObs,1,self.K)*(Z.T).reshape(1,self.D,self.K))
+#        otherKProduct = np.zeros((self.nObs,self.D,self.K))
+#        for k in xrange(self.K):
+#            otherKProduct[:,:,k] = XZprod[:,:,:k].prod(axis=2)*XZprod[:,:,k+1:].prod(axis=2)
+#        O_on = O_on.astype(np.bool)
+#        probGivenOnX0 = (1-L.reshape(1,self.D,1))*otherKProduct
+# Can drop probGivenOffX0 since it can be divided out of probGivenOffX1
+#        probGivenOnX1 = probGivenOnX0.copy()
+#        probGivenOnX0[~O_on] = 0.
+#        LikelihoodOfX[:,:,0] = (1.-probGivenOnX0).prod(axis=1)
+#        probGivenOnX1 = probGivenOnX1*(1.-Z.T).reshape(1,self.D,self.K)
+#        probGivenOffX1 = np.tile((1.-Z.T).reshape(1,self.D,self.K),(self.nObs,1,1))
+#        probGivenOnX1[~O_on] = 0.
+#        probGivenOffX1[O_on] = 1.
+#        LikelihoodOfX[:,:,1] = (1.-probGivenOnX1).prod(axis=1)*probGivenOffX1.prod(axis=1)
+#        #LikelihoodOfX[:,:,1] = (1.-probGivenOnX1).prod(axis=1)*probGivenOffX1.prod(axis=1)
+        return LikelihoodOfX
+
     def computeLikelihoodOfXk(self, k, X, Z, L):
         LikelihoodOfXk = np.zeros((self.nObs,2))
-        #LikelihoodOfXk = np.zeros((self.N,self.max_obs,2))
         
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         Z_pos = Z.T[self.OO.T]
-        #Z_pos = Z.T[self.OO]
         Z_neg = np.tile(Z[k,:],(self.nObs,1))
-        #Z_neg = np.tile(Z[k,:],(self.N,self.max_obs,1))
         XZ = X*Z_pos
-        #XZ = X.T*Z_pos
         prod_other_k = np.prod((1-XZ[:,:,np.arange(self.K) != k]),axis=2)
-        #prod_other_k = np.prod((1-XZ[:,:,:,np.arange(self.K) != k]),axis=3)
 
         posTerms = (1-(1-L[self.OO.T])*prod_other_k)
-        #posTerms = (1-(1-L[self.OO])*prod_other_k)
-        posTermsMasked = posTerms*self.posMask + (1-self.posMask)
+        posTermsMasked = posTerms*self.posMask.T + (1-self.posMask.T)
         LikelihoodOfXk[:,0] = np.prod(posTermsMasked,axis=0)
-        #LikelihoodOfXk[:,:,0] = np.prod(posTermsMasked,axis=0)
 
-        #import pdb; pdb.set_trace()
         posTerms = 1-(1-L[self.OO.T])*(1-Z_pos[:,:,k])*prod_other_k
-        #posTerms = 1-(1-L[self.OO])*(1-Z_pos[:,:,:,k])*prod_other_k
-        posTermsMasked = posTerms*self.posMask + (1-self.posMask)
+        posTermsMasked = posTerms*self.posMask.T + (1-self.posMask.T)
         negTerms = 1-Z_neg
         negTermsMasked = negTerms*self.negMask + (1-self.negMask)
         LikelihoodOfXk[:,1] = np.prod(negTermsMasked,axis=1)*np.prod(posTermsMasked,axis=0)
-        #LikelihoodOfXk[:,:,1] = np.prod(negTermsMasked,axis=2)*\
-        #    np.prod(posTermsMasked,axis=0)
         
         return LikelihoodOfXk
 
+    #@profilingUtil.timefunc
     def astep(self,X):
+        #timer = profilingUtil.timewith('forwardX step')
         S, B0, B, Z, L = self.get_params()
         X = np.reshape(X, (self.nObs,self.K)).astype(np.int8)
         #X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
 
         Psi = self.computePsi(S,B)
-        beta = np.ones((self.nObs,2))
-        #beta = np.ones((self.max_obs,self.N,2))
-        for k in range(self.K):
-            LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
-            
-            for n in range(self.N):
-                n0 = self.zeroIndices[n]
-                for t in range(self.T[n]-1,0,-1):
-                    beta[n0+t-1,:] = np.sum(beta[n0+t,np.newaxis,:]*Psi[n0+t,k,:,:]*LikelihoodOfXk[n0+t,np.newaxis,:],axis=1)
-                    beta[n0+t-1,:] = (beta[n0+t-1,:].T/np.sum(beta[n0+t-1,:])).T
-#            for t in range(self.max_obs-1,0,-1):                    
-#                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
-#                beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
-#                beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
+        #timer.checkpoint('Computed Psi')
+        beta = np.ones((self.nObs,self.K,2))
+        LikelihoodOfX = self.computeLikelihoodOfX(X,Z,L)
+        #import pdb; pdb.set_trace()
+        #timer.checkpoint('Computed LikelihoodX')
+        for n in range(self.N):
+            n0 = self.zeroIndices[n]
+            for t in range(self.T[n]-1,0,-1):
+                beta[n0+t-1,:,:] = np.sum(beta[n0+t,:,:,np.newaxis]*Psi[n0+t,:,:,:]*LikelihoodOfX[n0+t,:,:,np.newaxis],axis=1)
+                beta[n0+t-1,:,:] = (beta[n0+t-1,:,:].T/np.sum(beta[n0+t-1,:,:],axis=1)).T
 
-            #TODO: double check this zeroIndices+1 here
-            pX0 = beta[self.zeroIndices]*np.array([1-B0[k,S[self.zeroIndices]],B0[k,S[self.zeroIndices]]]).T*LikelihoodOfXk[self.zeroIndices+1,:]
-            #DES: What is the t variable doing here??
-            #pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,t,:]
-            pXt = beta[:,:]*Psi[np.arange(self.nObs),k,X[:,k],:]*LikelihoodOfXk[:,:]
-            pXt[self.zeroIndices] = pX0
-            X[:,k] = self.sampleState(pXt)
-            #X[self.zeroIndices,k] = self.sampleState(pX0)
-#            for t in range(self.max_obs-1):
-#                Xtk = X[k,t,:]
-#                pXt = beta[t+1,:,:]*Psi[k,np.arange(self.N),t+1,Xtk,:]*LikelihoodOfXk[:,t+1,:]
-#                X[k,t+1,:] = self.sampleState(pXt)
+        #import pdb; pdb.set_trace()
+        #TODO: double check this zeroIndices+1 here
+        pX0 = beta[self.zeroIndices]*np.array([1-B0[:,S[self.zeroIndices]],B0[:,S[self.zeroIndices]]]).T*LikelihoodOfX[self.zeroIndices+1,:,:]
+        pXt = beta[:,:,:]*Psi[np.tile(np.arange(self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs,1)),X[:,:],:]*LikelihoodOfX[:,:,:]
+        #pXt = beta[:,:,:]*Psi[np.arange(self.nObs),:,X[:,:],:]*LikelihoodOfX[:,:,:]
+        pXt[self.zeroIndices] = pX0
+        X[:,:] = self.sampleState(pXt)
+#        for k in range(self.K):
+#            LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
+#            timer.checkpoint('after computeLikelihoodOfXk')
+#            
+#            for n in range(self.N):
+#                n0 = self.zeroIndices[n]
+#                for t in range(self.T[n]-1,0,-1):
+#                    beta[n0+t-1,:] = np.sum(beta[n0+t,np.newaxis,:]*Psi[n0+t,k,:,:]*LikelihoodOfXk[n0+t,np.newaxis,:],axis=1)
+#                    beta[n0+t-1,:] = (beta[n0+t-1,:].T/np.sum(beta[n0+t-1,:])).T
+##            for t in range(self.max_obs-1,0,-1):                    
+##                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
+##                beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
+##                beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
+#            timer.checkpoint('after nt loops')
+#
+#            #TODO: double check this zeroIndices+1 here
+#            pX0 = beta[self.zeroIndices]*np.array([1-B0[k,S[self.zeroIndices]],B0[k,S[self.zeroIndices]]]).T*LikelihoodOfXk[self.zeroIndices+1,:]
+#            #DES: What is the t variable doing here??
+#            #pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,t,:]
+#            pXt = beta[:,:]*Psi[np.arange(self.nObs),k,X[:,k],:]*LikelihoodOfXk[:,:]
+#            pXt[self.zeroIndices] = pX0
+#            X[:,k] = self.sampleState(pXt)
+#            #X[self.zeroIndices,k] = self.sampleState(pX0)
+##            for t in range(self.max_obs-1):
+##                Xtk = X[k,t,:]
+##                pXt = beta[t+1,:,:]*Psi[k,np.arange(self.N),t+1,Xtk,:]*LikelihoodOfXk[:,t+1,:]
+##                X[k,t+1,:] = self.sampleState(pXt)
 
         return X
 

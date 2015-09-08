@@ -8,6 +8,8 @@ from theano.compile.sharedvalue import shared
 import theano.tensor.slinalg
 from theano.tensor.extra_ops import bincount
 
+import profilingUtil
+
 class DiscreteObsMJP_unif_prior(Continuous):
 
     def __init__(self, M, lower=0, upper=100, *args, **kwargs):
@@ -78,6 +80,7 @@ class DiscreteObsMJP(Continuous):
         
         return C
         
+    #@profilingUtil.timefunc
     def logp(self, S):
     	l = 0.0
 
@@ -165,6 +168,7 @@ class Comorbidities(Continuous):
         self.B = B
         self.mode = X
 
+    #@profilingUtil.timefunc
     def logp(self, X):
         #K = self.K
         #nObs = self.nObs
@@ -200,35 +204,23 @@ class Comorbidities(Continuous):
         return l
 
 #O_theano_type = TT.TensorType('int32', [False, False, False])
-#O_theano_type = TT.TensorType('uint8', [False, False, False])
 #@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
-@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.bmatrix], otypes=[TT.dscalar])
-def oldlogp_numpy_claims(l,nObs,T,Z,L,X,O_on):
-    logLike = np.array(0.0)
+#@do_profile()
+#@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.bmatrix], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.wmatrix, TT.bmatrix], otypes=[TT.dscalar])
+def logp_numpy_claims(l,nObs,T,Z,L,X,O,posMask):
+    #logLike = np.array(0.0)
 
     #import pdb; pdb.set_trace()
 
-    O_on = O_on.astype(np.bool)
-    # tempVec is 1-X*Z
-    tempVec =  (1. - X.reshape(nObs,1,X.shape[1])*(Z.T).reshape(1,Z.shape[1],Z.shape[0]))
-    # Add the contribution from O = 1
-    logLike += np.log(1-(1-np.tile(L,(1995,1))[O_on])*tempVec[O_on].prod(axis=1)).sum()
+    Z_on = Z.T[O.T]
+    denomLikelihood = (1.-L[O.T])*(1. - X[np.newaxis,:,:]*(Z_on)).prod(axis=2)
+    numLikelihood = (1.-denomLikelihood.T)*posMask + (1.-posMask)
+    denomLikelihood = denomLikelihood.T*posMask + (1.-posMask)
+    totalTerm = np.log(1.-L).sum()*nObs + np.log(1.-X[:,np.newaxis,:]*Z.T[np.newaxis,:,:]).sum()
 
-    # Add the contribution from O = 0
-    logLike += np.log((1-np.tile(L,(1995,1))[~O_on])*tempVec[~O_on].prod(axis=1)).sum()
+    logLike = np.array(np.log(numLikelihood).sum() - np.log(denomLikelihood).sum() + totalTerm)
 
-
-#    O_on = O_on.astype(np.bool)
-#    O_off = O_off.astype(np.bool)
-#    #import pdb; pdb.set_trace()
-#    for n in xrange(N):
-#        for t in range(0,T[n]):
-#            pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
-#            logLike += np.sum(np.log(pO[O_on[:,t,n]]))
-#
-#            logLike += np.sum(np.log(1-pO[O_off[:,t,n]]))
-    
-    #print "\tLmax, Lmean, logp: ", L.max(), L.mean(), logLike
     return logLike
 
 class Claims(Continuous):
@@ -248,6 +240,9 @@ class Claims(Continuous):
         self.pos_O_idx = np.zeros((self.nObs,D+1), dtype='int8')
         self.pos_O_idx[np.arange(self.nObs),O_input.T] = 1
         self.pos_O_idx = self.pos_O_idx[:,:-1]
+
+        self.O = O_input.astype('int16')
+        self.posMask = (O_input != -1).astype('int8')
         
 #        for n in xrange(self.N):
 #            for t in xrange(self.T[n]):
@@ -257,12 +252,49 @@ class Claims(Continuous):
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
+    #@profilingUtil.timefunc
     def logp(self, O):
-        logLike = np.float64(0.0)
+        logLike = np.array(0.0)
         #import pdb; pdb.set_trace()
-        logLike = oldlogp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
-            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
+        logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.O),TT.as_tensor_variable(self.posMask))
+        #logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+        #    TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
 #        logLike = oldlogp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.N),
 #            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
         #import pdb; pdb.set_trace()
         return logLike
+
+
+    def oldlogp(self, O):
+        logLike = np.float64(0.0)
+        import pdb; pdb.set_trace()
+        logLike = old_logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
+        return logLike
+    
+@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.bmatrix], otypes=[TT.dscalar])
+def old_logp_numpy_claims(l,nObs,T,Z,L,X,O_on):
+
+    logLike = np.array(0.0)
+
+    O_on = O_on.astype(np.bool)
+    # tempVec is 1-X*Z
+    tempVec =  (1. - X.reshape(nObs,1,X.shape[1])*(Z.T).reshape(1,Z.shape[1],Z.shape[0]))
+    # Add the contribution from O = 1
+    logLike += np.log(1-(1-np.tile(L,(nObs,1))[O_on])*tempVec[O_on].prod(axis=1)).sum()
+
+    # Add the contribution from O = 0
+    logLike += np.log((1-np.tile(L,(nObs,1))[~O_on])*tempVec[~O_on].prod(axis=1)).sum()
+
+#    O_on = O_on.astype(np.bool)
+#    O_off = O_off.astype(np.bool)
+#    #import pdb; pdb.set_trace()
+#    for n in xrange(N):
+#        for t in range(0,T[n]):
+#            pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
+#            logLike += np.sum(np.log(pO[O_on[:,t,n]]))
+#
+#            logLike += np.sum(np.log(1-pO[O_off[:,t,n]]))
+    
+    return logLike

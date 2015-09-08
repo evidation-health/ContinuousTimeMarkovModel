@@ -168,17 +168,17 @@ class logpTests(unittest.TestCase):
         pS_Correct = np.array([[[ 0.36139104,  0.19639045,  0.44221851],[ 0.34890514,  0.19355079,  0.45754407],[ 0.33357958,  0.18872767,  0.47769275]]])
         np.testing.assert_array_almost_equal(pS_Test, pS_Correct, err_msg="forwardS test off",decimal = 6)
 
-    def test_forwardX_same_as_old(self):
-        pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
-        pX_Correct = np.array([[[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-       [[ 0.07595709,  0.01703846],[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-       [[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02448445]],
-       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445]]])
-        #import pdb; pdb.set_trace()
-        pX_Correct = np.concatenate([pX_Correct[i,0:self.T[i],:] for i in range(self.N)])
-        
-        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
+#    def test_forwardX_same_as_old(self):
+#        pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+#        pX_Correct = np.array([[[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+#       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+#       [[ 0.07595709,  0.01703846],[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
+#       [[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02448445]],
+#       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445]]])
+#        #import pdb; pdb.set_trace()
+#        pX_Correct = np.concatenate([pX_Correct[i,0:self.T[i],:] for i in range(self.N)])
+#        
+#        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
 
 if __name__ == '__main__':
     unittest.main()

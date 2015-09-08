@@ -7,7 +7,7 @@ from scipy import linalg
 
 import theano
 
-import time
+import profilingUtil
 
 class ForwardS(ArrayStepShared):
     """
@@ -123,6 +123,7 @@ class ForwardS(ArrayStepShared):
             pS0[n,:] = pi * pX_GIVEN_S0 * pX0
         return pS0
 
+    #@profilingUtil.timefunc
     def astep(self, q0):
         #X change points are the points in time where at least 
         #one comorbidity gets turned on. it's important to track
