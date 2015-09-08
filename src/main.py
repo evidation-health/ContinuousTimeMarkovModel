@@ -139,7 +139,7 @@ with model:
     
     #import pdb; pdb.set_trace()
     #trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=111,progressbar=False)
-    trace = sample(101, steps, start=start, random_seed=222,progressbar=False)
+    trace = sample(301, steps, start=start, random_seed=111,progressbar=True)
 
 pi = trace[pi]
 Q = trace[Q]

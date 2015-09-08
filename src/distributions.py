@@ -129,7 +129,7 @@ class Comorbidities(Continuous):
         self.B = B
         self.mode = X
 
-    @timefunc
+    #@timefunc
     def logp(self, X):
         K = self.K
         max_obs = self.max_obs
@@ -201,7 +201,7 @@ class Claims(Continuous):
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
-    @timefunc
+    #@timefunc
     def logp(self, O):
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
