@@ -134,8 +134,8 @@ class logpTests(unittest.TestCase):
     def test_claims_Z_same_as_old(self):
         with self.model:
             Z_LL = self.Z.transformed.logp(self.myTestPoint)
-            Z_LL_Correct = -330.8951778864186
-            #Z_LL_Correct = -105.50739200312837
+            #Z_LL_Correct = -330.8951778864186
+            Z_LL_Correct = -105.50739200312837
             np.testing.assert_almost_equal(Z_LL, Z_LL_Correct, decimal = 6, err_msg="logp of Z is incorrect")
 
     def test_claims_X_same_as_old(self):
@@ -157,6 +157,7 @@ class logpTests(unittest.TestCase):
             defaultCorrect = -258.46778148992826
             claims_LL = self.testClaims.logp(self.myTestPoint)
             claims_LL_Correct = -252.1491658970591
+            #claims_LL_Correct = -260.7074409023564
 
             np.testing.assert_almost_equal(defaultVal, defaultCorrect, decimal = 6, err_msg="logp of O is incorrect for default input")
             np.testing.assert_almost_equal(claims_LL, claims_LL_Correct, decimal = 6, err_msg="logp of O is incorrect")

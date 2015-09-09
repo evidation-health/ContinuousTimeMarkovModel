@@ -89,6 +89,7 @@ class DiscreteObsMJP(Continuous):
         #Get time 0 states
         zeroIndices = np.roll(self.T.cumsum(),1)
         zeroIndices[0] = 0;
+        zeroIndices = zeroIndices.astype('int32')
         l += TT.sum(TT.log(pi[S[zeroIndices]]))
         #l += TT.sum(TT.log(pi[S[:,0]]))
 
@@ -123,20 +124,25 @@ def logp_numpy_comorbidities(l,nObs,B0,B,X,S,T):
         #Unwrap t=0 points for B0
         zeroIndices = np.roll(T.cumsum(),1)
         zeroIndices[0] = 0;
+        zeroIndices = zeroIndices.astype('int32')
 
         #import pdb; pdb.set_trace()
 
         #Likelihood from B0 for X=1 and X=0 cases
         logLike += (X[zeroIndices]*np.log(B0[:,S[zeroIndices]]).T).sum()
-        logLike += ((1-X[zeroIndices])*np.log(1-B0[:,S[zeroIndices]]).T).sum()
+        #logLike += (X[zeroIndices]*np.log(B0[:,S[zeroIndices]]).T).sum()
+        logLike += ((1-X[zeroIndices])*np.log(1.-B0[:,S[zeroIndices]]).T).sum()
 
         stateChange = S[1:]-S[:-1]
         # Don't consider t=0 points
         stateChange[zeroIndices[1:]-1] = 0
         changed = np.nonzero(stateChange)[0]+1
 
+        #import pdb; pdb.set_trace()
+
         # A change can only happen from 0 to 1 given our assumptions
         logLike += ((X[changed]-X[changed-1])*np.log(B[:,S[changed]]).T).sum()
+        logLike += (((1-X[changed])*(1-X[changed-1]))*np.log(1.-B[:,S[changed]]).T).sum()
         #logLike += (X[changed]*np.log(B[:,S[changed]]).T).sum()
         
 
@@ -253,22 +259,19 @@ class Claims(Continuous):
         self.mode = O
 
     #@profilingUtil.timefunc
-    def logp(self, O):
+    def newlogp(self, O):
         logLike = np.array(0.0)
         #import pdb; pdb.set_trace()
         logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.O),TT.as_tensor_variable(self.posMask))
         #logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
         #    TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
-#        logLike = oldlogp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.N),
-#            TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx),TT.as_tensor_variable(self.neg_O_idx))
-        #import pdb; pdb.set_trace()
         return logLike
 
 
-    def oldlogp(self, O):
-        logLike = np.float64(0.0)
-        import pdb; pdb.set_trace()
+    def logp(self, O):
+        logLike = np.array(0.0)
+        #import pdb; pdb.set_trace()
         logLike = old_logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
         return logLike
