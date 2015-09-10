@@ -8,6 +8,7 @@ from ContinuousTimeMarkovModel.src.distributions import *
 from ContinuousTimeMarkovModel.src.forwardS import *
 from ContinuousTimeMarkovModel.src.forwardX import *
 from theano import function
+from pickle import load
 
 class logpTests(unittest.TestCase):
     def setUp(self):
@@ -20,10 +21,13 @@ class logpTests(unittest.TestCase):
         min_obs = 10 # Minimum number of observed claims per patient
         max_obs = 30 # Maximum number of observed claims per patient
         self.M = M
+        self.N = N
+        self.K = K
+        self.max_obs = max_obs
         # Load pre-generated data
-        from pickle import load
 
         T = load(open('../../data/X_layer_100_patients/T.pkl', 'rb'))
+        self.T = T
         obs_jumps = load(open('../../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
         S_start = load(open('../../data/X_layer_100_patients/S.pkl', 'rb'))
         X_start = load(open('../../data/X_layer_100_patients/X.pkl', 'rb'))
@@ -139,25 +143,40 @@ class logpTests(unittest.TestCase):
             np.testing.assert_almost_equal(defaultVal, defaultCorrect, decimal = 6, err_msg="logp of O is incorrect for default input")
             np.testing.assert_almost_equal(claims_LL, claims_LL_Correct, decimal = 6, err_msg="logp of O is incorrect")
 
-#    def test_forwardS_same_as_old(self):
-#        #import pdb; pdb.set_trace()
+    def test_forwardS_same_as_old(self):
 #        Qvals = logistic.cdf(self.Q_raw_log)
 #        Qtest = np.zeros((self.M,self.M))
 #        for i in range(self.M-1):
 #            Qtest[i,i+1] = Qvals[i]
 #            Qtest[i,i] = -Qvals[i]
-#        pS_Test = self.forS.compute_pS(Qtest,self.M)
-#        pS_Correct = np.array([[[ 0.36139104,  0.19639045,  0.44221851],[ 0.34890514,  0.19355079,  0.45754407],[ 0.33357958,  0.18872767,  0.47769275]]])
-#        np.testing.assert_array_almost_equal(pS_Test, pS_Correct, err_msg="forwardS test off",decimal = 6)
-#
-#    def test_forwardX_same_as_old(self):
-#        pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
-#        pX_Correct = np.array([[[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-#       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-#       [[ 0.07595709,  0.01703846],[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859]],
-#       [[ 0.07595709,  0.01703846],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445],[ 0.1042057 ,  0.02448445]],
-#       [[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02225859],[ 0.1042057 ,  0.02448445]]])
-#        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
+        self.forS.astep(0.)
+        pS0_Test = self.forS.compute_S0_GIVEN_X0()
+        #pS_Test = self.forS.compute_pS(Qtest,self.M)
+        pS0_Correct = load(open('pS0_Test_data.pkl', 'rb'))
+
+        pSnt_Test = np.zeros((self.N,self.max_obs,self.M))
+        for n in xrange(self.N):
+            for t in xrange(self.T[n]-1):
+                pSnt_Test[n,t] = self.forS.compute_pSt_GIVEN_St1(n,t,self.myTestPoint['S'][n,t])
+        pSnt_Correct = load(open('pSnt_Test_data.pkl', 'rb'))
+
+        #import pdb; pdb.set_trace()
+        np.testing.assert_array_almost_equal(pS0_Test, pS0_Correct, err_msg="forwardS test off",decimal = 6)
+        np.testing.assert_array_almost_equal(pSnt_Test, pSnt_Correct, err_msg="forwardS test off",decimal = 6)
+
+    def test_forwardX_same_as_old(self):
+        #pX_Test = self.forX.computeLikelihoodOfXk(0,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+        pX_Test = np.zeros((self.N,self.max_obs,self.K,2))
+        Psi = self.forX.computePsi(self.myTestPoint['S'],logistic.cdf(self.myTestPoint['B_logodds']))
+        for k in range(self.K):
+            LikelihoodOfXk = self.forX.computeLikelihoodOfXk(k,self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+            beta = self.forX.computeBeta(k,Psi,LikelihoodOfXk)
+            pX_Test[:,0,k,:] = self.forX.computePX0(k,beta,logistic.cdf(self.myTestPoint['B0_logodds']),self.myTestPoint['S'],LikelihoodOfXk)
+            for t in range(self.max_obs-1):
+                pX_Test[:,t+1,k,:] = self.forX.computePXt(k,t,beta,self.myTestPoint['X'],Psi,LikelihoodOfXk)
+        #import pdb; pdb.set_trace()
+        pX_Correct = load(open('pX_Test_data.pkl','rb'))
+        np.testing.assert_array_almost_equal(pX_Test, pX_Correct, err_msg="forwardX likelihood test off",decimal = 6)
 
 if __name__ == '__main__':
     unittest.main()
