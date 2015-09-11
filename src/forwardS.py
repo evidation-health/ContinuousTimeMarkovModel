@@ -123,6 +123,24 @@ class ForwardS(ArrayStepShared):
             pS0[n,:] = pi * pX_GIVEN_S0 * pX0
         return pS0
 
+    def compute_pSt_GIVEN_St1(self,n0,t,Sprev):
+        i = Sprev.astype(np.int)
+
+        was_changed = self.X[n0+t+1,:] != self.X[n0+t,:]
+        not_on_yet = np.logical_not(self.X[n0+t].astype(np.bool))
+
+        pXt_GIVEN_St_St1 = np.prod(self.B[was_changed & not_on_yet,:], axis=0) * np.prod(1-self.B[(~was_changed) & not_on_yet,:], axis=0)
+        if np.any(was_changed):
+            pXt_GIVEN_St_St1[i] = 0.0
+        else:
+            pXt_GIVEN_St_St1[i] = 1.0
+
+        #import pdb; pdb.set_trace()
+        tau_ind = np.where(self.step_sizes==self.observed_jumps[n0+t+1])[0][0]
+        
+        #don't divide by beta_t it's just a constant anyway
+        return self.beta[:,t+1+n0] * self.pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+
     #@profilingUtil.timefunc
     def astep(self, q0):
         #X change points are the points in time where at least 
@@ -158,27 +176,27 @@ class ForwardS(ArrayStepShared):
         for n in xrange(self.N):
             n0 = self.zeroIndices[n]
             for t in xrange(0,T[n]-1):
-                #import pdb; pdb.set_trace()
-                i = S[n0+t].astype(np.int)
-                #i = S[n,t].astype(np.int)
-
-                was_changed = X[n0+t+1,:] != X[n0+t,:]
-                #was_changed = X[:,t+1,n] != X[:,t,n]
-                not_on_yet = np.logical_not(X[n0+t].astype(np.bool))
-                #not_on_yet = np.logical_not(X[:,t,n].astype(np.bool))
-
-                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed) & not_on_yet,:], axis=0)
-                if np.any(was_changed):
-                    pXt_GIVEN_St_St1[i] = 0.0
-                else:
-                    pXt_GIVEN_St_St1[i] = 1.0
-
-                #import pdb; pdb.set_trace()
-                tau_ind = np.where(self.step_sizes==observed_jumps[n0+t+1])[0][0]
-                #tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
-                
-                #don't divide by beta_t it's just a constant anyway
-                pSt_GIVEN_St1 = beta[:,t+1+n] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+#                #import pdb; pdb.set_trace()
+#                i = S[n0+t].astype(np.int)
+#                #i = S[n,t].astype(np.int)
+#
+#                was_changed = X[n0+t+1,:] != X[n0+t,:]
+#                #was_changed = X[:,t+1,n] != X[:,t,n]
+#                not_on_yet = np.logical_not(X[n0+t].astype(np.bool))
+#                #not_on_yet = np.logical_not(X[:,t,n].astype(np.bool))
+#
+#                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed) & not_on_yet,:], axis=0)
+#                if np.any(was_changed):
+#                    pXt_GIVEN_St_St1[i] = 0.0
+#                else:
+#                    pXt_GIVEN_St_St1[i] = 1.0
+#
+#                tau_ind = np.where(self.step_sizes==observed_jumps[n0+t+1])[0][0]
+#                #tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
+#                
+#                #don't divide by beta_t it's just a constant anyway
+#                pSt_GIVEN_St1 = beta[:,t+1+n0] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+                pSt_GIVEN_St1 = self.compute_pSt_GIVEN_St1(n0,t,S[n0+t])
                 #pSt_GIVEN_St1 = beta[:,t+1,n] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
 
                 #make sure not to go backward or forward too far
@@ -186,6 +204,7 @@ class ForwardS(ArrayStepShared):
                 
                 S[n0+t+1] = self.drawStateSingle(pSt_GIVEN_St1)
                 #S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
+            #import pdb; pdb.set_trace()
 
         return S
         #return q0

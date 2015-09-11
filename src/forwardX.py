@@ -30,7 +30,7 @@ class ForwardX(ArrayStepShared):
         #    for t in xrange(self.T[n]):
         #        self.pos_O_idx[:,t,n] = np.in1d(np.arange(self.D), self.O[:,t,n])
 
-        self.OO = np.zeros((self.nObs,self.Dd),dtype=np.int)
+        #self.OO = np.zeros((self.nObs,self.Dd),dtype=np.int)
         #self.OO = np.zeros((self.Dd,self.N,self.max_obs),dtype=np.int)
         self.negMask = np.zeros((self.nObs,D),dtype=np.int)
         #self.negMask = np.zeros((self.N,self.max_obs,D),dtype=np.int)
@@ -38,9 +38,9 @@ class ForwardX(ArrayStepShared):
             n0 = self.zeroIndices[n]
             for t in range(self.T[n]):
             #for t in range(self.max_obs):
-                self.OO[n0+t,:] = self.O[n0+t,:]
+                #self.OO[n0+t,:] = self.O[n0+t,:]
                 self.negMask[n0+t,:] = 1-np.in1d(np.arange(self.D), self.O[n0+t,:]).astype(np.int)
-        self.posMask = (self.OO != -1).astype(np.int)
+        self.posMask = (self.O != -1).astype(np.int)
 
         #self.betaMask = np.zeros((max_obs,N,2))
         #for n in range(self.N):
@@ -77,24 +77,27 @@ class ForwardX(ArrayStepShared):
         return drawn_state.astype(np.int8)
 
     def computePsi(self, S, B):
+        #Psi[nt,k,j,i] is the likelihood of x=i at time t given x=j at time t-1
+
         #prob. of getting the comorbidity once you already have it is one.
         #prob of not having the comorbidity once you've already had it is zero
         #Since state stays the same more often that it changes, by default we
         #set the prob. of staying in 0 given you're in 0 to 1.0. We then
         #change this to the appropriate B prob. for all instances where there
         #was a state change
-        Psi = np.ones((self.nObs,self.K,2,2),dtype=float)
+        Psi = np.zeros((self.nObs,self.K,2,2),dtype=float)
         #Psi = np.zeros((self.K,self.N,self.max_obs,2,2))
-        #Psi[:,:,:,0,0] = 1.0
-        #Psi[:,:,:,1,1] = 1.0
+        Psi[:,:,0,0] = 1.0
+        Psi[:,:,1,1] = 1.0
 
         #use diff to see if state increased, if so prob. are based on B. Note
         #we have to insert at the beginning of S to get a diff that is the same
         #size as Psi in the time dimension
         state_change_idx = np.insert(S[1:]-S[:-1],0,0)
         state_change_idx[self.zeroIndices] = 0
-        Psi[state_change_idx.nonzero()][:,:,0,0] = (1-B[:,S[state_change_idx.nonzero()]]).T
-        Psi[state_change_idx.nonzero()][:,:,0,1] = B[:,S[state_change_idx.nonzero()]].T
+        #import pdb; pdb.set_trace()
+        Psi[state_change_idx.nonzero(),:,0,0] = (1-B[:,S[state_change_idx.nonzero()]]).T
+        Psi[state_change_idx.nonzero(),:,0,1] = B[:,S[state_change_idx.nonzero()]].T
         #state_change_idx = np.diff(np.insert(S[:,:],0,1000,axis=1),axis=1) > 0
         #Psi[:,state_change_idx,0,0] = 1-B[:,S[state_change_idx]]
         #Psi[:,state_change_idx,0,1] = B[:,S[state_change_idx]]
@@ -103,16 +106,18 @@ class ForwardX(ArrayStepShared):
 
     #@do_profile()
     def computeLikelihoodOfX(self,X,Z,L):
+        #import pdb; pdb.set_trace()
         LikelihoodOfX = np.zeros((self.nObs,self.K,2))
+        #Add extra column to get trashed by all the -1's, removed in following line
         O_on = np.zeros((self.nObs,self.D+1), dtype='int8')
         O_on[np.arange(self.nObs),self.O.T] = 1
         O_on = O_on[:,:-1]
-        Z_on = Z.T[self.OO.T]
+        Z_on = Z.T[self.O.T]
         XZprod_on =  (1. - X.reshape(1,self.nObs,self.K)*(Z_on))
         otherKProduct_on = np.zeros((self.Dd,self.nObs,self.K))
         for k in xrange(self.K):
             otherKProduct_on[:,:,k] = XZprod_on[:,:,:k].prod(axis=2)*XZprod_on[:,:,k+1:].prod(axis=2)
-        probGivenOnX0 = (1-L[self.OO.T])[:,:,np.newaxis]*otherKProduct_on
+        probGivenOnX0 = (1-L[self.O.T])[:,:,np.newaxis]*otherKProduct_on
         probGivenOnX1 = probGivenOnX0.copy()
         probGivenOnX0 = (1.-probGivenOnX0).T*self.posMask + (1-self.posMask)
         LikelihoodOfX[:,:,0] = (probGivenOnX0).prod(axis=2).T
@@ -121,7 +126,6 @@ class ForwardX(ArrayStepShared):
         probGivenOffX1 = np.tile((1.-Z.T).reshape(self.D,1,self.K),(1,self.nObs,1))
         # Divide by Z_on values so assumes none are 0 at the moment!
         #TODO: Get this working for Z having 0 values
-        #import pdb; pdb.set_trace()
         totalZ = (1.-Z).prod(axis=1)
         Z_on_mask = (1.-Z_on).T*self.posMask + (1-self.posMask)
         probGivenOffX1 = totalZ/(Z_on_mask).prod(axis=2).T
@@ -167,6 +171,24 @@ class ForwardX(ArrayStepShared):
         
         return LikelihoodOfXk
 
+    def computeBeta(self,Psi,LikelihoodOfX):
+        beta = np.ones((self.nObs,self.K,2))
+        #import pdb; pdb.set_trace()
+        for n in range(self.N):
+            n0 = self.zeroIndices[n]
+            for t in range(self.T[n]-1,0,-1):
+                beta[n0+t-1,:,:] = np.sum(beta[n0+t,:,np.newaxis,:]*Psi[n0+t,:,:,:]*LikelihoodOfX[n0+t,:,np.newaxis,:],axis=2)
+                beta[n0+t-1,:,:] = (beta[n0+t-1,:,:].T/np.sum(beta[n0+t-1,:,:],axis=1)).T
+        return beta
+
+    def computePX(self,beta,B0,S,X,LikelihoodOfX,Psi):
+        pX0 = beta[self.zeroIndices]*np.array([1-B0[:,S[self.zeroIndices]],B0[:,S[self.zeroIndices]]]).T*LikelihoodOfX[self.zeroIndices,:,:]
+        pXt = np.insert(beta[1:,:,:]*Psi[np.tile(np.arange(1,self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs-1,1)),X[:-1,:],:]*LikelihoodOfX[1:,:,:],0,-1,axis=0)
+        #pXt = beta[:,:,:]*Psi[np.tile(np.arange(self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs,1)),X[:,:],:]*LikelihoodOfX[:,:,:]
+        #pXt = beta[:,:,:]*Psi[np.arange(self.nObs),:,X[:,:],:]*LikelihoodOfX[:,:,:]
+        pXt[self.zeroIndices] = pX0
+        return pXt
+
     #@profilingUtil.timefunc
     def astep(self,X):
         #timer = profilingUtil.timewith('forwardX step')
@@ -176,22 +198,23 @@ class ForwardX(ArrayStepShared):
 
         Psi = self.computePsi(S,B)
         #timer.checkpoint('Computed Psi')
-        beta = np.ones((self.nObs,self.K,2))
+#        beta = np.ones((self.nObs,self.K,2))
         LikelihoodOfX = self.computeLikelihoodOfX(X,Z,L)
         #import pdb; pdb.set_trace()
         #timer.checkpoint('Computed LikelihoodX')
-        for n in range(self.N):
-            n0 = self.zeroIndices[n]
-            for t in range(self.T[n]-1,0,-1):
-                beta[n0+t-1,:,:] = np.sum(beta[n0+t,:,:,np.newaxis]*Psi[n0+t,:,:,:]*LikelihoodOfX[n0+t,:,:,np.newaxis],axis=1)
-                beta[n0+t-1,:,:] = (beta[n0+t-1,:,:].T/np.sum(beta[n0+t-1,:,:],axis=1)).T
+        beta = self.computeBeta(Psi,LikelihoodOfX)
+#        for n in range(self.N):
+#            n0 = self.zeroIndices[n]
+#            for t in range(self.T[n]-1,0,-1):
+#                beta[n0+t-1,:,:] = np.sum(beta[n0+t,:,:,np.newaxis]*Psi[n0+t,:,:,:]*LikelihoodOfX[n0+t,:,:,np.newaxis],axis=1)
+#                beta[n0+t-1,:,:] = (beta[n0+t-1,:,:].T/np.sum(beta[n0+t-1,:,:],axis=1)).T
+#        import pdb; pdb.set_trace()
 
-        #import pdb; pdb.set_trace()
-        #TODO: double check this zeroIndices+1 here
-        pX0 = beta[self.zeroIndices]*np.array([1-B0[:,S[self.zeroIndices]],B0[:,S[self.zeroIndices]]]).T*LikelihoodOfX[self.zeroIndices+1,:,:]
-        pXt = beta[:,:,:]*Psi[np.tile(np.arange(self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs,1)),X[:,:],:]*LikelihoodOfX[:,:,:]
-        #pXt = beta[:,:,:]*Psi[np.arange(self.nObs),:,X[:,:],:]*LikelihoodOfX[:,:,:]
-        pXt[self.zeroIndices] = pX0
+#        pX0 = beta[self.zeroIndices]*np.array([1-B0[:,S[self.zeroIndices]],B0[:,S[self.zeroIndices]]]).T*LikelihoodOfX[self.zeroIndices+1,:,:]
+#        pXt = beta[:,:,:]*Psi[np.tile(np.arange(self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs,1)),X[:,:],:]*LikelihoodOfX[:,:,:]
+#        #pXt = beta[:,:,:]*Psi[np.arange(self.nObs),:,X[:,:],:]*LikelihoodOfX[:,:,:]
+#        pXt[self.zeroIndices] = pX0
+        pXt = self.computePX(beta,B0,S,X,LikelihoodOfX,Psi)
         X[:,:] = self.sampleState(pXt)
 #        for k in range(self.K):
 #            LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
