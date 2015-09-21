@@ -1,6 +1,6 @@
 import numpy as np
 from pymc3 import Model
-from ContinuousTimeMarkovModel.src.distributions import *
+from ContinuousTimeMarkovModel.distributions import *
 from theano import function
 
 #test discrete

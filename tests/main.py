@@ -1,10 +1,10 @@
 import numpy as np
 from theano.tensor import as_tensor_variable
-from ContinuousTimeMarkovModel.src.distributions import *
+from ContinuousTimeMarkovModel.distributions import *
 from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
 import theano.tensor as TT
-from ContinuousTimeMarkovModel.src.forwardS import *
-from ContinuousTimeMarkovModel.src.forwardX import *
+from ContinuousTimeMarkovModel.forwardS import *
+from ContinuousTimeMarkovModel.forwardX import *
 
 import sys; sys.setrecursionlimit(50000)
 
