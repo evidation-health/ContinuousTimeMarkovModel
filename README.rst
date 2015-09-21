@@ -41,9 +41,9 @@ ContinuousTimeMarkovModel
     :alt: Supported imlementations
     :target: https://pypi.python.org/pypi/ContinuousTimeMarkovModel
 
-CContinuous time Markov Model with discrete inputs
+Continuous Time Markov Model with discrete inputs
 
-* Free software: BSD license
+* Free software: MIT License
 
 Installation
 ============
