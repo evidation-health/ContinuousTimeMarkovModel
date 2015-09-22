@@ -103,16 +103,12 @@ def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
     #n_trans = np.zeros((4,4))
     #n_off_before = np.zeros((4,4))
     #n_turned_on = np.zeros((4,4))
-    n_trans_from_0 = 0
-    tot_time_until_switch = 0
     for n in xrange(N):
         pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
         ll += np.log(pX0)
 
         for t in range(1,T[n]):
             if S[n,t] != S[n,t-1]:
-
-
                 turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
                 stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
                 ll += np.log(np.prod(B[turned_on, S[n,t]]))
