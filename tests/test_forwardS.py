@@ -1,7 +1,7 @@
 import numpy as np
-from ContinuousTimeMarkovModel.src.distributions import *
+from ContinuousTimeMarkovModel.distributions import *
 from pymc3 import Model, Metropolis, Binomial, Beta
-from ContinuousTimeMarkovModel.src.forwardS import *
+from ContinuousTimeMarkovModel.forwardS import *
 
 M = 6
 K = 10

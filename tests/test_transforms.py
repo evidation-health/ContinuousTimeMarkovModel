@@ -1,5 +1,5 @@
 from pymc3.tests.test_transforms import *
-import ContinuousTimeMarkovModel.src.transforms as ctrans
+import ContinuousTimeMarkovModel.transforms as ctrans
 from pymc3.tests.test_distributions import Domain
 
 min_rate_matrix = np.zeros(shape=(5,5))
