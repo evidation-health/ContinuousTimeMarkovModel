@@ -97,14 +97,18 @@ class ForwardS(ArrayStepShared):
         B0 = self.B0
         X = self.X
 
+        pX0 = np.zeros((N,M))
         pS0 = np.zeros((N,M))
         for n in xrange(N):
             on = X[:,0,n] == 1
             off = np.invert(on)
-            pX0 = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
+            pX0[n,:] = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
             pX_GIVEN_S0 = self.beta[:,0,n]
-            pS0[n,:] = pi * pX_GIVEN_S0 * pX0
+            #pi = np.array([0.5,0.3,0.1,0.1])
+            pS0[n,:] = pi * pX_GIVEN_S0 * pX0[n,:]
+            #pS0[n,:] = pX_GIVEN_S0 * pX0
 
+        #import pdb; pdb.set_trace()
         return pS0
 
     def astep(self, q0):
@@ -129,6 +133,8 @@ class ForwardS(ArrayStepShared):
         #import pdb; pdb.set_trace()
         S[:,0] = self.drawState(pS0_GIVEN_X0)
 
+        print '\ndist0:', np.bincount(S[:,0])
+        #import pdb; pdb.set_trace()
         #calculate p(S_t=i | S_{t=1}=j, X, Q, B)
         #note: pS is probability of jump conditional on Q
         #whereas pS_ij is also conditional on everything else in the model
@@ -137,6 +143,7 @@ class ForwardS(ArrayStepShared):
         observed_jumps = self.observed_jumps
         pS = self.pS
         
+        #S[:,0]=q0.reshape((1000,15)).astype(int)[:,0]
         for n in xrange(self.N):
             for t in xrange(0,T[n]-1):
                 i = S[n,t].astype(np.int)
@@ -160,6 +167,7 @@ class ForwardS(ArrayStepShared):
                 
                 S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
+        print 'dist1:', np.bincount(S[:,1])
         return S
         #return q0
 

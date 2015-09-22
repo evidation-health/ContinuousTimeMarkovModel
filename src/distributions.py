@@ -94,21 +94,40 @@ class DiscreteObsMJP(Continuous):
 from theano.compile.ops import as_op
 
 X_theano_type = TT.TensorType('int8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.wscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
-        ll = np.array(0.0)
-	for n in xrange(N):
-		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
-		ll += np.log(pX0)
+    ll = np.array(0.0)
+    #n_trans = np.zeros((4,4))
+    #n_off_before = np.zeros((4,4))
+    #n_turned_on = np.zeros((4,4))
+    n_trans_from_0 = 0
+    tot_time_until_switch = 0
+    for n in xrange(N):
+        pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
+        ll += np.log(pX0)
 
-		for t in range(1,T[n]):
-			if S[n,t] != S[n,t-1]:
-				turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
-				stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
-				ll += np.log(np.prod(B[turned_on, S[n,t]]))
-				ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
+        for t in range(1,T[n]):
+            if S[n,t] != S[n,t-1]:
+                #n_trans[S[n,t-1],S[n,t]] += 1
+                #n_off_before[S[n,t-1],S[n,t]] += (X[0,t-1,n] == 0)
+                #if (X[0,t-1,n] == 0):
+                #    n_turned_on[S[n,t-1],S[n,t]] += (X[0,t,n] == 1)
+                #if S[n,t-1] == 0 and S[n,t]==1:
+                #    n_trans_from_0 += 1
+                #    tot_time_until_switch += t
 
-	return ll
+                turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
+                stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
+                ll += np.log(np.prod(B[turned_on, S[n,t]]))
+                ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
+    
+
+    #print '\ntrans from 0,', n_trans_from_0, 'avg time to switch to 1:', np.float(tot_time_until_switch)/(n_trans_from_0+1)
+    #print '\nn_trans:\n', n_trans 
+    #print 'n_off_before\n', n_off_before
+    #print 'pct_turned_on:\n', n_turned_on.astype(np.float)/(n_off_before+1)
+    #import pdb; pdb.set_trace()
+    return ll
 		#for t in range(1,T[n]):
 
 class Comorbidities(Continuous):
@@ -158,7 +177,7 @@ class Comorbidities(Continuous):
 
 #O_theano_type = TT.TensorType('int32', [False, False, False])
 O_theano_type = TT.TensorType('uint8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.wscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     ll = np.array(0.0)
     O_on = O_on.astype(np.bool)
