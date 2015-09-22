@@ -97,7 +97,7 @@ class DiscreteObsMJP(Continuous):
 from theano.compile.ops import as_op
 
 X_theano_type = TT.TensorType('int8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.wscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
     ll = np.array(0.0)
     #n_trans = np.zeros((4,4))
@@ -164,7 +164,7 @@ class Comorbidities(Continuous):
 
 #O_theano_type = TT.TensorType('int32', [False, False, False])
 O_theano_type = TT.TensorType('uint8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.wscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     ll = np.array(0.0)
     O_on = O_on.astype(np.bool)
@@ -184,7 +184,7 @@ class Claims(Continuous):
     def __init__(self, X, Z, L, T, D, max_obs, O_input, shape, *args, **kwargs):
         super(Claims, self).__init__(shape = shape, dtype='int32',*args, **kwargs)
         self.X = X
-        self.N = shape[2]
+        self.N = np.int64(shape[2])
         self.Z = Z
         self.L = L
         self.T = T
