@@ -6,7 +6,7 @@ from pymc3.distributions.transforms import logodds
 from theano import function
 
 #import ContinuousTimeMarkovModel.cython.forwardX_cython as cy
-import profilingUtil
+import ContinuousTimeMarkovModel.profilingUtil
 
 class ForwardX(ArrayStepShared):
     """

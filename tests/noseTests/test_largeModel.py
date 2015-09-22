@@ -5,8 +5,8 @@ from theano.tensor import as_tensor_variable
 from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.distributions import *
-from ContinuousTimeMarkovModel.forwardS import *
-from ContinuousTimeMarkovModel.forwardX import *
+from ContinuousTimeMarkovModel.samplers.forwardS import *
+from ContinuousTimeMarkovModel.samplers.forwardX import *
 from theano import function
 from pickle import load
 

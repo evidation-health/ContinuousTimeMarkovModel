@@ -2,12 +2,12 @@ from pymc3.core import *
 from pymc3.step_methods.arraystep import ArrayStepShared
 from pymc3.theanof import make_shared_replacements
 from pymc3.distributions.transforms import stick_breaking, logodds
-from .transforms import rate_matrix, rate_matrix_one_way
+from ContinuousTimeMarkovModel.transforms import rate_matrix, rate_matrix_one_way
 from scipy import linalg
 
 import theano
 
-import profilingUtil
+import ContinuousTimeMarkovModel.profilingUtil
 
 class ForwardS(ArrayStepShared):
     """

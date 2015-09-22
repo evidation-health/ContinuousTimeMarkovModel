@@ -9,7 +9,7 @@ from theano.compile.sharedvalue import shared
 import theano.tensor.slinalg
 from theano.tensor.extra_ops import bincount
 
-import profilingUtil
+import ContinuousTimeMarkovModel.profilingUtil
 
 class DiscreteObsMJP_unif_prior(Continuous):
 
