@@ -70,15 +70,17 @@ class ForwardS(ArrayStepShared):
         beta = np.ones((M,self.max_obs,self.N))
         for n in xrange(self.N):
             for t in np.arange(T[n]-1, 0, -1):
+                #import pdb; pdb.set_trace()
                 tau_ind = np.where(self.step_sizes==observed_jumps[n,t-1])[0][0]
                 was_changed = X[:,t,n] != X[:,t-1,n]
+                
+                #include the B prob. in the calculation only if the comorbidity
+                #was not on the previous step
                 not_on_yet = np.logical_not(X[:,t-1,n].astype(np.bool))
                 pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed)&not_on_yet,:], axis=0)
-                #pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
                 pXt_GIVEN_St_St1 = np.tile([pXt_GIVEN_St_St1], (M,1))
                 np.fill_diagonal(pXt_GIVEN_St_St1,np.float(not np.any(was_changed)))
                 beta[:,t-1,n] = np.sum(beta[:,t,n]*(pS[tau_ind,:,:]*pXt_GIVEN_St_St1), axis=1)
-                #beta[:,t-1,n] = np.sum(beta[:,t,n]*pS[tau_ind,:,:]*pXt_GIVEN_St_St1, axis=1)
 
         return beta
     
@@ -104,14 +106,18 @@ class ForwardS(ArrayStepShared):
         B0 = self.B0
         X = self.X
 
+        pX0 = np.zeros((N,M))
         pS0 = np.zeros((N,M))
         for n in xrange(N):
             on = X[:,0,n] == 1
             off = np.invert(on)
-            pX0 = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
+            pX0[n,:] = np.prod(1-B0[off,:],axis=0) * np.prod(B0[on,:],axis=0)
             pX_GIVEN_S0 = self.beta[:,0,n]
-            pS0[n,:] = pi * pX_GIVEN_S0 * pX0
+            #pi = np.array([0.5,0.3,0.1,0.1])
+            pS0[n,:] = pi * pX_GIVEN_S0 * pX0[n,:]
+            #pS0[n,:] = pX_GIVEN_S0 * pX0
 
+        #import pdb; pdb.set_trace()
         return pS0
     
     #@timefunc
@@ -134,8 +140,10 @@ class ForwardS(ArrayStepShared):
         #calculate pS0(i) | X, pi, B0
         beta = self.beta = self.computeBeta(self.Q, self.B0, self.B)
         pS0_GIVEN_X0 = self.compute_S0_GIVEN_X0()
+        #import pdb; pdb.set_trace()
         S[:,0] = self.drawState(pS0_GIVEN_X0)
 
+        #import pdb; pdb.set_trace()
         #calculate p(S_t=i | S_{t=1}=j, X, Q, B)
         #note: pS is probability of jump conditional on Q
         #whereas pS_ij is also conditional on everything else in the model
@@ -144,25 +152,10 @@ class ForwardS(ArrayStepShared):
         observed_jumps = self.observed_jumps
         pS = self.pS
         
+        #S[:,0]=q0.reshape((1000,15)).astype(int)[:,0]
         for n in xrange(self.N):
             for t in xrange(0,T[n]-1):
-#                i = S[n,t].astype(np.int)
-#
-#                was_changed = X[:,t+1,n] != X[:,t,n]
-#                not_on_yet = np.logical_not(X[:,t,n].astype(np.bool))
-#
-#                #pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
-#                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed) & not_on_yet,:], axis=0)
-#                if np.any(was_changed):
-#                    pXt_GIVEN_St_St1[i] = 0.0
-#                else:
-#                    pXt_GIVEN_St_St1[i] = 1.0
-#
-#                tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
-#                
-#                #don't divide by beta_t it's just a constant anyway
-#                pSt_GIVEN_St1 = beta[:,t+1,n] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
-                #import pdb; pdb.set_trace()
+
                 pSt_GIVEN_St1 = self.compute_pSt_GIVEN_St1(n,t,S[n,t])
 
                 #make sure not to go backward or forward too far

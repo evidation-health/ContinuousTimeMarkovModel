@@ -110,6 +110,7 @@ class ForwardX(ArrayStepShared):
 
     #@timefunc
     def astep(self,X):
+        
         S, B0, B, Z, L = self.get_params()
         X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
 
@@ -118,21 +119,13 @@ class ForwardX(ArrayStepShared):
         for k in range(self.K):
             LikelihoodOfXk = self.computeLikelihoodOfXk(k,X,Z,L)
             
-#            for t in range(self.max_obs-1,0,-1):                    
-#                beta[t-1,:,:] = np.sum(beta[t,:,np.newaxis,:]*Psi[k,:,t,:,:]*LikelihoodOfXk[:,t,np.newaxis,:],axis=2)
-#                beta[t-1,:,:] = (beta[t-1,:,:].T/np.sum(beta[t-1,:,:], axis=1)).T
-#                beta[t-1,:,:] = beta[t-1,:,:]*self.betaMask[t-1,:,:]+(1-self.betaMask[t-1,:,:])
             beta = self.computeBeta(k,Psi,LikelihoodOfXk)
-
-#            pX0 = beta[0,:,:]*np.array([1-B0[k,S[:,0]],B0[k,S[:,0]]]).T*LikelihoodOfXk[:,0,:]
             pX0 = self.computePX0(k,beta,B0,S,LikelihoodOfXk)
+
             X[k,0,:] = self.sampleState(pX0)
             for t in range(self.max_obs-1):
-#                Xtk = X[k,t,:]
-#                pXt = beta[t+1,:,:]*Psi[k,np.arange(self.N),t+1,Xtk,:]*LikelihoodOfXk[:,t+1,:]
                 pXt = self.computePXt(k,t,beta,X,Psi,LikelihoodOfXk)
                 X[k,t+1,:] = self.sampleState(pXt)
-            #import pdb; pdb.set_trace()
 
         return X
 
@@ -156,7 +149,6 @@ class ForwardX(ArrayStepShared):
         self.X = np.reshape(X, (self.K,self.max_obs,self.N)).astype(np.int8)
 
         #X_new = np.zeros((self.K,self.max_obs,self.N), dtype=np.int8) - 1
-
         for k in range(self.K):
             #note we keep Psi and pOt_GIVEN_Xt because they are used
             #in the computation of beta ADN then again in the sampling forward of X

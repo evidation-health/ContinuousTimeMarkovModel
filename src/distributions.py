@@ -97,24 +97,28 @@ class DiscreteObsMJP(Continuous):
 from theano.compile.ops import as_op
 
 X_theano_type = TT.TensorType('int8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.bscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.wscalar, TT.dmatrix, TT.dmatrix, X_theano_type, TT.imatrix, TT.lvector], otypes=[TT.dscalar])
 def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
-        ll = np.array(0.0)
-        #ll = np.float64(0.0)
-        #import pdb; pdb.set_trace()
-	for n in xrange(N):
-		pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
-		ll += np.log(pX0)
+    ll = np.array(0.0)
+    #n_trans = np.zeros((4,4))
+    #n_off_before = np.zeros((4,4))
+    #n_turned_on = np.zeros((4,4))
+    n_trans_from_0 = 0
+    tot_time_until_switch = 0
+    for n in xrange(N):
+        pX0 = np.prod(B0[X[:,0,n] == 1, S[n,0]]) * np.prod(1-B0[X[:,0,n] != 1, S[n,0]])
+        ll += np.log(pX0)
 
-		for t in range(1,T[n]):
-			if S[n,t] != S[n,t-1]:
-				turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
-				stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
-				ll += np.log(np.prod(B[turned_on, S[n,t]]))
-				ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
+        for t in range(1,T[n]):
+            if S[n,t] != S[n,t-1]:
 
-	return ll
-		#for t in range(1,T[n]):
+
+                turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
+                stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
+                ll += np.log(np.prod(B[turned_on, S[n,t]]))
+                ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
+    
+    return ll
 
 class Comorbidities(Continuous):
     def __init__(self, S, B0, B, T, shape, *args, **kwargs):
@@ -164,7 +168,7 @@ class Comorbidities(Continuous):
 
 #O_theano_type = TT.TensorType('int32', [False, False, False])
 O_theano_type = TT.TensorType('uint8', [False, False, False])
-@as_op(itypes=[TT.dscalar, TT.bscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
+@as_op(itypes=[TT.dscalar, TT.wscalar, TT.lvector, TT.dmatrix, TT.dvector, X_theano_type, O_theano_type, O_theano_type], otypes=[TT.dscalar])
 def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     ll = np.array(0.0)
     O_on = O_on.astype(np.bool)
@@ -173,10 +177,7 @@ def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     for n in xrange(N):
         for t in range(0,T[n]):
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
-#            if O_on[0,t,n]:
-#                pO_0 += np.log(pO[0])
-#            else:
-#                pO_0 += np.log(1-pO[0])
+
             ll += np.sum(np.log(pO[O_on[:,t,n]]))
 
             ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
