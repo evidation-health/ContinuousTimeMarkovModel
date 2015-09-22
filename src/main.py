@@ -158,7 +158,8 @@ with model:
     steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
     #steps.append(Slice(vars=[L],tune=True, w=0.1))
 
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
+    #model.dlogp()
     #trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=111,progressbar=False)
     trace = sample(1001, steps, start=start, random_seed=111,progressbar=True)
     #trace = sample(11, steps, start=start, random_seed=[111,112,113],progressbar=False,njobs=3)

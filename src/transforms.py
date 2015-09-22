@@ -1,6 +1,6 @@
 import theano.tensor as TT
 from pymc3.distributions.transforms import Transform, ElemwiseTransform
-from pymc3.distributions.transforms import interval
+from pymc3.distributions.transforms import interval, logodds
 import numpy as np
 
 class RateMatrix(Transform):
@@ -88,3 +88,38 @@ class RateMatrixOneWay(Transform):
 
 def rate_matrix_one_way(lower, upper):
     return RateMatrixOneWay(lower, upper)
+
+
+class UnanchoredBetaMatrix(Transform):
+    name = "unanchoredBetaMatrix"
+    def __init__(self, anchors,K,D):
+        self.logodds_transform = logodds
+        #anchors is list of tuples (D,K)
+        #TODO: Sort this
+        self.anchors = anchors
+        self.K = K
+        self.D = D
+
+    def unanchored_to_full_matrix(self,Z_raw):
+        #Z_raw is of length D*K-a*(K-1)
+        #anchors must be sorted by D
+        for anchor in anchors:
+            np.insert(Z_raw,anchor[0]*self.K,np.ones(anchor[1])*10E-6)
+            np.insert(Z_raw,anchor[0]*self.K+anchor[1]+1,np.ones(self.K-anchor[1]-1)*10E-6)
+        return Z_raw
+
+    def backward(self, Z_raw_log):
+        Z_raw = self.logodds_transform.backward(Z_raw_log)
+        Z = self.unanchored_to_full_matrix(Z_raw)
+        return Z
+
+    def forward(self, Z):
+        Z_raw = self.full_matrix_to_unanchored(Z)
+        Z_raw_log = self.logodds_transform.forward(Z_raw)
+        return Z_raw_log
+
+    def jacobian_det(self, x):
+        return self.logodds_transform.jacobian_det(x)
+
+def unanchored_betas(anchors,K,D):
+    return UnanchoredBetaMatrix(anchors,K,D)

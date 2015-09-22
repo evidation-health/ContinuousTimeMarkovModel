@@ -1,4 +1,5 @@
 from pymc3 import Continuous
+from pymc3.distributions.special import gammaln
 from pymc3.distributions.discrete import Categorical, Binomial
 from .transforms import rate_matrix, rate_matrix_one_way
 import numpy as np
@@ -22,6 +23,28 @@ class DiscreteObsMJP_unif_prior(Continuous):
 
     def logp(self, value):
         return TT.as_tensor_variable(0.0)
+
+class Beta_with_anchors(Continuous):
+
+    def __init__(self, shape, anchors, alpha = 1.0, beta = 1.0, *args, **kwargs):
+        self.alpha = alpha
+        self.beta = beta
+        super(Beta_with_anchors, self).__init__(transform=unanchored_betas(alpha=alpha, beta=beta, anchors=anchors), 
+            *args, **kwargs)
+        #Q = np.ones(shape, np.float64) - 0.5
+        #self.mode = Q
+
+    def logp(self, value):
+        alpha = self.alpha
+        beta = self.beta
+
+        return bound(
+            gammaln(alpha + beta) - gammaln(alpha) - gammaln(beta) +
+            logpow(
+                value, alpha - 1) + logpow(1 - value, beta - 1),
+            0 <= value, value <= 1,
+            alpha > 0,
+            beta > 0)
 
 class DiscreteObsMJP(Continuous):
 
@@ -158,7 +181,37 @@ def logp_numpy_comorbidities(l,nObs,B0,B,X,S,T):
 #				ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
 #
 	return logLike
-		#for t in range(1,T[n]):
+
+def logp_theano_comorbidities(logLike,nObs,B0,B,X,S,T):
+        logLike = 0.0
+
+        #Unwrap t=0 points for B0
+        zeroIndices = np.roll(T.cumsum(),1)
+        #zeroIndices = np.roll(T.cumsum(),1)
+        zeroIndices[0] = 0;
+        zeroIndices = zeroIndices.astype('int32')
+
+        #import pdb; pdb.set_trace()
+
+        #Likelihood from B0 for X=1 and X=0 cases
+        logLike += (X[zeroIndices]*TT.log(B0[:,S[zeroIndices]]).T).sum()
+        logLike += ((1-X[zeroIndices])*TT.log(1.-B0[:,S[zeroIndices]]).T).sum()
+
+        stateChange = S[1:]-S[:-1]
+    # Don't consider t=0 points
+        setZero = zeroIndices[1:]-1
+        stateChange[setZero] = 0
+        #stateChange[zeroIndices[1:]-1] = 0
+        changed = TT.nonzero(stateChange)[0]+1
+
+        #import pdb; pdb.set_trace()
+
+        # A change can only happen from 0 to 1 given our assumptions
+        logLike += ((X[changed]-X[changed-1])*TT.log(B[:,S[changed]]).T).sum()
+        logLike += (((1-X[changed])*(1-X[changed-1]))*TT.log(1.-B[:,S[changed]]).T).sum()
+        #logLike += (X[changed]*np.log(B[:,S[changed]]).T).sum()
+        
+	return logLike
 
 class Comorbidities(Continuous):
     def __init__(self, S, B0, B, T, shape, *args, **kwargs):
@@ -185,8 +238,10 @@ class Comorbidities(Continuous):
         #B0 = self.B0
         #B = self.B
 
+#        l = 0.0
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
+        #l = logp_theano_comorbidities(l,self.nObs,self.B0,self.B,X,self.S,self.T)
         l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(self.nObs),self.B0,self.B,X,self.S,TT.as_tensor_variable(self.T))
         #l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
