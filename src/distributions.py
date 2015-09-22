@@ -8,6 +8,8 @@ from theano.compile.sharedvalue import shared
 import theano.tensor.slinalg
 from theano.tensor.extra_ops import bincount
 
+from profilingUtil import timefunc
+
 class DiscreteObsMJP_unif_prior(Continuous):
 
     def __init__(self, M, lower=0, upper=100, *args, **kwargs):
@@ -65,6 +67,7 @@ class DiscreteObsMJP(Continuous):
         
         return C
         
+    #@timefunc
     def logp(self, S):
     	l = 0.0
 
@@ -108,27 +111,14 @@ def logp_numpy_comorbidities(l,N,B0,B,X,S,T):
 
         for t in range(1,T[n]):
             if S[n,t] != S[n,t-1]:
-                #n_trans[S[n,t-1],S[n,t]] += 1
-                #n_off_before[S[n,t-1],S[n,t]] += (X[0,t-1,n] == 0)
-                #if (X[0,t-1,n] == 0):
-                #    n_turned_on[S[n,t-1],S[n,t]] += (X[0,t,n] == 1)
-                #if S[n,t-1] == 0 and S[n,t]==1:
-                #    n_trans_from_0 += 1
-                #    tot_time_until_switch += t
+
 
                 turned_on = ((X[:,t-1,n] == 0) & (X[:,t,n] == 1))
                 stayed_off = ((X[:,t-1,n] == 0) & (X[:,t,n] == 0))
                 ll += np.log(np.prod(B[turned_on, S[n,t]]))
                 ll += np.log(np.prod(1-B[stayed_off, S[n,t]]))
     
-
-    #print '\ntrans from 0,', n_trans_from_0, 'avg time to switch to 1:', np.float(tot_time_until_switch)/(n_trans_from_0+1)
-    #print '\nn_trans:\n', n_trans 
-    #print 'n_off_before\n', n_off_before
-    #print 'pct_turned_on:\n', n_turned_on.astype(np.float)/(n_off_before+1)
-    #import pdb; pdb.set_trace()
     return ll
-		#for t in range(1,T[n]):
 
 class Comorbidities(Continuous):
     def __init__(self, S, B0, B, T, shape, *args, **kwargs):
@@ -143,6 +133,7 @@ class Comorbidities(Continuous):
         self.B = B
         self.mode = X
 
+    #@timefunc
     def logp(self, X):
         K = self.K
         max_obs = self.max_obs
@@ -186,6 +177,7 @@ def oldlogp_numpy_claims(l,N,T,Z,L,X,O_on, O_off):
     for n in xrange(N):
         for t in range(0,T[n]):
             pO = 1 - (1-L)*np.prod(1-(X[:,t,n]*Z.T), axis=1)
+
             ll += np.sum(np.log(pO[O_on[:,t,n]]))
 
             ll += np.sum(np.log(1-pO[O_off[:,t,n]]))
@@ -210,6 +202,7 @@ class Claims(Continuous):
         O = np.ones(shape, dtype='int32')
         self.mode = O
 
+    #@timefunc
     def logp(self, O):
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()

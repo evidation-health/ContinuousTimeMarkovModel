@@ -7,7 +7,16 @@ from scipy import linalg
 
 import theano
 
-import time
+from profilingUtil import timefunc
+
+#def timefunc(f):
+#    def f_timer(*args, **kwargs):
+#        start = time.time()
+#        result = f(*args, **kwargs)
+#        end = time.time()
+#        print f.__name__, 'took', end - start, 'time'
+#        return result
+#    return f_timer
 
 class ForwardS(ArrayStepShared):
     """
@@ -110,7 +119,8 @@ class ForwardS(ArrayStepShared):
 
         #import pdb; pdb.set_trace()
         return pS0
-
+    
+    #@timefunc
     def astep(self, q0):
         #X change points are the points in time where at least 
         #one comorbidity gets turned on. it's important to track
@@ -133,7 +143,6 @@ class ForwardS(ArrayStepShared):
         #import pdb; pdb.set_trace()
         S[:,0] = self.drawState(pS0_GIVEN_X0)
 
-        print '\ndist0:', np.bincount(S[:,0])
         #import pdb; pdb.set_trace()
         #calculate p(S_t=i | S_{t=1}=j, X, Q, B)
         #note: pS is probability of jump conditional on Q
@@ -146,30 +155,35 @@ class ForwardS(ArrayStepShared):
         #S[:,0]=q0.reshape((1000,15)).astype(int)[:,0]
         for n in xrange(self.N):
             for t in xrange(0,T[n]-1):
-                i = S[n,t].astype(np.int)
 
-                was_changed = X[:,t+1,n] != X[:,t,n]
-                not_on_yet = np.logical_not(X[:,t,n].astype(np.bool))
-
-                pXt_GIVEN_St_St1 = np.prod(B[was_changed & not_on_yet,:], axis=0) * np.prod(1-B[(~was_changed) & not_on_yet,:], axis=0)
-                if np.any(was_changed):
-                    pXt_GIVEN_St_St1[i] = 0.0
-                else:
-                    pXt_GIVEN_St_St1[i] = 1.0
-
-                tau_ind = np.where(self.step_sizes==observed_jumps[n,t])[0][0]
-                
-                #don't divide by beta_t it's just a constant anyway
-                pSt_GIVEN_St1 = beta[:,t+1,n] * pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+                pSt_GIVEN_St1 = self.compute_pSt_GIVEN_St1(n,t,S[n,t])
 
                 #make sure not to go backward or forward too far
                 #pSt_GIVEN_St1[0:i] = 0.0
                 
                 S[n,t+1] = self.drawStateSingle(pSt_GIVEN_St1)
 
-        print 'dist1:', np.bincount(S[:,1])
         return S
         #return q0
+
+    def compute_pSt_GIVEN_St1(self,n,t,Sprev):
+
+        i = Sprev.astype(np.int)
+
+        was_changed = self.X[:,t+1,n] != self.X[:,t,n]
+        not_on_yet = np.logical_not(self.X[:,t,n].astype(np.bool))
+
+        #pXt_GIVEN_St_St1 = np.prod(B[was_changed,:], axis=0) * np.prod(1-B[~was_changed,:], axis=0)
+        pXt_GIVEN_St_St1 = np.prod(self.B[was_changed & not_on_yet,:], axis=0) * np.prod(1-self.B[(~was_changed) & not_on_yet,:], axis=0)
+        if np.any(was_changed):
+            pXt_GIVEN_St_St1[i] = 0.0
+        else:
+            pXt_GIVEN_St_St1[i] = 1.0
+
+        tau_ind = np.where(self.step_sizes==self.observed_jumps[n,t])[0][0]
+
+        return self.beta[:,t+1,n] * self.pS[tau_ind,i,:] * pXt_GIVEN_St_St1
+                
 
 def evaluate_symbolic_shared(pi, Q, B0, B, X):
     f = theano.function([], [pi, Q, B0, B, X])

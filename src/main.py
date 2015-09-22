@@ -132,11 +132,8 @@ with model:
     steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
     steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, max_obs=max_obs))
     steps.append(Metropolis(vars=[Z], scaling=0.01452, tune=False))
-    #steps.append(Metropolis(vars=[L],scaling=0.18641, tune=False))
     steps.append(Metropolis(vars=[L],scaling=0.02662, tune=False, ))
-    #steps.append(Slice(vars=[L],tune=True, w=0.1))
-    
-    #trace = sample(101, [step1, step2, step3, step4, step5, step6, step7, step8], start=start, random_seed=111,progressbar=False)
+
     trace = sample(1001, steps, start=start, random_seed=2013,progressbar=True)
 
 pi = trace[pi]
