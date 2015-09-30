@@ -1,7 +1,7 @@
 import numpy as np
 from theano.tensor import as_tensor_variable
 from ContinuousTimeMarkovModel.distributions import *
-from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice
+from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Beta, Slice, NUTS
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.samplers.forwardS import *
 from ContinuousTimeMarkovModel.samplers.forwardX import *
@@ -66,8 +66,9 @@ O = np.concatenate([O[:,0:T[i],i].T for i in range(N)])
 
 model = Model()
 with model:
-    pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5,0.5]), shape=M)
-    pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .1, -np.inf, 0))
+    pi = Dirichlet('pi', a = as_tensor_variable([0.147026,0.102571,0.239819,0.188710,0.267137,0.054738]), shape=M)
+    #pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5, 0.5, 0.5,0.5]), shape=M)
+    pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .001, -np.inf, 0))
 
     Q = DiscreteObsMJP_unif_prior('Q', M=M, lower=0.0, upper=1.0, shape=(M,M))
     
@@ -141,27 +142,35 @@ Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001],
 '''
 
 start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
-#teststart = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo, 'pi_stickbreaking':np.zeros(M)}
+#teststart = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo, 'pi_stickbreaking':np.ones(M)/float(M)}
 #start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_start}
 
 with model:
     #import pdb; pdb.set_trace()
 
     steps = []
-    steps.append(Metropolis(vars=[pi], scaling=0.058, tune=False))
-    steps.append(Metropolis(vars=[Q], scaling=0.2, tune=False))
+    steps.append(NUTS(vars=[pi]))
+    #steps.append(NUTS(vars=[pi], scaling=np.ones(M-1)*0.058))
+    #steps.append(Metropolis(vars=[pi], scaling=0.058, tune=False))
+    steps.append(NUTS(vars=[Q],scaling=np.ones(M-1,dtype=float)*10.))
+    #steps.append(Metropolis(vars=[Q], scaling=0.2, tune=False))
     steps.append(ForwardS(vars=[S], nObs=nObs, T=T, N=N, observed_jumps=obs_jumps))
+    steps.append(NUTS(vars=[B0]))
     steps.append(Metropolis(vars=[B0], scaling=0.2, tune=False))
+    #steps.append(NUTS(vars=[B], scaling=np.ones(K*M)))
     steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
     steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs))
+    #steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
     steps.append(Metropolis(vars=[Z], scaling=0.0132, tune=False))
+    #steps.append(NUTS(vars=[L],scaling=np.ones(D)))
     steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
-    #steps.append(Slice(vars=[L],tune=True, w=0.1))
+
+## 22 minutes per step with all NUTS set
 
     #import pdb; pdb.set_trace()
     #model.dlogp()
-    #trace = sample(1001, steps, start=start, random_seed=111,progressbar=True)
-    trace = sample(101, steps, start=start, random_seed=111,progressbar=True)
+    trace = sample(1001, steps, start=start, random_seed=111,progressbar=True)
+    #trace = sample(11, steps, start=start, random_seed=111,progressbar=True)
     #trace = sample(11, steps, start=start, random_seed=[111,112,113],progressbar=False,njobs=3)
 
 pi = trace[pi]
@@ -173,6 +182,7 @@ B = trace[B]
 X = trace[X]
 Z = trace[Z]
 L = trace[L]
+Sbin = np.vstack([np.bincount(S[i]) for i in range(len(S))])
 #np.set_printoptions(2);np.set_printoptions(linewidth=160)
 '''
 for i in range(1001):

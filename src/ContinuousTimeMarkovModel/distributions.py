@@ -199,8 +199,11 @@ def logp_theano_comorbidities(logLike,nObs,B0,B,X,S,T):
 
         stateChange = S[1:]-S[:-1]
     # Don't consider t=0 points
-        setZero = zeroIndices[1:]-1
-        stateChange[setZero] = 0
+        #import pdb; pdb.set_trace()
+        #setZero = TT.as_tensor_variable(zeroIndices[1:]-1)
+        #TT.set_subtensor(stateChange[setZero],0)
+        stateChange = TT.set_subtensor(stateChange[zeroIndices[1:]-1],0)
+        #stateChange[setZero] = 0
         #stateChange[zeroIndices[1:]-1] = 0
         changed = TT.nonzero(stateChange)[0]+1
 
@@ -241,8 +244,8 @@ class Comorbidities(Continuous):
 #        l = 0.0
         l = np.float64(0.0)
         #import pdb; pdb.set_trace()
-        #l = logp_theano_comorbidities(l,self.nObs,self.B0,self.B,X,self.S,self.T)
-        l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(self.nObs),self.B0,self.B,X,self.S,TT.as_tensor_variable(self.T))
+        l = logp_theano_comorbidities(l,self.nObs,self.B0,self.B,X,self.S,self.T)
+        #l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(self.nObs),self.B0,self.B,X,self.S,TT.as_tensor_variable(self.T))
         #l = logp_numpy_comorbidities(TT.as_tensor_variable(l),TT.as_tensor_variable(N),B0,B,X,S,TT.as_tensor_variable(T))        
         '''
         for n in xrange(N):
@@ -269,7 +272,7 @@ class Comorbidities(Continuous):
 #@do_profile()
 #@as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.bmatrix], otypes=[TT.dscalar])
 @as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.wmatrix, TT.bmatrix], otypes=[TT.dscalar])
-def logp_numpy_claims(l,nObs,T,Z,L,X,O,posMask):
+def new_logp_numpy_claims(l,nObs,T,Z,L,X,O,posMask):
     #logLike = np.array(0.0)
 
     #import pdb; pdb.set_trace()
@@ -283,6 +286,20 @@ def logp_numpy_claims(l,nObs,T,Z,L,X,O,posMask):
     logLike = np.array(np.log(numLikelihood).sum() - np.log(denomLikelihood).sum() + totalTerm)
 
     return logLike
+
+def new_logp_theano_claims(l,nObs,T,Z,L,X,O,posMask):
+    #import pdb; pdb.set_trace()
+
+    Z_on = Z.T[O.T]
+    denomLikelihood = (1.-L[O.T])*(1. - X[np.newaxis,:,:]*(Z_on)).prod(axis=2)
+    numLikelihood = (1.-denomLikelihood.T)*posMask + (1.-posMask)
+    denomLikelihood = denomLikelihood.T*posMask + (1.-posMask)
+    totalTerm = TT.log(1.-L).sum()*nObs + TT.log(1.-X[:,np.newaxis,:]*Z.T[np.newaxis,:,:]).sum()
+
+    logLike = TT.log(numLikelihood).sum() - TT.log(denomLikelihood).sum() + totalTerm
+
+    return logLike
+
 
 class Claims(Continuous):
     #def __init__(self, X, Z, L, T, D, max_obs, O_input, shape, *args, **kwargs):
@@ -317,7 +334,9 @@ class Claims(Continuous):
     def newlogp(self, O):
         logLike = np.array(0.0)
         #import pdb; pdb.set_trace()
-        logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+        #logLike = new_logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+        #    TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.O),TT.as_tensor_variable(self.posMask))
+        logLike = new_logp_theano_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.O),TT.as_tensor_variable(self.posMask))
         #logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
         #    TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
@@ -327,12 +346,27 @@ class Claims(Continuous):
     def logp(self, O):
         logLike = np.array(0.0)
         #import pdb; pdb.set_trace()
-        logLike = old_logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+        logLike = logp_theano_claims(TT.as_tensor_variable(logLike),self.nObs,
             TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
+        #logLike = logp_numpy_claims(TT.as_tensor_variable(logLike),TT.as_tensor_variable(self.nObs),
+        #    TT.as_tensor_variable(self.T),self.Z,self.L,self.X,TT.as_tensor_variable(self.pos_O_idx))
         return logLike
     
+def logp_theano_claims(l,nObs,T,Z,L,X,O_on):
+
+    #O_on = O_on.astype(np.bool)
+    # tempVec is 1-X*Z
+    tempVec =  (1. - X.reshape((nObs,1,X.shape[1]))*(Z.T).reshape((1,Z.shape[1],Z.shape[0])))
+    # Add the contribution from O = 1
+    logLike = TT.log(1-(1-TT.tile(L[np.newaxis,:],(nObs,1))[O_on.nonzero()])*tempVec[O_on.nonzero()].prod(axis=1)).sum()
+
+    # Add the contribution from O = 0
+    logLike += TT.log((1-TT.tile(L[np.newaxis,:],(nObs,1))[(1-O_on).nonzero()])*tempVec[(1-O_on).nonzero()].prod(axis=1)).sum()
+
+    return logLike
+
 @as_op(itypes=[TT.dscalar, TT.lscalar, TT.lvector, TT.dmatrix, TT.dvector, TT.bmatrix, TT.bmatrix], otypes=[TT.dscalar])
-def old_logp_numpy_claims(l,nObs,T,Z,L,X,O_on):
+def logp_numpy_claims(l,nObs,T,Z,L,X,O_on):
 
     logLike = np.array(0.0)
 
