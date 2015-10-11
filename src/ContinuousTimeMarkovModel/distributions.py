@@ -111,7 +111,7 @@ class DiscreteObsMJP(Continuous):
     	pi = self.pi
         #Get time 0 states
         zeroIndices = np.roll(self.T.cumsum(),1)
-        zeroIndices[0] = 0;
+        zeroIndices[0] = 0
         zeroIndices = zeroIndices.astype('int32')
         l += TT.sum(TT.log(pi[S[zeroIndices]]))
         #l += TT.sum(TT.log(pi[S[:,0]]))
