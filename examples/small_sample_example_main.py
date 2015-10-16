@@ -9,69 +9,59 @@ from ContinuousTimeMarkovModel.samplers.forwardX import *
 #import sys; sys.setrecursionlimit(50000)
 #theano.config.compute_test_value = 'off'
 
-N = 100 # Number of patients
-M = 6 # Number of hidden states
-K = 10 # Number of comorbidities
-D = 721 # Number of claims
-Dd = 80 # Maximum number of claims that can occur at once
-min_obs = 10 # Minimum number of observed claims per patient
-max_obs = 30 # Maximum number of observed claims per patient
-
 # Load pre-generated data
 from pickle import load
 
+datadir = '../data/small_sample/'
 
-S_start = load(open('../data/X_layer_100_patients/S.pkl', 'rb'))
-''' S_start[zeroIndices]
-[3, 0, 0, 4, 1, 0, 3, 4, 4, 2, 2, 4, 5, 2, 2, 2, 2, 0, 2, 1, 1, 0, 1, 0, 3, 4, 0, 0, 3, 4, 1, 5, 0, 5, 3, 0, 3, 2, 4, 1, 4, 5, 4, 0, 1, 1, 1, 2, 3, 0, 1, 3, 0, 2, 4, 2, 4, 3, 5, 0, 4, 0, 1, 4, 4, 0, 4, 1, 3, 2, 2, 0, 0, 2, 4, 4, 4, 5, 0, 2, 2, 0, 1, 2, 2, 3, 5, 3, 3, 4, 2, 2, 4, 3, 5, 5, 3, 2, 0, 3]
-'''
-X_start = load(open('../data/X_layer_100_patients/X.pkl', 'rb'))
-Z_start = load(open('../data/X_layer_100_patients/Z.pkl', 'rb'))
-L_start = load(open('../data/X_layer_100_patients/L.pkl', 'rb'))
-obs_jumps = load(open('../data/X_layer_100_patients/obs_jumps.pkl', 'rb'))
-T = load(open('../data/X_layer_100_patients/T.pkl', 'rb'))
-O = load(open('../data/X_layer_100_patients/O_input.pkl', 'rb'))
+infile = open(datadir+'pi.pkl','rb')
+pi_start = load(infile)
+infile.close
+infile = open(datadir+'Q.pkl','rb')
+Q_start = load(infile)
+infile.close
+infile = open(datadir+'S.pkl','rb')
+S_start = load(infile)
+infile.close
+infile = open(datadir+'B.pkl','rb')
+B_start = load(infile)
+infile.close
+infile = open(datadir+'B0.pkl','rb')
+B0_start = load(infile)
+infile.close
+infile = open(datadir+'X.pkl','rb')
+X_start = load(infile)
+infile.close
+infile = open(datadir+'Z.pkl','rb')
+Z_start = load(infile)
+infile.close
+infile = open(datadir+'L.pkl','rb')
+L_start = load(infile)
+infile.close
+infile = open(datadir+'obs_jumps.pkl','rb')
+obs_jumps = load(infile)
+infile.close
+infile = open(datadir+'T.pkl','rb')
+T = load(infile)
+infile.close
+infile = open(datadir+'O.pkl','rb')
+O = load(infile)
+infile.close
 
-'''
-T = load(open('../data/synthetic2000/T.pkl', 'rb'))
-obs_jumps = load(open('../data/synthetic2000/obs_jumps.pkl', 'rb'))
-S_start = load(open('../data/synthetic2000/S.pkl', 'rb'))
-X_start = load(open('../data/synthetic2000/X.pkl', 'rb'))
-Z_start = load(open('../data/synthetic2000/Z.pkl', 'rb'))
-L_start = load(open('../data/synthetic2000/L.pkl', 'rb'))
-O = load(open('../data/synthetic2000/O_input.pkl', 'rb'))
 
-
-T = load(open('../data/small_model/data/T.pkl', 'rb'))
-obs_jumps = load(open('../data/small_model/data/obs_jumps.pkl', 'rb'))
-S_start = load(open('../data/small_model/data/S.pkl', 'rb'))
-X_start = load(open('../data/small_model/data/X.pkl', 'rb'))
-Z_start = load(open('../data/small_model/data/Z.pkl', 'rb'))
-L_start = load(open('../data/small_model/data/L.pkl', 'rb'))
-O = load(open('../data/small_model/data/O_input.pkl', 'rb'))
-'''
-
-#DES: nObs is total number of observations
-nObs = T.sum()
-#compress n and t indices
-# S is (nObs) vector
-S_start = np.concatenate([S_start[i,0:T[i]] for i in range(N)])
-# add 0 to start for intial steps
-obs_jumps = np.hstack([np.zeros((N,1),dtype='int8'),obs_jumps])
-obs_jumps = np.concatenate([obs_jumps[i,0:T[i]] for i in range(N)])
-# X is now (nObs,K)
-X_start = np.concatenate([X_start[:,0:T[i],i].T for i in range(N)])
-# O is now (nObs, Dd)
-# TODO: implement this with sparse matrices
-O = np.concatenate([O[:,0:T[i],i].T for i in range(N)])
+nObs = S_start.shape[0]
+N = T.shape[0] # Number of patients
+M = pi_start.shape[0] # Number of hidden states
+K = Z_start.shape[0] # Number of comorbidities
+D = Z_start.shape[1] # Number of claims
+Dd = 16 # Maximum number of claims that can occur at once
 
 #import pdb; pdb.set_trace()
-
 
 model = Model()
 with model:
    #Fails: #pi = Dirichlet('pi', a = as_tensor_variable([0.147026,0.102571,0.239819,0.188710,0.267137,0.054738]), shape=M, testval = np.ones(M)/float(M))
-    pi = Dirichlet('pi', a = as_tensor_variable([0.147026,0.102571,0.239819,0.188710,0.267137,0.054738]), shape=M)
+    pi = Dirichlet('pi', a = as_tensor_variable(pi_start.copy()), shape=M)
     pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(pi) < .001, -np.inf, 0))
 
     Q = DiscreteObsMJP_unif_prior('Q', M=M, lower=0.0, upper=1.0, shape=(M,M))
@@ -95,46 +85,16 @@ with model:
     #O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, max_obs=max_obs, O_input=O, shape=(Dd,max_obs,N), observed=O)
 #import pdb; pdb.set_trace()
 
-import scipy.special
-Q_raw_log = scipy.special.logit(np.array([0.631921, 0.229485, 0.450538, 0.206042, 0.609582]))
-
 from scipy.special import logit
 
-B_lo = logit(np.array([
-[0.000001,0.760000,0.720000,0.570000,0.700000,0.610000],
-[0.000001,0.460000,0.390000,0.220000,0.200000,0.140000],
-[0.000001,0.620000,0.620000,0.440000,0.390000,0.240000],
-[0.000001,0.270000,0.210000,0.170000,0.190000,0.070000],
-[0.000001,0.490000,0.340000,0.220000,0.160000,0.090000],
-[0.000001,0.620000,0.340000,0.320000,0.240000,0.120000],
-[0.000001,0.550000,0.390000,0.320000,0.290000,0.150000],
-[0.000001,0.420000,0.240000,0.170000,0.170000,0.110000],
-[0.000001,0.310000,0.300000,0.230000,0.190000,0.110000],
-[0.000001,0.470000,0.340000,0.190000,0.190000,0.110000]]))
-
-B0_lo = logit(np.array([
-[0.410412,0.410412,0.418293,0.418293,0.429890,0.429890],
-[0.240983,0.240983,0.240983,0.240983,0.240983,0.240983],
-[0.339714,0.339714,0.339714,0.339714,0.339714,0.339714],
-[0.130415,0.130415,0.130415,0.130415,0.130415,0.130415],
-[0.143260,0.143260,0.143260,0.143260,0.143260,0.143260],
-[0.211465,0.211465,0.211465,0.211465,0.211465,0.211465],
-[0.194187,0.194187,0.194187,0.194187,0.194187,0.194187],
-[0.185422,0.185422,0.185422,0.185422,0.185422,0.185422],
-[0.171973,0.171973,0.171973,0.171973,0.171973,0.171973],
-[0.152277,0.152277,0.152277,0.152277,0.152277,0.152277]]))
-
+Q_raw = []
+for i in range(Q_start.shape[0]-1):
+    Q_raw.append(Q_start[i,i+1])
+Q_raw_log = logit(np.asarray(Q_raw))
+B_lo = logit(B_start)
+B0_lo = logit(B0_start)
 Z_lo = logit(Z_start)
 L_lo = logit(L_start)
-#L_lo = np.ones_like(L_start)*-4.0
-'''
-Q_raw_log = np.log(np.array([[1, 0.0000001, 0.0000001, 0.0000001, 0.0000001], 
-                             [0.0000001, 1, 0.0000001, 0.0000001, 0.0000001],
-                             [0.0000001, 0.0000001, 1, 0.0000001, 0.0000001],
-                             [0.0000001, 0.0000001, 0.0000001, 1, 0.0000001],
-                             [0.0000001, 0.0000001, 0.0000001, 0.0000001, 1],
-                             [0.0000001, 0.0000001, 0.0000001, 0.0000001, 0.0000001]]))
-'''
 
 start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
 #teststart = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo, 'pi_stickbreaking':np.ones(M)/float(M)}
