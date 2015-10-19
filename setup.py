@@ -95,7 +95,16 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
+        'line_profiler >= 1.0',
+        'scipy >= 0.16.0',
+        'Theano >= 0.7.0',
+        'Cython >= 0.23.3',
+        'numpy >= 1.9.3',
+        'pymc3'
         # eg: 'aspectlib==1.1.1', 'six>=1.7',
+    ],
+    dependency_links = [
+        'https://github.com/evidation-health/pymc3#egg=pymc3'
     ],
     extras_require={
         # eg:
