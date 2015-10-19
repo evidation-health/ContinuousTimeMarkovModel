@@ -104,7 +104,7 @@ setup(
         # eg: 'aspectlib==1.1.1', 'six>=1.7',
     ],
     dependency_links = [
-        'https://github.com/evidation-health/pymc3@v3.0.1#egg=pymc3v3.0.1'
+        'https://github.com/evidation-health/pymc3.git@v3.0.1#egg=pymc3-v3.0.1'
     ],
     extras_require={
         # eg:
