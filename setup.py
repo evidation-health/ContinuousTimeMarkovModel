@@ -99,12 +99,12 @@ setup(
         'scipy >= 0.16.0',
         'Theano >= 0.7.0',
         'Cython >= 0.23.3',
-        'numpy >= 1.9.3',
-        'pymc3'
+        'numpy == 1.9.3',
+        'pymc3 == dev'
         # eg: 'aspectlib==1.1.1', 'six>=1.7',
     ],
     dependency_links = [
-        'https://github.com/evidation-health/pymc3#egg=pymc3'
+        'git+https://github.com/evidation-health/pymc3.git#egg=pymc3-dev'
     ],
     extras_require={
         # eg:
