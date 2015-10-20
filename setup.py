@@ -100,11 +100,11 @@ setup(
         'Theano >= 0.7.0',
         'Cython >= 0.23.3',
         'numpy >= 1.9.3',
-        'pymc3 >= 3.0.1'
+        'pymc3'
         # eg: 'aspectlib==1.1.1', 'six>=1.7',
     ],
     dependency_links = [
-        'git+https://github.com/evidation-health/pymc3@3.0.1#egg=pymc3-3.0.1'
+        'git+git://github.com/evidation-health/pymc3.git#egg=pymc3'
     ],
     extras_require={
         # eg:
