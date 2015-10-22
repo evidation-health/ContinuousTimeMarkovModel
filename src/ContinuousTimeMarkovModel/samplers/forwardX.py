@@ -215,7 +215,6 @@ class ForwardX(ArrayStepShared):
 #            for t in range(self.T[n]-1,0,-1):
 #                beta[n0+t-1,:,:] = np.sum(beta[n0+t,:,:,np.newaxis]*Psi[n0+t,:,:,:]*LikelihoodOfX[n0+t,:,:,np.newaxis],axis=1)
 #                beta[n0+t-1,:,:] = (beta[n0+t-1,:,:].T/np.sum(beta[n0+t-1,:,:],axis=1)).T
-#        import pdb; pdb.set_trace()
 
 #        pX0 = beta[self.zeroIndices]*np.array([1-B0[:,S[self.zeroIndices]],B0[:,S[self.zeroIndices]]]).T*LikelihoodOfX[self.zeroIndices+1,:,:]
 #        pXt = beta[:,:,:]*Psi[np.tile(np.arange(self.nObs)[:,np.newaxis],(1,self.K)),np.tile(np.arange(self.K),(self.nObs,1)),X[:,:],:]*LikelihoodOfX[:,:,:]

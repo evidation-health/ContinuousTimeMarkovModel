@@ -16,38 +16,46 @@ datadir = '../data/small_sample/'
 
 infile = open(datadir+'pi.pkl','rb')
 pi_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'Q.pkl','rb')
 Q_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'S.pkl','rb')
 S_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'B.pkl','rb')
 B_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'B0.pkl','rb')
 B0_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'X.pkl','rb')
 X_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'Z.pkl','rb')
 Z_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'L.pkl','rb')
 L_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'obs_jumps.pkl','rb')
 obs_jumps = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'T.pkl','rb')
 T = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'O.pkl','rb')
 O = load(infile)
-infile.close
+infile.close()
 
+#Cut down to 100 people
+newN = 100
+T = T[:newN]
+nObs = T.sum()
+S_start = S_start[0:nObs]
+obs_jumps = obs_jumps[0:nObs]
+X_start = X_start[0:nObs]
+O = O[0:nObs]
 
 nObs = S_start.shape[0]
 N = T.shape[0] # Number of patients
@@ -115,10 +123,10 @@ with model:
     #steps.append(NUTS(vars=[B]))
     #steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
     steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs))
-    #steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
-    steps.append(Metropolis(vars=[Z], scaling=0.0132, tune=False))
-    #steps.append(NUTS(vars=[L],scaling=np.ones(D)))
-    steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
+    steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
+    #steps.append(Metropolis(vars=[Z], scaling=0.0132, tune=False))
+    steps.append(NUTS(vars=[L],scaling=np.ones(D)))
+    #steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
 
 ## 22 minutes per step with all NUTS set
 
@@ -140,15 +148,17 @@ L = trace[L]
 Sbin = np.vstack([np.bincount(S[i],minlength=6)/float(len(S[i])) for i in range(len(S))])
 zeroIndices = np.roll(T.cumsum(),1)
 zeroIndices[0] = 0
-pibar = np.vstack([np.bincount(S[i][zeroIndices],minlength=6)/float(zeroIndices.shape[0]) for i in range(len(S))])
-pibar = np.vstack([np.bincount(S_start[zeroIndices],minlength=6)/float(zeroIndices.shape[0]),pibar])
-#logp = steps[2].logp
-#Xlogp = steps[4].logp
-#XChanges = np.insert(1-(1-(X[:,1:]-X[:,:-1])).prod(axis=2),0,0,axis=1)
-#XChanges.T[zeroIndices] = 0
-#XChanges[XChanges.nonzero()] = XChanges[XChanges.nonzero()]/XChanges[XChanges.nonzero()]
-#XChanges = XChanges.sum(axis=1)/float(N)
-#logpTotal = [model.logp(trace[i]) for i in range(len(trace))]
+pibar = np.vstack([np.bincount(S[i][zeroIndices],minlength=M)/float(zeroIndices.shape[0]) for i in range(len(S))])
+pibar = np.vstack([np.bincount(S_start[zeroIndices],minlength=M)/float(zeroIndices.shape[0]),pibar])
+SEnd = np.vstack([np.bincount(S[i][zeroIndices-1],minlength=M)/float(zeroIndices.shape[0]) for i in range(len(S))])
+SEnd = np.vstack([np.bincount(S_start[zeroIndices-1],minlength=M)/float(zeroIndices.shape[0]),SEnd])
+logp = steps[2].logp
+Xlogp = steps[4].logp
+XChanges = np.insert(1-(1-(X[:,1:]-X[:,:-1])).prod(axis=2),0,0,axis=1)
+XChanges.T[zeroIndices] = 0
+XChanges[XChanges.nonzero()] = XChanges[XChanges.nonzero()]/XChanges[XChanges.nonzero()]
+XChanges = XChanges.sum(axis=1)/float(N)
+logpTotal = [model.logp(trace[i]) for i in range(len(trace))]
 
 #np.set_printoptions(2);np.set_printoptions(linewidth=160)
 '''

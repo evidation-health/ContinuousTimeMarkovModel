@@ -16,37 +16,37 @@ datadir = '../data/small_sample/'
 
 infile = open(datadir+'pi.pkl','rb')
 pi_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'Q.pkl','rb')
 Q_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'S.pkl','rb')
 S_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'B.pkl','rb')
 B_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'B0.pkl','rb')
 B0_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'X.pkl','rb')
 X_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'Z.pkl','rb')
 Z_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'L.pkl','rb')
 L_start = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'obs_jumps.pkl','rb')
 obs_jumps = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'T.pkl','rb')
 T = load(infile)
-infile.close
+infile.close()
 infile = open(datadir+'O.pkl','rb')
 O = load(infile)
-infile.close
+infile.close()
 
 #Cut down to 15 people
 newN = 15
@@ -142,9 +142,9 @@ with model:
     #steps.append(Metropolis(vars=[B], scaling=0.198, tune=False))
     steps.append(ForwardX(vars=[X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs))
 #    steps.append(Constant(vars=[X]))
-    steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
+#    steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
     #steps.append(Metropolis(vars=[Z], scaling=0.0132, tune=False))
-#    steps.append(Constant(vars=[Z]))
+    steps.append(Constant(vars=[Z]))
     steps.append(NUTS(vars=[L],scaling=np.ones(D)))
     #steps.append(Metropolis(vars=[L],scaling=0.02, tune=False, ))
 #    steps.append(Constant(vars=[L]))

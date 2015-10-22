@@ -152,11 +152,9 @@ class ForwardS(ArrayStepShared):
         likelihoodOfS = np.triu(likelihoodOfS)
         #likelihoodOfS[:,:,:] = np.triu(np.tile((((1-commorb_was_off)*(1-commorb_changed))[:,:,np.newaxis] + commorb_was_off[:,:,np.newaxis]*(commorb_changed[:,:,np.newaxis]*np.roll(B,-1,axis=1)[np.newaxis,:,:]+(1-commorb_changed[:,:,np.newaxis])*(1-np.roll(B,-1,axis=1)[np.newaxis,:,:]))).prod(axis=1)[:,:,np.newaxis],(1,1,self.M)),k=1)
         #likelihoodOfS[:,:,:] = np.triu(np.tile((((1-commorb_was_off)*(1-commorb_changed))[:,:,np.newaxis] + commorb_was_off[:,:,np.newaxis]*(commorb_changed[:,:,np.newaxis]*np.roll(B,-1,axis=1)[np.newaxis,:,:]+(1-commorb_changed[:,:,np.newaxis])*(1-np.roll(B,-1,axis=1)[np.newaxis,:,:]))).prod(axis=1)[:,np.newaxis,:],(1,self.M,1)),k=1)
-        #TODO: I do this a stupid lazy way using weird behaviour of tril on 3d arrays
         #Diagonal (S doesn't change)
         diagTemp = np.tile((1-commorb_changed).prod(axis=1)[:,np.newaxis,np.newaxis],(1,self.M,self.M))
         diagOnes = np.tile(np.identity(self.M)[np.newaxis,:,:],(self.nObs,1,1))
-        #diagTemp = np.triu(np.tril(np.tile((1-commorb_changed).prod(axis=1)[:,np.newaxis,np.newaxis],(1,self.M,self.M))))
         likelihoodOfS[diagOnes.nonzero()] = diagTemp[diagOnes.nonzero()]
         #Set t=0
         likelihoodOfS[self.zeroIndices,:,:] = (X[self.zeroIndices][:,:,np.newaxis]*B0[np.newaxis,:,:] + (1-X[self.zeroIndices])[:,:,np.newaxis]*(1-B0)[np.newaxis,:,:]).prod(axis=1)[:,np.newaxis,:]

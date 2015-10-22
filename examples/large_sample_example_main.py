@@ -180,8 +180,10 @@ L = trace[L]
 Sbin = np.vstack([np.bincount(S[i],minlength=6)/float(len(S[i])) for i in range(len(S))])
 zeroIndices = np.roll(T.cumsum(),1)
 zeroIndices[0] = 0
-pibar = np.vstack([np.bincount(S[i][zeroIndices],minlength=6)/float(zeroIndices.shape[0]) for i in range(len(S))])
-pibar = np.vstack([np.bincount(S_start[zeroIndices],minlength=6)/float(zeroIndices.shape[0]),pibar])
+pibar = np.vstack([np.bincount(S[i][zeroIndices],minlength=M)/float(zeroIndices.shape[0]) for i in range(len(S))])
+pibar = np.vstack([np.bincount(S_start[zeroIndices],minlength=M)/float(zeroIndices.shape[0]),pibar])
+SEnd = np.vstack([np.bincount(S[i][zeroIndices-1],minlength=M)/float(zeroIndices.shape[0]) for i in range(len(S))])
+SEnd = np.vstack([np.bincount(S_start[zeroIndices-1],minlength=M)/float(zeroIndices.shape[0]),SEnd])
 #logp = steps[2].logp
 #Xlogp = steps[4].logp
 #XChanges = np.insert(1-(1-(X[:,1:]-X[:,:-1])).prod(axis=2),0,0,axis=1)
