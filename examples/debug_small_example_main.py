@@ -62,7 +62,7 @@ N = T.shape[0] # Number of patients
 M = pi_start.shape[0] # Number of hidden states
 K = Z_start.shape[0] # Number of comorbidities
 D = Z_start.shape[1] # Number of claims
-Dd = 16 # Maximum number of claims that can occur at once
+Dd = O.shape[1] # Maximum number of claims that can occur at once
 
 #DES Random inputs
 #ranSeed = 144

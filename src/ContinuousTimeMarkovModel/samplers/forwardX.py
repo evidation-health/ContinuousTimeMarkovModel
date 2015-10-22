@@ -198,6 +198,7 @@ class ForwardX(ArrayStepShared):
 
     #@profilingUtil.timefunc
     def astep(self,X):
+#        import pdb; pdb.set_trace()
         #timer = profilingUtil.timewith('forwardX step')
         S, B0, B, Z, L = self.get_params()
         X = np.reshape(X, (self.nObs,self.K)).astype(np.int8)
