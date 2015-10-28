@@ -5,6 +5,7 @@ from pymc3 import Model, sample, Metropolis, Dirichlet, Potential, Binomial, Bet
 import theano.tensor as TT
 from ContinuousTimeMarkovModel.samplers.forwardS import *
 from ContinuousTimeMarkovModel.samplers.forwardX import *
+from theanoMod import *
 
 import argparse
 
@@ -73,6 +74,13 @@ infile = open(datadir+'O.pkl','rb')
 O = load(infile)
 infile.close()
 
+infile = open(datadir+'anchors.pkl','rb')
+anchors = load(infile)
+infile.close()
+#anchors = []
+
+#import pdb; pdb.set_trace()
+
 #Truncate to newN people
 if args.newN is not None:
     T = T[:args.newN]
@@ -89,6 +97,13 @@ K = Z_start.shape[0] # Number of comorbidities
 D = Z_start.shape[1] # Number of claims
 Dmax = O.shape[1] # Maximum number of claims that can occur at once
 
+mask = np.ones((K,D))
+for anchor in anchors:
+    for hold in anchor[1]:
+        mask[:,hold] = 0
+        mask[anchor[0],hold] = 1
+Z_start = Z_start[mask.nonzero()]
+
 model = Model()
 with model:
 # pi[m]: probability of starting in disease state m
@@ -103,11 +118,14 @@ with model:
     S = DiscreteObsMJP('S', pi=pi, Q=Q, M=M, nObs=nObs, observed_jumps=obs_jumps, T=T, shape=(nObs))
 
     B0 = Beta('B0', alpha = 1., beta = 1., shape=(K,M))
+    B0_monotonicity_constraint = Potential('B0_monotonicity_constraint',TT.switch(TT.min(DES_diff(B0)) < 0., 100.0*TT.min(DES_diff(B0)), 0))
+
     B = Beta('B', alpha = 1., beta = 1., shape=(K,M))
 
     X = Comorbidities('X', S=S, B0=B0,B=B, T=T, shape=(nObs, K))
 
-    Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+    #Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+    Z = Beta_with_anchors('Z', anchors=anchors, K=K, D=D, alpha = 0.1, beta = 1., shape=(K,D))
     L = Beta('L', alpha = 1., beta = 1., shape=D)
     O_obs = Claims('O_obs', X=X, Z=Z, L=L, T=T, D=D, O_input=O, shape=(nObs,Dmax), observed=O)
 
@@ -123,7 +141,8 @@ B0_lo = logit(B0_start)
 Z_lo = logit(Z_start)
 L_lo = logit(L_start)
 
-start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
+start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_anchoredbeta':Z_lo, 'L_logodds':L_lo}
+#start = {'Q_ratematrixoneway': Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo}
 
 with model:
 
@@ -136,8 +155,7 @@ with model:
     if 'Q' in args.constantVars:
         steps.append(Constant(vars=[Q]))
     else:
-        steps.append(NUTS(vars=[Q],scaling=np.ones(M-1,dtype=float)*10.))
-        #steps.append(Metropolis(vars=[Q], scaling=0.2, tune=False))
+        steps.append(NUTS(vars=[Q],scaling=np.ones(M-1,dtype=float)*10.)) #steps.append(Metropolis(vars=[Q], scaling=0.2, tune=False))
     if 'S' in args.constantVars:
         steps.append(Constant(vars=[S]))
     else:
@@ -162,7 +180,9 @@ with model:
     if 'Z' in args.constantVars:
         steps.append(Constant(vars=[Z]))
     else:
-        steps.append(NUTS(vars=[Z], scaling=np.ones(K*D)))
+        #import pdb; pdb.set_trace()
+        steps.append(NUTS(vars=[Z]))
+        #steps.append(NUTS(vars=[Z], scaling=np.ones_like(Z_lo)))
         #steps.append(Metropolis(vars=[Z], scaling=0.0132, tune=False))
     if 'L' in args.constantVars:
         steps.append(Constant(vars=[L]))
@@ -195,6 +215,7 @@ XChanges.T[zeroIndices] = 0
 XChanges[XChanges.nonzero()] = XChanges[XChanges.nonzero()]/XChanges[XChanges.nonzero()]
 XChanges = XChanges.sum(axis=1)/float(N)
 logpTotal = [model.logp(trace[i]) for i in range(len(trace))]
+#B0diff = np.array([np.diff(b) for b in B0])
 
 #np.set_printoptions(2);np.set_printoptions(linewidth=160)
 '''

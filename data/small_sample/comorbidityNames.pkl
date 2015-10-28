@@ -1,0 +1,10 @@
+(lp0
+S'COPD'
+p1
+aS'Other Lung Diseases'
+p2
+aS'Diabetes'
+p3
+aS'Kidney'
+p4
+a.

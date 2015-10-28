@@ -3,6 +3,8 @@ from pymc3.distributions.transforms import Transform, ElemwiseTransform
 from pymc3.distributions.transforms import interval, logodds
 import numpy as np
 
+#__all__ = ['ratematrix','ratematrixoneway','anchoredbeta']
+
 class RateMatrix(Transform):
     name = "ratematrix"
     def __init__(self, lower, upper):
@@ -90,36 +92,44 @@ def rate_matrix_one_way(lower, upper):
     return RateMatrixOneWay(lower, upper)
 
 
-class UnanchoredBetaMatrix(Transform):
-    name = "unanchoredBetaMatrix"
-    def __init__(self, anchors,K,D):
+class AnchoredBeta(Transform):
+    name = "anchoredbeta"
+    def __init__(self, mask, K, D):
         self.logodds_transform = logodds
         #anchors is list of tuples (D,K)
-        #TODO: Sort this
-        self.anchors = anchors
+        #self.anchors = anchors
         self.K = K
         self.D = D
 
-    def unanchored_to_full_matrix(self,Z_raw):
+        #mask contains zeros for elements fixed at 10E-6
+        self.mask = mask
+
+    def anchored_to_full_matrix(self,Z_raw):
         #Z_raw is of length D*K-a*(K-1)
-        #anchors must be sorted by D
-        for anchor in anchors:
-            np.insert(Z_raw,anchor[0]*self.K,np.ones(anchor[1])*10E-6)
-            np.insert(Z_raw,anchor[0]*self.K+anchor[1]+1,np.ones(self.K-anchor[1]-1)*10E-6)
+        Z_full = TT.ones_like(self.mask)*1E-6
+        Z_full = TT.set_subtensor(Z_full[self.mask.nonzero()], Z_raw)
+        return Z_full
+
+    def full_matrix_to_anchored(self,Z_full):
+        Z_full = TT.as_tensor_variable(Z_full)
+        Z_raw = Z_full[self.mask.nonzero()]
         return Z_raw
 
     def backward(self, Z_raw_log):
+        #Z_raw_log = TT.as_tensor_variable(Z_raw_log)
         Z_raw = self.logodds_transform.backward(Z_raw_log)
-        Z = self.unanchored_to_full_matrix(Z_raw)
+        Z = self.anchored_to_full_matrix(Z_raw)
         return Z
 
     def forward(self, Z):
-        Z_raw = self.full_matrix_to_unanchored(Z)
+        #import pdb; pdb.set_trace()
+        #Z = TT.as_tensor_variable(Z)
+        Z_raw = self.full_matrix_to_anchored(Z)
         Z_raw_log = self.logodds_transform.forward(Z_raw)
         return Z_raw_log
 
     def jacobian_det(self, x):
         return self.logodds_transform.jacobian_det(x)
 
-def unanchored_betas(anchors,K,D):
-    return UnanchoredBetaMatrix(anchors,K,D)
+def anchored_betas(mask,K,D,alpha,beta):
+    return AnchoredBeta(mask,K,D)
