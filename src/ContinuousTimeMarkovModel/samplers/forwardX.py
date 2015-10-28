@@ -2,6 +2,7 @@ from pymc3.core import *
 from pymc3.step_methods.arraystep import ArrayStepShared
 from pymc3.theanof import make_shared_replacements
 from pymc3.distributions.transforms import logodds
+from ContinuousTimeMarkovModel.transforms import *
 
 from theano import function
 
@@ -57,8 +58,10 @@ class ForwardX(ArrayStepShared):
         S = self.shared['S']
         B0 = logodds.backward(self.shared['B0_logodds'])
         B = logodds.backward(self.shared['B_logodds'])
-        
-        Z = logodds.backward(self.shared['Z_logodds'])
+       
+        Z = model.vars[6].distribution.transform_used.backward(self.shared['Z_anchoredbeta'])
+        #Z = anchoredbeta.backward(self.shared['Z_anchoredbeta'])
+        #Z = logodds.backward(self.shared['Z_logodds'])
         L = logodds.backward(self.shared['L_logodds'])
 
         #at this point parameters are still symbolic so we

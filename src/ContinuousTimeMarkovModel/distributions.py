@@ -1,7 +1,9 @@
 from pymc3 import Continuous
+from pymc3.distributions.dist_math import bound,logpow
 from pymc3.distributions.special import gammaln
 from pymc3.distributions.discrete import Categorical, Binomial
-from .transforms import rate_matrix, rate_matrix_one_way
+#from .transforms import rate_matrix, rate_matrix_one_way
+from ContinuousTimeMarkovModel.transforms import *
 import numpy as np
 import theano.tensor as TT
 from theano.tensor.nlinalg import eig, matrix_inverse
@@ -16,8 +18,7 @@ class DiscreteObsMJP_unif_prior(Continuous):
     def __init__(self, M, lower=0, upper=100, *args, **kwargs):
         self.lower = lower
         self.upper = upper
-        super(DiscreteObsMJP_unif_prior, self).__init__(transform=rate_matrix_one_way(lower=lower, upper=upper), 
-            *args, **kwargs)
+        super(DiscreteObsMJP_unif_prior, self).__init__(transform=rate_matrix_one_way(lower=lower, upper=upper), *args, **kwargs)
         Q = np.ones((M, M), np.float64) - 0.5
         self.mode = Q
 
@@ -26,25 +27,51 @@ class DiscreteObsMJP_unif_prior(Continuous):
 
 class Beta_with_anchors(Continuous):
 
-    def __init__(self, shape, anchors, alpha = 1.0, beta = 1.0, *args, **kwargs):
-        self.alpha = alpha
-        self.beta = beta
-        super(Beta_with_anchors, self).__init__(transform=unanchored_betas(alpha=alpha, beta=beta, anchors=anchors), 
-            *args, **kwargs)
-        #Q = np.ones(shape, np.float64) - 0.5
-        #self.mode = Q
+    def __init__(self, anchors, K, D, alpha = 1.0, beta = 1.0, *args, **kwargs):
+        #import pdb; pdb.set_trace()
+        self.alpha = shared(alpha)
+        self.beta = shared(beta)
+        #mask contains zeros for elements fixed at 1E-6
+        mask = np.ones((K,D))
+        for anchor in anchors:
+            #mask[:,anchor[1]] = 0
+            for hold in anchor[1]:
+                mask[:,hold] = 0
+                mask[anchor[0],hold] = 1
+        self.mask = TT.as_tensor_variable(mask)
+ #       mask = TT.zeros_like(TT.as_tensor_variable(np.zeros((K,D))))
+ #       for anchor in anchors:
+ #           TT.set_subtensor(mask[anchor[0],:], 0)
+ #           TT.set_subtensor(mask[anchor[0],anchor[1]], 1)
+ #       self.mask = mask
 
-    def logp(self, value):
+        super(Beta_with_anchors, self).__init__(transform=anchored_betas(mask=self.mask, K=K, D=D, alpha=alpha, beta=beta), *args, **kwargs)
+        #super(Beta_with_anchors, self).__init__(transform=anchored_betas(anchors=anchors, K=K, D=D, alpha=alpha, beta=beta), *args, **kwargs)
+        #Z = np.ones((D,K), np.float64) - 0.5
+        #self.mode = Z
+
+#TODO: Should this be numpy like ratematrix
+        self.mean = TT.ones_like(self.mask)*1E-6 
+        self.mean = TT.set_subtensor(self.mean[self.mask.nonzero()], (alpha / (alpha + beta)))
+        #self.mean = np.ones((K,D),np.float64)*1E-6 
+        #self.mean[self.mask.nonzero()] = (alpha / (alpha + beta))
+
+    def logp(self, Z):
         alpha = self.alpha
         beta = self.beta
 
-        return bound(
+        Zanchored = Z[self.mask.nonzero()]
+
+        #import pdb; pdb.set_trace()
+        logp = bound(
             gammaln(alpha + beta) - gammaln(alpha) - gammaln(beta) +
             logpow(
-                value, alpha - 1) + logpow(1 - value, beta - 1),
-            0 <= value, value <= 1,
+                Zanchored, alpha - 1) + logpow(1 - Zanchored, beta - 1),
+            0 <= Zanchored, Zanchored <= 1,
             alpha > 0,
             beta > 0)
+
+        return logp
 
 class DiscreteObsMJP(Continuous):
 
@@ -358,10 +385,13 @@ def logp_theano_claims(l,nObs,T,Z,L,X,O_on):
     # tempVec is 1-X*Z
     tempVec =  (1. - X.reshape((nObs,1,X.shape[1]))*(Z.T).reshape((1,Z.shape[1],Z.shape[0])))
     # Add the contribution from O = 1
-    logLike = TT.log(1-(1-TT.tile(L[np.newaxis,:],(nObs,1))[O_on.nonzero()])*tempVec[O_on.nonzero()].prod(axis=1)).sum()
+    logLike = TT.log(1-(1-TT.tile(L[np.newaxis,:],(nObs,1))[O_on.nonzero()])*TT.prod(tempVec[O_on.nonzero()],axis=1,no_zeros_in_input=True)).sum()
+    #logLike = TT.log(1-(1-TT.tile(L[np.newaxis,:],(nObs,1))[O_on.nonzero()])*tempVec[O_on.nonzero()].prod(axis=1,no_zeros_in_input=True)).sum()
+    #logLike = TT.log(1-(1-TT.tile(L[np.newaxis,:],(nObs,1))[O_on.nonzero()])*tempVec[O_on.nonzero()].prod(axis=1)).sum()
 
     # Add the contribution from O = 0
-    logLike += TT.log((1-TT.tile(L[np.newaxis,:],(nObs,1))[(1-O_on).nonzero()])*tempVec[(1-O_on).nonzero()].prod(axis=1)).sum()
+    logLike += TT.log((1-TT.tile(L[np.newaxis,:],(nObs,1))[(1-O_on).nonzero()])*TT.prod(tempVec[(1-O_on).nonzero()],axis=1,no_zeros_in_input=True)).sum()
+    #logLike += TT.log((1-TT.tile(L[np.newaxis,:],(nObs,1))[(1-O_on).nonzero()])*tempVec[(1-O_on).nonzero()].prod(axis=1)).sum()
 
     return logLike
 
