@@ -24,6 +24,6 @@ pip install --process-dependency-links --trusted-host github.com -e git+https://
 
 mydata.csv should contain rows of index, userid, datetime, claimsCode(i.e. ICD9) with a header pers_uniq_id, date_of_service, primary_diag_cd but the script can be easily modified to fit slightly different formatting
 
-* Run the runSontagModel.py script passing it your inputs (or try out the small_sample default) which in ipython would be run as:
+* Run the runSontagModel.py script in the examples directory by passing it your inputs (or try out the small_sample default) which in ipython would be run as:
 
 `run runSontagModel.py -n 1001 -t 100 -d '../data/myPickledInputs'`
