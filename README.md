@@ -27,3 +27,10 @@ mydata.csv should contain rows of index, userid, datetime, claimsCode(i.e. ICD9)
 * Run the runSontagModel.py script in the examples directory by passing it your inputs (or try out the small_sample default) which in ipython would be run as:
 
 `run runSontagModel.py -n 1001 -t 100 -d '../data/myPickledInputs'`
+
+* In ipython, plot sampling results using pymc3's traceplot functionality or use groundTruthTraceplot to compare samples to a known result
+
+```
+pymc3.traceplot(trace=trace,vars=['pi']); plt.show()
+groundTruthTraceplot(L_start,trace,var='L')
+```
