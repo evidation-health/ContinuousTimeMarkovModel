@@ -23,13 +23,17 @@ parser.add_argument('-c','--const', action='store', default=[], nargs='+', type=
                         help='list of variables to hold constant during sampling')
 parser.add_argument('--seed', action='store', default=111, type=int, dest = 'random_seed',
                         help='random seed for sampling')
-parser.add_argument('-p','--hide-progressbar', action='store_false', dest = 'progressbar',
+parser.add_argument('-p','--profile', action='store_true', dest = 'profile',
+                        help='turns on theano profiler')
+parser.add_argument('-P','--hide-progressbar', action='store_false', dest = 'progressbar',
                         help='hides progress bar in sample')
 #parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),default=sys.stdout)
 args = parser.parse_args()
 
 #import sys; sys.setrecursionlimit(50000)
 #theano.config.compute_test_value = 'off'
+if args.profile:
+    theano.config.profile = True
 
 # Load pre-generated data
 from pickle import load

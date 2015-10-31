@@ -37,6 +37,23 @@ class logpTests(unittest.TestCase):
         #O[[0,5,11,12],[0,1,2,3]] = 1
         O = np.concatenate([O[:,0:T[i],i].T for i in range(N)])
 
+        Z_lo = np.array([[-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509],
+   [-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
+    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509]])
+
+        anchors = []
+        mask = np.ones((K,D))
+        for anchor in anchors:
+            for hold in anchor[1]:
+                mask[:,hold] = 0
+                mask[anchor[0],hold] = 1
+        Z_lo = Z_lo[mask.nonzero()]
+
         with Model() as self.model:
             self.pi = Dirichlet('pi', a = as_tensor_variable([0.5, 0.5, 0.5]), shape=M)
             pi_min_potential = Potential('pi_min_potential', TT.switch(TT.min(self.pi) < .1, -np.inf, 0))
@@ -45,7 +62,8 @@ class logpTests(unittest.TestCase):
             self.B0 = Beta('B0', alpha = 1., beta = 1., shape=(K,M))
             self.B = Beta('B', alpha = 1., beta = 1., shape=(K,M))
             self.X = Comorbidities('X', S=self.S, B0=self.B0,B=self.B, T=T, shape=(nObs,K))
-            self.Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+            #self.Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+            self.Z = Beta_with_anchors('Z', anchors=anchors, K=K, D=D, alpha = 0.1, beta = 1., shape=(K,D))
             self.L = Beta('L', alpha = 1., beta = 1., shape=D)
             #L = Beta('L', alpha = 0.1, beta = 1, shape=D, transform=None)
             #L = Uniform('L', left = 0.0, right = 1.0, shape=D, transform=None)
@@ -55,14 +73,7 @@ class logpTests(unittest.TestCase):
             self.forS = ForwardS(vars=[self.S], N=N, T=T, nObs=nObs, observed_jumps=obs_jumps)
             self.forX = ForwardX(vars=[self.X], N=N, T=T, K=K, D=D,Dd=Dd, O=O, nObs=nObs)
 
-        self.myTestPoint = {'Z_logodds': np.array([[-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509],
-   [-2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509,
-    -2.30258509, -2.30258509, -2.30258509, -2.30258509, -2.30258509]]), 'Q_ratematrixoneway': np.array([ 0.1,  0.1]), 'pi_stickbreaking': np.array([0.2,0.1]), 'S': np.array([[0, 0, 1, 1],
+        self.myTestPoint = {'Z_anchoredbeta': Z_lo, 'Q_ratematrixoneway': np.array([ 0.1,  0.1]), 'pi_stickbreaking': np.array([0.2,0.1]), 'S': np.array([[0, 0, 1, 1],
    [1, 1, 1, 1],
    [1, 1, 2, 2],
    [0, 2, 2, 2],                                                                                                                                                                 
@@ -165,7 +176,7 @@ class logpTests(unittest.TestCase):
     def test_forwardS_same_as_old(self):
         #import pdb; pdb.set_trace()
         Qtest = np.array([[-3.,2.,1.],[3.,-6.,3.],[1.,1.,-2.]])
-        pS_Test = self.forS.compute_pS(Qtest,self.M)
+        pS_Test = self.forS.compute_pSt_GIVEN_Stm1(Qtest,self.M)
         pS_Correct = np.array([[[ 0.36139104,  0.19639045,  0.44221851],[ 0.34890514,  0.19355079,  0.45754407],[ 0.33357958,  0.18872767,  0.47769275]]])
         np.testing.assert_array_almost_equal(pS_Test, pS_Correct, err_msg="forwardS test off",decimal = 6)
 

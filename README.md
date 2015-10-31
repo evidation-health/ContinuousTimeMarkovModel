@@ -8,19 +8,26 @@ http://cs.nyu.edu/~dsontag/papers/WanSonWan_kdd14.pdf
 
 # Instructions
 
-1. cd in to src/cython
-2. run the command 
+1. Install the package with the command
 
 ```
-python setup.py build_ext --inplace
+pip install --process-dependency-links --trusted-host github.com -e git+https://github.com/evidation-health/ContinuousTimeMarkovModel.git#egg=ContinuousTimeMarkovModel
 ```
 
-3. This compiles the Cython code snippet. There should be a file now in the Cython directory called "compute_prod_other_k.so" if not, then it's in one of the other directories under cython (most likely cython/ContinuousTimeMarkovModel/src/cython) so move it in to the cython directory
+2. cd into the ContinuousTimeMarkovModel directory, something like /usr/local/lib/python2.7/site-packages/src/continuoustimemarkovmodel
+    or try running 'import ContinuousTimeMarkovModel; print ContinuousTimeMarkovModel.__path__' in a python script
 
-4. Add the directory that you cloned the project in to i.e. the directory that contains "ContinuousTimeMarkovModel" in to the Python path. The python path is the environment variable called $PYTHONPATH 
-
-5. Run the program (from ipython the command is)
+3. Add your data using the claimsToInputs.py script in the data file (may need slight modification for specific csv format). Example:
 
 ```
-run main.py
+python claimsToInputs.py mydata.csv -c 32 -o myPickledInputs
+```
+
+    mydata.csv should contain rows of index, userid, datetime, claimsCode(i.e. ICD9) with a header pers_uniq_id, date_of_service, primary_diag_cd but the
+    script can be easily modified to fit slightly different formatting
+
+4. Run the runSontagModel.py script passing it your inputs (or try out the small_sample default) which in ipython would be run as:
+
+```
+run runSontagModel.py -n 1001 -t 100 -d '../data/myPickledInputs'
 ```

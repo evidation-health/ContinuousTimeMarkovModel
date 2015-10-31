@@ -43,6 +43,14 @@ class logpTests(unittest.TestCase):
         O = np.concatenate([O[:,0:T[i],i].T for i in range(N)])
         S_start = np.concatenate([S_start[i,0:T[i]] for i in range(N)])
         X_start = np.concatenate([X_start[:,0:T[i],i].T for i in range(N)])
+        anchors = []
+        self.Z_original
+        mask = np.ones((K,D))
+        for anchor in anchors:
+            for hold in anchor[1]:
+                mask[:,hold] = 0
+                mask[anchor[0],hold] = 1
+        Z_start = Z_start[mask.nonzero()]
 
         with Model() as self.model:
             self.pi = Dirichlet('pi', a = as_tensor_variable([0.5,0.5,0.5,0.5,0.5,0.5]), shape=M)
@@ -52,7 +60,8 @@ class logpTests(unittest.TestCase):
             self.B0 = Beta('B0', alpha = 1., beta = 1., shape=(K,M))
             self.B = Beta('B', alpha = 1., beta = 1., shape=(K,M))
             self.X = Comorbidities('X', S=self.S, B0=self.B0,B=self.B, T=T, shape=(nObs,K))
-            self.Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+            #self.Z = Beta('Z', alpha = 0.1, beta = 1., shape=(K,D))
+            self.Z = Beta_with_anchors('Z', anchors=anchors, K=K, D=D, alpha = 0.1, beta = 1., shape=(K,D))
             self.L = Beta('L', alpha = 1., beta = 1., shape=D)
             self.testClaims = Claims('O_obs', X=self.X, Z=self.Z, L=self.L, T=T, D=D, O_input=O, shape=(nObs,Dd), observed=O)
 
@@ -90,7 +99,7 @@ class logpTests(unittest.TestCase):
         Z_lo = logit(Z_start)
         L_lo = logit(L_start)
         #import pdb; pdb.set_trace()
-        self.myTestPoint = {'Q_ratematrixoneway': self.Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_logodds':Z_lo, 'L_logodds':L_lo, 'pi_stickbreaking':np.array([0.5,0.5,0.5,0.5,0.5,0.5])}
+        self.myTestPoint = {'Q_ratematrixoneway': self.Q_raw_log, 'B_logodds':B_lo, 'B0_logodds':B0_lo, 'S':S_start, 'X':X_start, 'Z_anchoredbeta':Z_lo, 'L_logodds':L_lo, 'pi_stickbreaking':np.array([0.5,0.5,0.5,0.5,0.5,0.5])}
 
 #    def test_claims_pi_same_as_old(self):
 #        pi_LL = self.pi.transformed.logp(self.myTestPoint)
@@ -166,7 +175,7 @@ class logpTests(unittest.TestCase):
 #        np.testing.assert_array_almost_equal(pSnt_Test, pSnt_Correct, err_msg="forwardS test off",decimal = 6)
     def test_forwardS_same_as_old(self):
         self.forS.astep(0.)
-        pS0_Test = self.forS.compute_S0_GIVEN_X0()
+        pS0_Test = self.forS.compute_S0_GIVEN_X0(self.forS.computeLikelihoodOfS(self.myTestPoint['X'],logistic.cdf(self.myTestPoint['B_logodds']),logistic.cdf(self.myTestPoint['B0_logodds'])))
         pS0_Correct = load(open('pS0_Test_data.pkl', 'rb'))
 
         pSnt_Test = np.zeros((self.nObs,self.M))
@@ -186,7 +195,7 @@ class logpTests(unittest.TestCase):
 
     def test_forwardX_same_as_old(self):
         Psi = self.forX.computePsi(self.myTestPoint['S'],logistic.cdf(self.myTestPoint['B_logodds']))
-        LikelihoodOfX = self.forX.computeLikelihoodOfX(self.myTestPoint['X'],logistic.cdf(self.myTestPoint['Z_logodds']),logistic.cdf(self.myTestPoint['L_logodds']))
+        LikelihoodOfX = self.forX.computeLikelihoodOfX(self.myTestPoint['X'],self.Z_original,logistic.cdf(self.myTestPoint['L_logodds']))
         beta = self.forX.computeBeta(Psi,LikelihoodOfX)
         pX_Test = self.forX.computePX(beta,logistic.cdf(self.myTestPoint['B0_logodds']),self.myTestPoint['S'],self.myTestPoint['X'],LikelihoodOfX,Psi)
         pX_Test = pX_Test[:,:,0] / (pX_Test[:,:,0]+pX_Test[:,:,1])
