@@ -1,0 +1,1325 @@
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 3 steps) 5.036116e-03s
+
+  Total time spent in calling the VM 2.097845e-03s (41.656%)
+  Total overhead (computing slices..) 2.938271e-03s (58.344%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.199s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  39.1%    39.1%       0.001s       2.47e-05s     Py      30      10   theano.tensor.basic.Split
+  18.6%    57.7%       0.000s       2.35e-06s     C      150      50   theano.tensor.elemwise.Elemwise
+   8.2%    65.9%       0.000s       6.43e-06s     C       24       8   theano.tensor.subtensor.IncSubtensor
+   6.0%    71.9%       0.000s       3.81e-06s     C       30      10   theano.tensor.extra_ops.CumsumOp
+   4.8%    76.7%       0.000s       3.03e-05s     Py       3       1   theano.tensor.basic.ARange
+   4.4%    81.1%       0.000s       1.02e-06s     C       81      27   theano.tensor.subtensor.Subtensor
+   4.2%    85.3%       0.000s       6.62e-06s     C       12       4   theano.tensor.basic.Join
+   3.5%    88.8%       0.000s       1.10e-05s     C        6       2   theano.tensor.subtensor.AdvancedIncSubtensor1
+   3.4%    92.1%       0.000s       7.07e-06s     C        9       3   theano.tensor.subtensor.AdvancedSubtensor1
+   2.3%    94.5%       0.000s       1.47e-05s     C        3       1   theano.tensor.extra_ops.CumprodOp
+   1.7%    96.2%       0.000s       1.77e-06s     C       18       6   theano.tensor.basic.Alloc
+   1.2%    97.4%       0.000s       7.63e-06s     C        3       1   theano.tensor.basic.Reshape
+   0.6%    98.0%       0.000s       8.11e-07s     C       15       5   theano.tensor.opt.MakeVector
+   0.5%    98.5%       0.000s       1.01e-06s     C        9       3   theano.tensor.elemwise.DimShuffle
+   0.5%    99.0%       0.000s       1.47e-06s     C        6       2   theano.compile.ops.Shape_i
+   0.4%    99.3%       0.000s       5.56e-07s     C       12       4   theano.tensor.opt.Assert
+   0.2%    99.5%       0.000s       1.35e-06s     C        3       1   theano.tensor.basic.ScalarFromTensor
+   0.2%    99.7%       0.000s       5.17e-07s     C        6       2   theano.tensor.elemwise.All
+   0.2%    99.8%       0.000s       1.03e-06s     C        3       1   theano.tensor.basic.Flatten
+   0.2%   100.0%       0.000s       9.54e-07s     C        3       1   theano.compile.ops.ViewOp
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  39.1%    39.1%       0.001s       2.47e-05s     Py      30       10   Split{2}
+   6.0%    45.2%       0.000s       3.81e-06s     C       30       10   CumsumOp{0}
+   4.8%    50.0%       0.000s       3.03e-05s     Py       3        1   ARange{dtype='int64'}
+   4.2%    54.2%       0.000s       6.62e-06s     C       12        4   Join
+   3.4%    57.5%       0.000s       7.07e-06s     C        9        3   AdvancedSubtensor1
+   3.0%    60.6%       0.000s       9.16e-07s     C       63       21   Subtensor{::int64}
+   2.3%    62.9%       0.000s       1.47e-05s     C        3        1   CumprodOp{0}
+   2.3%    65.2%       0.000s       1.43e-05s     C        3        1   AdvancedIncSubtensor1{no_inplace,inc}
+   1.8%    67.0%       0.000s       5.80e-06s     C        6        2   IncSubtensor{Inc;:int64:}
+   1.8%    68.8%       0.000s       1.10e-05s     C        3        1   IncSubtensor{InplaceInc;::int64}
+   1.7%    70.4%       0.000s       1.77e-06s     C       18        6   Alloc
+   1.7%    72.1%       0.000s       2.13e-06s     C       15        5   Elemwise{mul,no_inplace}
+   1.4%    73.6%       0.000s       9.14e-06s     C        3        1   IncSubtensor{Inc;::int64}
+   1.4%    75.0%       0.000s       8.98e-06s     C        3        1   Elemwise{Composite{(Switch(i0, i0, Switch(i1, ((i2 * (i3 + (i4 / i5)) * i6) / i5), i0)) + Switch(i0, i0, Switch(i1, ((i3 * i6) / i5), i0)))}}[(0, 3)]
+   1.4%    76.4%       0.000s       8.98e-06s     C        3        1   Elemwise{Composite{EQ(i0, (Composite{Switch(LT(i0, i1), i2, i0)}((Composite{((i0 + i1) - i2)}(i1, i2, i3) + i4), i5, i6) - Switch(LT(Composite{Switch(LT(i0, i1), i2, i0)}(Composite{Switch(LT(i0, i1), (i2 - i3), i0)}(Composite{((i0 - (Switch(LT(i1, i2), i3, i1) - i4)) - i5)}((Composite{((i0 + i1) - i2)}(i1, i2, i3) + i4), Composite{((((i0 - i1) - i2) // i3) + i4)}(Composite{((i0 + i1) - i2)}(i1, i2, i3), i7, i8, i9, i10), i11, i12, i13, i1
+   1.4%    77.8%       0.000s       8.58e-06s     C        3        1   Elemwise{Composite{((i0 * i1 * i2) + (i3 * i2))}}
+   1.3%    79.1%       0.000s       8.27e-06s     C        3        1   IncSubtensor{InplaceInc;int64}
+   1.3%    80.4%       0.000s       7.95e-06s     C        3        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((-i0) + i1)}(i4, i5) * i2) + (i0 * ((-i6) + i7) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i4, i5) * i3 * i0) + (i0 * i8 * i2 * i3 * Composite{((-i0) + i1)}(i9, i10) * i2) + (i0 * ((-i11) + i12) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i9, i10) * i3 * i0) + (-((scalar_sigmoid((-i13)) * scalar_sigmoid((-i13)) * i14 * i3) + (scalar_sigmoid((-i13)) * i3))) + (scalar_sigmoid(i13) * i14 * i
+   1.2%    81.6%       0.000s       7.63e-06s     C        3        1   AdvancedIncSubtensor1{inplace,inc}
+   1.2%    82.8%       0.000s       7.63e-06s     C        3        1   Reshape{1}
+   ... (remaining 46 Ops account for  17.22%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+   8.3%     8.3%       0.000s       5.26e-05s      3   127   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   4.8%    13.1%       0.000s       3.03e-05s      3   136   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   4.8%    17.9%       0.000s       3.03e-05s      3     3   ARange{dtype='int64'}(TensorConstant{0}, Shape_i{0}.0, TensorConstant{1})
+   4.1%    22.0%       0.000s       2.57e-05s      3   138   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   3.8%    25.8%       0.000s       2.37e-05s      3   117   Split{2}(Elemwise{Mul}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   3.3%    29.1%       0.000s       2.07e-05s      3   137   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   3.1%    32.2%       0.000s       1.98e-05s      3   116   Split{2}(Elemwise{Composite{(Switch(i0, i0, Switch(i1, ((i2 * (i3 + (i4 / i5)) * i6) / i5), i0)) + Switch(i0, i0, Switch(i1, ((i3 * i6) / i5), i0)))}}[(0, 3)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   3.1%    35.3%       0.000s       1.94e-05s      3   125   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 3)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   3.0%    38.3%       0.000s       1.90e-05s      3   120   Split{2}(Elemwise{Composite{Switch(i0, i1, Switch(i2, (i3 / i4), i0))}}[(0, 4)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   2.9%    41.1%       0.000s       1.80e-05s      3   113   Split{2}(Elemwise{Composite{((i0 * i1) + (i2 * i3 * i1))}}[(0, 0)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   2.8%    43.9%       0.000s       1.76e-05s      3   134   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 3)].0, TensorConstant{0}, MakeVector{dtype='int64'}.0)
+   2.3%    46.2%       0.000s       1.47e-05s      3    26   CumprodOp{0}(Join.0)
+   2.3%    48.5%       0.000s       1.43e-05s      3    90   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-(i0 / i1)) / i1)}}[(0, 0)].0, AdvancedSubtensor1.0)
+   1.8%    50.3%       0.000s       1.10e-05s      3    70   IncSubtensor{InplaceInc;::int64}(Alloc.0, Elemwise{true_div}.0, Constant{-1})
+   1.7%    52.0%       0.000s       1.10e-05s      3    68   Join(TensorConstant{0}, Alloc.0, Elemwise{Neg}[(0, 0)].0)
+   1.4%    53.5%       0.000s       9.14e-06s      3    74   IncSubtensor{Inc;::int64}(Alloc.0, Subtensor{::int64}.0, Constant{-1})
+   1.4%    54.9%       0.000s       9.06e-06s      3    41   AdvancedSubtensor1(pi, AdvancedSubtensor1.0)
+   1.4%    56.3%       0.000s       8.98e-06s      3   108   Elemwise{Composite{(Switch(i0, i0, Switch(i1, ((i2 * (i3 + (i4 / i5)) * i6) / i5), i0)) + Switch(i0, i0, Switch(i1, ((i3 * i6) / i5), i0)))}}[(0, 3)](TensorConstant{(1,) of 0}, Elemwise{Mul}[(0, 0)].0, TensorConstant{(1,) of -1.0}, IncSubtensor{Inc;::int64}.0, Join.0, Join.0, TensorConstant{[-0.420537...8801956 ]})
+   1.4%    57.7%       0.000s       8.98e-06s      3    64   Elemwise{Composite{EQ(i0, (Composite{Switch(LT(i0, i1), i2, i0)}((Composite{((i0 + i1) - i2)}(i1, i2, i3) + i4), i5, i6) - Switch(LT(Composite{Switch(LT(i0, i1), i2, i0)}(Composite{Switch(LT(i0, i1), (i2 - i3), i0)}(Composite{((i0 - (Switch(LT(i1, i2), i3, i1) - i4)) - i5)}((Composite{((i0 + i1) - i2)}(i1, i2, i3) + i4), Composite{((((i0 - i1) - i2) // i3) + i4)}(Composite{((i0 + i1) - i2)}(i1, i2, i3), i7, i8, i9, i10), i11, i12, i13, i14), i15, (C
+   1.4%    59.1%       0.000s       8.58e-06s      3    76   Elemwise{Composite{((i0 * i1 * i2) + (i3 * i2))}}(Join.0, IncSubtensor{Inc;::int64}.0, CumprodOp{0}.0, Join.0)
+   ... (remaining 122 Apply instances account for 40.90%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: /usr/local/lib/python2.7/site-packages/pymc3/model.py:278
+  Time in 1 calls to Function.__call__: 4.014015e-03s
+  Time in Function.fn.__call__: 3.849983e-03s (95.914%)
+  Time in thunks: 3.507614e-03s (87.384%)
+  Total compile time: 1.362692e+01s
+    Number of Apply nodes: 188
+    Theano Optimizer time: 8.197986e+00s
+       Theano validate time: 1.183081e-01s
+    Theano Linker time (includes C, CUDA code generation/compiling): 5.132382e+00s
+       Import time 8.026083e-01s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.251s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  61.3%    61.3%       0.002s       2.15e-03s     Py       1       1   theano.scan_module.scan_op.Scan
+  10.3%    71.5%       0.000s       5.07e-06s     C       71      71   theano.tensor.elemwise.Elemwise
+   9.3%    80.8%       0.000s       8.15e-05s     Py       4       4   theano.tensor.basic.Nonzero
+   5.1%    85.9%       0.000s       3.54e-05s     C        5       5   theano.tensor.subtensor.AdvancedIncSubtensor1
+   3.0%    88.9%       0.000s       3.54e-05s     Py       3       3   theano.tensor.basic.ARange
+   1.6%    90.5%       0.000s       8.24e-06s     C        7       7   theano.tensor.subtensor.AdvancedSubtensor1
+   1.5%    92.0%       0.000s       5.10e-05s     Py       1       1   theano.tensor.subtensor.AdvancedIncSubtensor
+   1.2%    93.2%       0.000s       1.64e-06s     C       26      26   theano.tensor.subtensor.Subtensor
+   1.0%    94.2%       0.000s       3.48e-06s     C       10      10   theano.tensor.basic.Alloc
+   0.9%    95.1%       0.000s       3.19e-05s     Py       1       1   theano.tensor.subtensor.AdvancedSubtensor
+   0.8%    95.9%       0.000s       8.98e-06s     C        3       3   theano.tensor.extra_ops.CumprodOp
+   0.7%    96.6%       0.000s       3.28e-06s     C        8       8   theano.tensor.basic.Reshape
+   0.7%    97.4%       0.000s       4.37e-06s     C        6       6   theano.tensor.basic.Join
+   0.6%    98.0%       0.000s       2.03e-06s     C       10      10   theano.tensor.opt.MakeVector
+   0.6%    98.5%       0.000s       2.25e-06s     C        9       9   theano.compile.ops.Shape_i
+   0.4%    98.9%       0.000s       1.87e-06s     C        7       7   theano.tensor.elemwise.Sum
+   0.2%    99.1%       0.000s       8.11e-06s     C        1       1   theano.tensor.subtensor.IncSubtensor
+   0.2%    99.4%       0.000s       8.11e-06s     C        1       1   theano.tensor.elemwise.CAReduce
+   0.2%    99.6%       0.000s       1.97e-06s     C        4       4   theano.tensor.elemwise.DimShuffle
+   0.2%    99.8%       0.000s       1.38e-06s     C        5       5   theano.tensor.basic.Flatten
+   ... (remaining 3 Classes account for   0.20%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  61.3%    61.3%       0.002s       2.15e-03s     Py       1        1   for{cpu,scan_fn}
+   9.3%    70.6%       0.000s       8.15e-05s     Py       4        4   Nonzero
+   3.9%    74.5%       0.000s       3.46e-05s     C        4        4   AdvancedIncSubtensor1{inplace,set}
+   3.0%    77.5%       0.000s       3.54e-05s     Py       3        3   ARange{dtype='int64'}
+   1.9%    79.5%       0.000s       2.26e-05s     C        3        3   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2)), (Switch(EQ(i0, i1), i1, i3) + Switch(EQ(i4, i1), i1, i3)), i5) + log(Abs(i6)))}}[(0, 4)]
+   1.6%    81.1%       0.000s       8.24e-06s     C        7        7   AdvancedSubtensor1
+   1.5%    82.6%       0.000s       5.10e-05s     Py       1        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   1.1%    83.7%       0.000s       3.89e-05s     C        1        1   AdvancedIncSubtensor1{inplace,inc}
+   1.0%    84.7%       0.000s       3.48e-06s     C       10       10   Alloc
+   0.9%    85.6%       0.000s       3.19e-05s     Py       1        1   AdvancedSubtensor
+   0.9%    86.5%       0.000s       5.17e-06s     C        6        6   Elemwise{sub,no_inplace}
+   0.8%    87.3%       0.000s       2.91e-05s     C        1        1   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2) * i3 * i4), (Switch(AND(EQ((i5 - i0), i1), i6), i1, (i7 * log((i5 - i0)))) + i8 + Switch(AND(EQ(i0, i1), i9), i1, (i10 * log(i0)))), i11) + log(Abs(i12)))}}[(0, 0)]
+   0.8%    88.1%       0.000s       1.42e-06s     C       19       19   Subtensor{int64}
+   0.8%    88.8%       0.000s       8.98e-06s     C        3        3   CumprodOp{0}
+   0.7%    89.6%       0.000s       4.37e-06s     C        6        6   Join
+   0.6%    90.2%       0.000s       2.10e-05s     C        1        1   Elemwise{Sub}[(0, 1)]
+   0.6%    90.7%       0.000s       2.03e-06s     C       10       10   MakeVector{dtype='int64'}
+   0.5%    91.3%       0.000s       3.02e-06s     C        6        6   sigmoid
+   0.5%    91.7%       0.000s       3.29e-06s     C        5        5   Elemwise{eq,no_inplace}
+   0.5%    92.2%       0.000s       5.40e-06s     C        3        3   Reshape{1}
+   ... (remaining 47 Ops account for   7.81%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  61.3%    61.3%       0.002s       2.15e-03s      1   186   for{cpu,scan_fn}(Subtensor{int64}.0, Subtensor{int64:int64:int8}.0, Subtensor{int64}.0, AdvancedSubtensor1.0, sigmoid.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, Elemwise{Sub}[(0, 1)].0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Reshape{3}.0, AdvancedSubtensor1.0, sigmoid.0, Elemwise{Exp}[(0, 0)].0, Elemwise{sub,no_inplace}.0, Elemwise{sub}.0, Join.0, Elemwise{Exp}[(0, 0)].0, Elemwise{add,no_inplace}.0, Elemwise{Composite{(
+   3.5%    64.8%       0.000s       1.24e-04s      1   138   Nonzero(Elemwise{eq,no_inplace}.0)
+   2.6%    67.4%       0.000s       8.99e-05s      1   139   Nonzero(Elemwise{eq,no_inplace}.0)
+   2.2%    69.6%       0.000s       7.80e-05s      1   140   Nonzero(Elemwise{neq,no_inplace}.0)
+   1.5%    71.1%       0.000s       5.41e-05s      1   181   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Elemwise{neg,no_inplace}.0, Subtensor{int64}.0)
+   1.5%    72.6%       0.000s       5.10e-05s      1    36   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}(Alloc.0, sigmoid.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   1.3%    73.9%       0.000s       4.51e-05s      1   101   ARange{dtype='int64'}(TensorConstant{0}, Elemwise{Sqr}[(0, 0)].0, TensorConstant{1})
+   1.2%    75.1%       0.000s       4.20e-05s      1   107   ARange{dtype='int64'}(TensorConstant{0}, Subtensor{int64}.0, TensorConstant{1})
+   1.2%    76.2%       0.000s       4.10e-05s      1   176   AdvancedIncSubtensor1{inplace,set}(Alloc.0, TensorConstant{0.0}, Subtensor{int64}.0)
+   1.1%    77.3%       0.000s       3.89e-05s      1   125   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, TensorConstant{1}, AdvancedSubtensor1.0)
+   1.0%    78.3%       0.000s       3.48e-05s      1   108   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2)), (Switch(EQ(i0, i1), i1, i3) + Switch(EQ(i4, i1), i1, i3)), i5) + log(Abs(i6)))}}[(0, 4)](sigmoid.0, TensorConstant{(1, 1) of 0}, TensorConstant{(1, 1) of 1}, TensorConstant{(1, 1) of 0.0}, Elemwise{sub}.0, TensorConstant{(1, 1) of -inf}, Reshape{2}.0)
+   1.0%    79.3%       0.000s       3.41e-05s      1    82   Nonzero(AdvancedIncSubtensor1{inplace,set}.0)
+   0.9%    80.3%       0.000s       3.31e-05s      1    69   AdvancedIncSubtensor1{inplace,set}(Elemwise{sub,no_inplace}.0, TensorConstant{0}, TensorConstant{[  20   31..1577 1585]})
+   0.9%    81.2%       0.000s       3.19e-05s      1    64   AdvancedSubtensor(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   0.8%    82.0%       0.000s       2.91e-05s      1   100   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2) * i3 * i4), (Switch(AND(EQ((i5 - i0), i1), i6), i1, (i7 * log((i5 - i0)))) + i8 + Switch(AND(EQ(i0, i1), i9), i1, (i10 * log(i0)))), i11) + log(Abs(i12)))}}[(0, 0)](AdvancedSubtensor.0, TensorConstant{(1,) of 0}, TensorConstant{(1,) of 1}, Elemwise{gt,no_inplace}.0, Elemwise{gt,no_inplace}.0, TensorConstant{(1,) of 1.0}, Elemwise{eq,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{Composite{((sc
+   0.6%    82.6%       0.000s       2.10e-05s      1    47   Elemwise{Sub}[(0, 1)](TensorConstant{(1, 1) of 1}, AdvancedSubtensor1.0)
+   0.5%    83.1%       0.000s       1.91e-05s      1   117   CumprodOp{0}(Join.0)
+   0.5%    83.7%       0.000s       1.91e-05s      1    27   ARange{dtype='int64'}(TensorConstant{0}, Shape_i{0}.0, TensorConstant{1})
+   0.5%    84.2%       0.000s       1.69e-05s      1   110   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2)), (Switch(EQ(i0, i1), i1, i3) + Switch(EQ(i4, i1), i1, i3)), i5) + log(Abs(i6)))}}[(0, 4)](sigmoid.0, TensorConstant{(1, 1) of 0}, TensorConstant{(1, 1) of 1}, TensorConstant{(1, 1) of 0.0}, Elemwise{sub}.0, TensorConstant{(1, 1) of -inf}, Reshape{2}.0)
+   0.5%    84.6%       0.000s       1.69e-05s      1    23   AdvancedSubtensor1(S, TensorConstant{[   0   21..1578 1586]})
+   ... (remaining 168 Apply instances account for 15.35%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 3 steps) 1.541853e-03s
+
+  Total time spent in calling the VM 1.437187e-03s (93.212%)
+  Total overhead (computing slices..) 1.046658e-04s (6.788%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.293s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  49.7%    49.7%       0.001s       2.14e-05s     Py      30      10   theano.tensor.basic.Split
+  12.9%    62.6%       0.000s       1.59e-06s     C      105      35   theano.tensor.elemwise.Elemwise
+   9.3%    71.9%       0.000s       4.02e-06s     C       30      10   theano.tensor.extra_ops.CumsumOp
+   8.3%    80.2%       0.000s       3.97e-06s     C       27       9   theano.tensor.subtensor.IncSubtensor
+   6.2%    86.4%       0.000s       8.32e-07s     C       96      32   theano.tensor.subtensor.Subtensor
+   4.7%    91.1%       0.000s       1.02e-05s     C        6       2   theano.tensor.subtensor.AdvancedIncSubtensor1
+   2.1%    93.2%       0.000s       3.02e-06s     C        9       3   theano.tensor.basic.Join
+   2.0%    95.3%       0.000s       1.26e-06s     C       21       7   theano.tensor.basic.Alloc
+   1.9%    97.1%       0.000s       4.01e-06s     C        6       2   theano.tensor.subtensor.AdvancedSubtensor1
+   0.8%    97.9%       0.000s       8.34e-07s     C       12       4   theano.compile.ops.Shape_i
+   0.7%    98.6%       0.000s       7.75e-07s     C       12       4   theano.tensor.opt.MakeVector
+   0.3%    98.9%       0.000s       1.35e-06s     C        3       1   theano.tensor.basic.Flatten
+   0.2%    99.2%       0.000s       1.03e-06s     C        3       1   theano.tensor.opt.Assert
+   0.2%    99.4%       0.000s       9.54e-07s     C        3       1   theano.tensor.basic.ScalarFromTensor
+   0.2%    99.6%       0.000s       9.54e-07s     C        3       1   theano.tensor.elemwise.DimShuffle
+   0.2%    99.9%       0.000s       9.54e-07s     C        3       1   theano.compile.ops.ViewOp
+   0.1%   100.0%       0.000s       6.36e-07s     C        3       1   theano.tensor.basic.Reshape
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  49.7%    49.7%       0.001s       2.14e-05s     Py      30       10   Split{2}
+   9.3%    59.0%       0.000s       4.02e-06s     C       30       10   CumsumOp{0}
+   3.5%    62.5%       0.000s       6.94e-07s     C       66       22   Subtensor{::int64}
+   3.3%    65.9%       0.000s       1.44e-05s     C        3        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((-i0) + i1)}(i4, i5) * i2) + (i0 * ((-i6) + i7) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i4, i5) * i3 * i0) + (i0 * i8 * i2 * i3 * Composite{((-i0) + i1)}(i9, i10) * i2) + (i0 * ((-i11) + i12) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i9, i10) * i3 * i0) + (-(((i13 * i3 * i14 * i14) / i15) + ((i3 * i14) / i16))) + ((i13 * i3 * i17) / i18) + ((i3 * i17 * i17) / i19) + (i3 * i20 * i2 * 
+   3.3%    69.1%       0.000s       7.03e-06s     C        6        2   IncSubtensor{InplaceInc;::int64}
+   3.2%    72.3%       0.000s       1.37e-05s     C        3        1   AdvancedIncSubtensor1{no_inplace,inc}
+   2.2%    74.5%       0.000s       1.19e-06s     C       24        8   Subtensor{int64}
+   2.1%    76.6%       0.000s       3.02e-06s     C        9        3   Join
+   2.0%    78.7%       0.000s       1.26e-06s     C       21        7   Alloc
+   1.9%    80.5%       0.000s       4.01e-06s     C        6        2   AdvancedSubtensor1
+   1.5%    82.1%       0.000s       6.68e-06s     C        3        1   AdvancedIncSubtensor1{inplace,inc}
+   1.5%    83.6%       0.000s       6.68e-06s     C        3        1   IncSubtensor{InplaceInc;int64}
+   1.4%    85.1%       0.000s       8.86e-07s     C       21        7   Elemwise{mul,no_inplace}
+   1.4%    86.5%       0.000s       3.02e-06s     C        6        2   IncSubtensor{Inc;:int64:}
+   1.1%    87.6%       0.000s       4.93e-06s     C        3        1   IncSubtensor{Set;int8}
+   1.1%    88.7%       0.000s       2.26e-06s     C        6        2   Elemwise{Composite{(i0 * ((i1 * i2) + (i3 * i4)))}}[(0, 3)]
+   0.9%    89.6%       0.000s       1.35e-06s     C        9        3   IncSubtensor{InplaceSet;int8}
+   0.8%    90.4%       0.000s       3.58e-06s     C        3        1   Elemwise{Composite{(i0 + Switch(i1, i2, (Switch(i3, i4, i5) / i6)))}}
+   0.8%    91.2%       0.000s       8.34e-07s     C       12        4   Shape_i{0}
+   0.7%    91.9%       0.000s       7.75e-07s     C       12        4   MakeVector{dtype='int64'}
+   ... (remaining 25 Ops account for   8.06%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  12.2%    12.2%       0.000s       5.24e-05s      3   110   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   5.5%    17.7%       0.000s       2.37e-05s      3   101   Split{2}(Elemwise{Mul}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   5.0%    22.7%       0.000s       2.17e-05s      3   120   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   4.1%    26.8%       0.000s       1.76e-05s      3   109   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 3)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   4.1%    30.9%       0.000s       1.76e-05s      3    58   CumsumOp{0}(Subtensor{::int64}.0)
+   3.9%    34.8%       0.000s       1.70e-05s      3    88   Split{2}(Elemwise{Mul}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.9%    38.7%       0.000s       1.68e-05s      3    99   Split{2}(Elemwise{Composite{((i0 * i1) + (i2 * i3 * i1))}}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.8%    42.5%       0.000s       1.63e-05s      3   119   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.8%    46.3%       0.000s       1.63e-05s      3   118   Split{2}(Elemwise{TrueDiv}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.8%    50.1%       0.000s       1.63e-05s      3    86   Split{2}(Elemwise{Composite{((i0 * i1) + (i2 * i3 * i1))}}[(0, 0)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.7%    53.8%       0.000s       1.60e-05s      3   116   Split{2}(Elemwise{Composite{(((-(i0 * i1)) / i2) + (i3 / i4) + (i5 / i4))}}[(0, 3)].0, TensorConstant{0}, <TensorType(int64, vector)>)
+   3.3%    57.1%       0.000s       1.44e-05s      3   121   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((-i0) + i1)}(i4, i5) * i2) + (i0 * ((-i6) + i7) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i4, i5) * i3 * i0) + (i0 * i8 * i2 * i3 * Composite{((-i0) + i1)}(i9, i10) * i2) + (i0 * ((-i11) + i12) * i2) + (i0 * i2 * Composite{((-i0) + i1)}(i9, i10) * i3 * i0) + (-(((i13 * i3 * i14 * i14) / i15) + ((i3 * i14) / i16))) + ((i13 * i3 * i17) / i18) + ((i3 * i17 * i17) / i19) + (i3 * i20 * i2 * i2 * i0) + 
+   3.2%    60.3%       0.000s       1.37e-05s      3    80   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-(i0 / i1)) / i1)}}[(0, 0)].0, <TensorType(int32, vector)>)
+   1.9%    62.1%       0.000s       8.03e-06s      3    56   IncSubtensor{InplaceInc;::int64}(Alloc.0, Elemwise{true_div}.0, Constant{-1})
+   1.5%    63.7%       0.000s       6.68e-06s      3    82   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, Elemwise{Inv}[(0, 0)].0, <TensorType(int32, vector)>)
+   1.5%    65.2%       0.000s       6.68e-06s      3    46   IncSubtensor{InplaceInc;int64}(Alloc.0, TensorConstant{1.0}, ScalarFromTensor.0)
+   1.4%    66.6%       0.000s       6.04e-06s      3    60   IncSubtensor{InplaceInc;::int64}(Alloc.0, Subtensor{::int64}.0, Constant{-1})
+   1.3%    67.9%       0.000s       5.64e-06s      3    71   AdvancedSubtensor1(Elemwise{Composite{(i0 + (i1 * i2))}}.0, <TensorType(int32, vector)>)
+   1.3%    69.2%       0.000s       5.40e-06s      3    98   CumsumOp{0}(Elemwise{mul,no_inplace}.0)
+   1.1%    70.3%       0.000s       4.93e-06s      3    37   IncSubtensor{Set;int8}(MakeVector{dtype='int64'}.0, Subtensor{int64}.0, Constant{0})
+   ... (remaining 104 Apply instances account for 29.66%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: /Users/dstuck/evidation/ContinuousTimeMarkovModel/src/ContinuousTimeMarkovModel/samplers/forwardS.py:254
+  Time in 2 calls to Function.__call__: 3.938675e-04s
+  Time in Function.fn.__call__: 3.340244e-04s (84.806%)
+  Time in thunks: 2.577305e-04s (65.436%)
+  Total compile time: 6.384778e-01s
+    Number of Apply nodes: 40
+    Theano Optimizer time: 1.734872e-01s
+       Theano validate time: 9.137154e-03s
+    Theano Linker time (includes C, CUDA code generation/compiling): 2.769690e-01s
+       Import time 2.340353e-01s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.315s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  34.5%    34.5%       0.000s       1.48e-05s     Py       6       3   theano.tensor.basic.Nonzero
+  15.2%    49.7%       0.000s       6.52e-06s     C        6       3   theano.tensor.subtensor.AdvancedIncSubtensor1
+  14.0%    63.6%       0.000s       9.00e-06s     Py       4       2   theano.tensor.basic.ARange
+  13.2%    76.9%       0.000s       1.14e-06s     C       30      15   theano.tensor.elemwise.Elemwise
+   6.1%    83.0%       0.000s       2.62e-06s     C        6       3   theano.tensor.basic.Join
+   4.6%    87.6%       0.000s       5.96e-06s     C        2       1   theano.tensor.extra_ops.CumprodOp
+   4.3%    92.0%       0.000s       1.40e-06s     C        8       4   theano.tensor.subtensor.Subtensor
+   3.1%    95.1%       0.000s       2.03e-06s     C        4       2   theano.tensor.basic.Alloc
+   2.3%    97.4%       0.000s       2.98e-06s     C        2       1   theano.compile.ops.DeepCopyOp
+   1.1%    98.5%       0.000s       7.15e-07s     C        4       2   theano.compile.ops.Shape_i
+   0.7%    99.3%       0.000s       4.77e-07s     C        4       2   theano.tensor.elemwise.DimShuffle
+   0.4%    99.6%       0.000s       4.77e-07s     C        2       1   theano.tensor.basic.Reshape
+   0.4%   100.0%       0.000s       4.77e-07s     C        2       1   theano.tensor.opt.MakeVector
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  34.5%    34.5%       0.000s       1.48e-05s     Py       6        3   Nonzero
+  15.2%    49.7%       0.000s       6.52e-06s     C        6        3   AdvancedIncSubtensor1{inplace,set}
+  14.0%    63.6%       0.000s       9.00e-06s     Py       4        2   ARange{dtype='int64'}
+   6.1%    69.8%       0.000s       2.62e-06s     C        6        3   Join
+   4.6%    74.4%       0.000s       5.96e-06s     C        2        1   CumprodOp{0}
+   3.5%    77.9%       0.000s       1.51e-06s     C        6        3   Subtensor{int64}
+   3.1%    81.0%       0.000s       2.03e-06s     C        4        2   Alloc
+   2.5%    83.5%       0.000s       1.07e-06s     C        6        3   sigmoid
+   2.3%    85.8%       0.000s       2.98e-06s     C        2        1   DeepCopyOp
+   1.6%    87.4%       0.000s       2.03e-06s     C        2        1   Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}
+   1.3%    88.7%       0.000s       1.67e-06s     C        2        1   Elemwise{Add}[(0, 1)]
+   1.2%    89.9%       0.000s       7.75e-07s     C        4        2   Elemwise{eq,no_inplace}
+   1.2%    91.1%       0.000s       1.55e-06s     C        2        1   Elemwise{Composite{Switch(LT(i0, i1), i0, i1)}}[(0, 1)]
+   1.1%    92.2%       0.000s       7.15e-07s     C        4        2   Shape_i{0}
+   1.1%    93.3%       0.000s       1.43e-06s     C        2        1   Elemwise{neq,no_inplace}
+   0.8%    94.2%       0.000s       1.07e-06s     C        2        1   Elemwise{Mod}[(0, 0)]
+   0.8%    95.0%       0.000s       1.07e-06s     C        2        1   Elemwise{Mul}[(0, 0)]
+   0.8%    95.8%       0.000s       1.07e-06s     C        2        1   Subtensor{:int64:}
+   0.8%    96.7%       0.000s       1.07e-06s     C        2        1   Elemwise{Sub}[(0, 1)]
+   0.7%    97.4%       0.000s       4.77e-07s     C        4        2   InplaceDimShuffle{x}
+   ... (remaining 5 Ops account for   2.59%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  15.5%    15.5%       0.000s       2.00e-05s      2    31   Nonzero(Elemwise{neq,no_inplace}.0)
+  10.5%    26.0%       0.000s       1.35e-05s      2    30   Nonzero(Elemwise{eq,no_inplace}.0)
+   9.3%    35.2%       0.000s       1.19e-05s      2    36   AdvancedIncSubtensor1{inplace,set}(Alloc.0, TensorConstant{0.0}, Subtensor{int64}.0)
+   8.9%    44.1%       0.000s       1.14e-05s      2     9   ARange{dtype='int64'}(TensorConstant{0}, Shape_i{0}.0, TensorConstant{1})
+   8.5%    52.6%       0.000s       1.10e-05s      2    29   Nonzero(Elemwise{eq,no_inplace}.0)
+   5.1%    57.7%       0.000s       6.56e-06s      2    20   ARange{dtype='int64'}(TensorConstant{0}, Elemwise{Sqr}[(0, 0)].0, TensorConstant{1})
+   4.6%    62.3%       0.000s       5.96e-06s      2    28   CumprodOp{0}(Join.0)
+   3.5%    65.9%       0.000s       4.53e-06s      2    37   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Elemwise{neg,no_inplace}.0, Subtensor{int64}.0)
+   2.7%    68.5%       0.000s       3.46e-06s      2    19   Join(TensorConstant{0}, Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}.0, Alloc.0)
+   2.4%    71.0%       0.000s       3.10e-06s      2    38   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Subtensor{:int64:}.0, Subtensor{int64}.0)
+   2.4%    73.4%       0.000s       3.10e-06s      2    35   Subtensor{int64}(Nonzero.0, Constant{0})
+   2.3%    75.7%       0.000s       2.98e-06s      2     0   DeepCopyOp(X_shared)
+   1.9%    77.6%       0.000s       2.50e-06s      2    17   Alloc(TensorConstant{1.0}, Elemwise{Composite{Switch(LT(i0, i1), i0, i1)}}[(0, 1)].0)
+   1.9%    79.6%       0.000s       2.50e-06s      2     7   Join(TensorConstant{0}, sigmoid.0, TensorConstant{(1,) of 0.0})
+   1.6%    81.1%       0.000s       2.03e-06s      2    13   Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}(pi_stickbreaking_shared, InplaceDimShuffle{x}.0, ARange{dtype='int64'}.0)
+   1.5%    82.6%       0.000s       1.91e-06s      2    24   Join(TensorConstant{0}, Alloc.0, Elemwise{Sub}[(0, 1)].0)
+   1.3%    83.9%       0.000s       1.67e-06s      2    14   Elemwise{Add}[(0, 1)](TensorConstant{1}, Shape_i{0}.0)
+   1.2%    85.1%       0.000s       1.55e-06s      2    21   Alloc(TensorConstant{(1,) of 0.0}, Elemwise{Sqr}[(0, 0)].0)
+   1.2%    86.3%       0.000s       1.55e-06s      2    15   Elemwise{Composite{Switch(LT(i0, i1), i0, i1)}}[(0, 1)](TensorConstant{1}, Shape_i{0}.0)
+   1.1%    87.4%       0.000s       1.43e-06s      2    27   Elemwise{neq,no_inplace}(Elemwise{Mod}[(0, 0)].0, TensorConstant{(1,) of 0})
+   ... (remaining 20 Apply instances account for 12.58%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 16 steps) 4.029989e-03s
+
+  Total time spent in calling the VM 3.813744e-03s (94.634%)
+  Total overhead (computing slices..) 2.162457e-04s (5.366%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.321s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  62.5%    62.5%       0.002s       6.21e-06s     C      352      22   theano.tensor.elemwise.Elemwise
+  12.5%    74.9%       0.000s       5.45e-06s     C       80       5   theano.tensor.subtensor.AdvancedIncSubtensor1
+   7.9%    82.9%       0.000s       1.74e-05s     Py      16       1   theano.tensor.basic.Nonzero
+   5.6%    88.5%       0.000s       2.45e-06s     C       80       5   theano.tensor.subtensor.AdvancedSubtensor1
+   3.2%    91.7%       0.000s       6.97e-06s     C       16       1   theano.tensor.subtensor.IncSubtensor
+   1.6%    93.3%       0.000s       5.79e-07s     C       96       6   theano.tensor.elemwise.DimShuffle
+   1.4%    94.6%       0.000s       4.34e-07s     C      112       7   theano.tensor.basic.Reshape
+   1.3%    96.0%       0.000s       1.44e-06s     C       32       2   theano.tensor.basic.Alloc
+   1.3%    97.2%       0.000s       6.93e-07s     C       64       4   theano.tensor.subtensor.Subtensor
+   0.7%    97.9%       0.000s       7.45e-07s     C       32       2   theano.tensor.basic.Flatten
+   0.5%    98.4%       0.000s       5.81e-07s     C       32       2   theano.tensor.opt.MakeVector
+   0.4%    98.9%       0.000s       4.84e-07s     C       32       2   theano.tensor.opt.Assert
+   0.4%    99.3%       0.000s       2.35e-07s     C       64       4   theano.compile.ops.Shape_i
+   0.4%    99.7%       0.000s       8.20e-07s     C       16       1   theano.tensor.basic.ScalarFromTensor
+   0.2%    99.9%       0.000s       4.47e-07s     C       16       1   theano.tensor.elemwise.Prod
+   0.1%   100.0%       0.000s       2.38e-07s     C       16       1   theano.compile.ops.ViewOp
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  55.2%    55.2%       0.002s       1.21e-04s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * (i4 + i5) * i2) + (i0 * i2 * (i4 + i5) * i3 * i0) + (i0 * (i6 + i7) * i2) + (i3 * i8 * i2 * i2 * i2 * i0) + (i9 * i3 * i0 * i8 * i2 * i2 * i0) + (i10 * i0 * i3 * i8 * i0 * i2 * i2) + (i3 * i0 * i8 * i0 * i2 * i0) + (i11 * ((i12 * i2 * i2) + (i3 * i0 * i2 * i8 * i2)) * i0) + (((i12 * i0) + (i13 * i8 * i2 * i3 * i0)) * i2 * i0) + (i9 * i3 * Composite{(i0 - Switch(i1, i2, Switch(i3, (i4 / i5), i2)))}(
+   7.9%    63.2%       0.000s       1.74e-05s     Py      16        1   Nonzero
+   5.9%    69.1%       0.000s       1.29e-05s     C       16        1   AdvancedIncSubtensor1{inplace,set}
+   5.6%    74.7%       0.000s       2.45e-06s     C       80        5   AdvancedSubtensor1
+   5.4%    80.1%       0.000s       3.92e-06s     C       48        3   AdvancedIncSubtensor1{no_inplace,inc}
+   3.2%    83.3%       0.000s       6.97e-06s     C       16        1   IncSubtensor{InplaceInc;int64}
+   1.6%    84.8%       0.000s       5.79e-07s     C       96        6   InplaceDimShuffle{1,0}
+   1.3%    86.2%       0.000s       9.83e-07s     C       48        3   Elemwise{sub,no_inplace}
+   1.3%    87.5%       0.000s       1.44e-06s     C       32        2   Alloc
+   1.2%    88.7%       0.000s       2.61e-06s     C       16        1   AdvancedIncSubtensor1{inplace,inc}
+   1.0%    89.7%       0.000s       4.20e-07s     C       80        5   Reshape{2}
+   0.7%    90.4%       0.000s       8.20e-07s     C       32        2   Elemwise{mul}
+   0.7%    91.1%       0.000s       7.45e-07s     C       32        2   Flatten{1}
+   0.6%    91.7%       0.000s       4.32e-07s     C       48        3   Elemwise{Sub}[(0, 1)]
+   0.6%    92.2%       0.000s       6.26e-07s     C       32        2   Subtensor{int64}
+   0.5%    92.8%       0.000s       5.81e-07s     C       32        2   MakeVector{dtype='int64'}
+   0.5%    93.3%       0.000s       1.12e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i1) + (i3 * i2 * i2 * i0 * i1))}}
+   0.5%    93.8%       0.000s       1.06e-06s     C       16        1   Elemwise{scalar_sigmoid}
+   0.5%    94.2%       0.000s       1.01e-06s     C       16        1   Elemwise{Composite{(((i0 * i1 * i2 * i2) / sqr(i3)) + ((i0 * i1 * i2 * i2) / sqr(i3)) + (i1 / sqr(i3)))}}[(0, 1)]
+   0.4%    94.7%       0.000s       9.83e-07s     C       16        1   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}
+   ... (remaining 17 Ops account for   5.31%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  55.2%    55.2%       0.002s       1.21e-04s     16    63   Elemwise{Composite{((i0 * i1 * i2 * i3 * (i4 + i5) * i2) + (i0 * i2 * (i4 + i5) * i3 * i0) + (i0 * (i6 + i7) * i2) + (i3 * i8 * i2 * i2 * i2 * i0) + (i9 * i3 * i0 * i8 * i2 * i2 * i0) + (i10 * i0 * i3 * i8 * i0 * i2 * i2) + (i3 * i0 * i8 * i0 * i2 * i0) + (i11 * ((i12 * i2 * i2) + (i3 * i0 * i2 * i8 * i2)) * i0) + (((i12 * i0) + (i13 * i8 * i2 * i3 * i0)) * i2 * i0) + (i9 * i3 * Composite{(i0 - Switch(i1, i2, Switch(i3, (i4 / i5), i2)))}(Composite{S
+   7.9%    63.2%       0.000s       1.74e-05s     16    18   Nonzero(AdvancedIncSubtensor1{inplace,set}.0)
+   5.9%    69.1%       0.000s       1.29e-05s     16    14   AdvancedIncSubtensor1{inplace,set}(Elemwise{sub,no_inplace}.0, TensorConstant{0}, TensorConstant{[  20   31..1577 1585]})
+   3.2%    72.3%       0.000s       6.97e-06s     16    20   IncSubtensor{InplaceInc;int64}(Alloc.0, TensorConstant{1.0}, ScalarFromTensor.0)
+   2.5%    74.7%       0.000s       5.38e-06s     16    45   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}.0, AdvancedSubtensor1.0)
+   1.6%    76.3%       0.000s       3.52e-06s     16    35   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, AdvancedSubtensor1.0)
+   1.6%    77.9%       0.000s       3.41e-06s     16    52   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((i0 * i1 * i2 * i3) / sqr(i4))}}[(0, 1)].0, AdvancedSubtensor1.0)
+   1.4%    79.3%       0.000s       2.97e-06s     16    54   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((i0 * i1 * i2) / i3)}}[(0, 3)].0, AdvancedSubtensor1.0)
+   1.2%    80.5%       0.000s       2.71e-06s     16    33   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, AdvancedSubtensor1.0)
+   1.2%    81.7%       0.000s       2.61e-06s     16    57   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, Elemwise{true_div,no_inplace}.0, AdvancedSubtensor1.0)
+   1.2%    82.9%       0.000s       2.58e-06s     16    24   AdvancedSubtensor1(X_copy, Subtensor{int64}.0)
+   0.9%    83.8%       0.000s       1.98e-06s     16    29   AdvancedSubtensor1(S_copy, Elemwise{Add}[(0, 1)].0)
+   0.8%    84.6%       0.000s       1.77e-06s     16    16   Alloc(TensorConstant{(1,) of 0.0}, Prod{acc_dtype=int64}.0)
+   0.7%    85.3%       0.000s       1.48e-06s     16    30   AdvancedSubtensor1(X_copy, Elemwise{Add}[(0, 1)].0)
+   0.6%    85.8%       0.000s       1.28e-06s     16    10   Elemwise{sub,no_inplace}(Subtensor{int64::}.0, Subtensor{:int64:}.0)
+   0.6%    86.4%       0.000s       1.24e-06s     16    27   Elemwise{mul}(Elemwise{scalar_sigmoid}.0, Reshape{2}.0, Elemwise{sub}.0)
+   0.5%    86.9%       0.000s       1.12e-06s     16    28   Elemwise{Composite{((i0 * i1 * i2 * i1) + (i3 * i2 * i2 * i0 * i1))}}(Reshape{2}.0, Elemwise{sub}.0, Elemwise{scalar_sigmoid}.0, TensorConstant{(1, 1) of -1.0})
+   0.5%    87.4%       0.000s       1.10e-06s     16     9   Alloc(TensorConstant{(1, 1) of 0.0}, Shape_i{1}.0, Shape_i{0}.0)
+   0.5%    87.9%       0.000s       1.06e-06s     16     1   Elemwise{scalar_sigmoid}(B_logodds_copy)
+   0.5%    88.4%       0.000s       1.01e-06s     16    36   Elemwise{Composite{(((i0 * i1 * i2 * i2) / sqr(i3)) + ((i0 * i1 * i2 * i2) / sqr(i3)) + (i1 / sqr(i3)))}}[(0, 1)](TensorConstant{(1, 1) of -1.0}, Reshape{2}.0, Elemwise{sgn,no_inplace}.0, Elemwise{Abs}[(0, 0)].0)
+   ... (remaining 46 Apply instances account for 11.63%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 16 steps) 3.684998e-03s
+
+  Total time spent in calling the VM 3.425121e-03s (92.948%)
+  Total overhead (computing slices..) 2.598763e-04s (7.052%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.346s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  35.5%    35.5%       0.001s       1.69e-05s     C       64       4   theano.tensor.subtensor.AdvancedIncSubtensor1
+  17.7%    53.2%       0.001s       3.36e-05s     Py      16       1   theanoMod.DES_DiffOp
+  14.3%    67.5%       0.000s       1.30e-06s     C      336      21   theano.tensor.elemwise.Elemwise
+   9.6%    77.1%       0.000s       4.57e-06s     C       64       4   theano.tensor.subtensor.AdvancedSubtensor1
+   7.8%    84.9%       0.000s       3.70e-06s     C       64       4   theano.tensor.basic.Join
+   3.8%    88.7%       0.000s       9.09e-07s     C      128       8   theano.tensor.elemwise.DimShuffle
+   2.3%    91.0%       0.000s       4.47e-06s     C       16       1   theano.tensor.subtensor.IncSubtensor
+   2.2%    93.3%       0.000s       1.06e-06s     C       64       4   theano.tensor.basic.Alloc
+   1.9%    95.2%       0.000s       5.13e-07s     C      112       7   theano.tensor.basic.Reshape
+   1.3%    96.5%       0.000s       4.22e-07s     C       96       6   theano.compile.ops.Shape_i
+   0.8%    97.3%       0.000s       7.30e-07s     C       32       2   theano.tensor.basic.Flatten
+   0.6%    97.9%       0.000s       1.15e-06s     C       16       1   theano.tensor.basic.ScalarFromTensor
+   0.5%    98.4%       0.000s       1.01e-06s     C       16       1   theano.tensor.subtensor.Subtensor
+   0.4%    98.8%       0.000s       4.02e-07s     C       32       2   theano.tensor.opt.Assert
+   0.4%    99.2%       0.000s       3.95e-07s     C       32       2   theano.tensor.opt.MakeVector
+   0.4%    99.6%       0.000s       7.90e-07s     C       16       1   theano.tensor.elemwise.CAReduce
+   0.2%    99.8%       0.000s       3.87e-07s     C       16       1   theano.tensor.elemwise.Prod
+   0.2%   100.0%       0.000s       2.98e-07s     C       16       1   theano.compile.ops.ViewOp
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  28.9%    28.9%       0.001s       1.83e-05s     C       48        3   AdvancedIncSubtensor1{no_inplace,inc}
+  17.7%    46.5%       0.001s       3.36e-05s     Py      16        1   DES_DiffOp{n=1, axis=-1}
+   9.6%    56.2%       0.000s       4.57e-06s     C       64        4   AdvancedSubtensor1
+   7.8%    63.9%       0.000s       3.70e-06s     C       64        4   Join
+   6.6%    70.6%       0.000s       1.26e-05s     C       16        1   AdvancedIncSubtensor1{inplace,inc}
+   3.0%    73.6%       0.000s       9.56e-07s     C       96        6   InplaceDimShuffle{1,0}
+   2.6%    76.1%       0.000s       4.90e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i2) + (i0 * i2 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i3 * i0) + (i0 * ((i6 - i7) + (i6 - i7) + i10 + i11) * i2) + (i3 * i12 * i2 * i2 * i2 * i0) + (i13 * i3 * i0 * i12 * i2 * i2 * i0) + (i14 * i0 * i3 * i12 * i0 * i2 * i2) + (i3 * i0 * i12 * i0 * i2 * i0) + (i15 * ((i16 * i2 * i2) + (i3 * i0 * i2 * i12
+   2.3%    78.5%       0.000s       4.47e-06s     C       16        1   IncSubtensor{InplaceInc;int64}
+   2.2%    80.7%       0.000s       1.06e-06s     C       64        4   Alloc
+   1.5%    82.2%       0.000s       5.60e-07s     C       80        5   Reshape{2}
+   1.2%    83.4%       0.000s       2.31e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)]
+   1.2%    84.6%       0.000s       1.10e-06s     C       32        2   Elemwise{Sub}[(0, 1)]
+   1.1%    85.7%       0.000s       2.18e-06s     C       16        1   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}
+   1.0%    86.7%       0.000s       1.91e-06s     C       16        1   Elemwise{Composite{LT((-i0), i1)}}
+   1.0%    87.7%       0.000s       1.83e-06s     C       16        1   Elemwise{true_div,no_inplace}
+   0.9%    88.6%       0.000s       1.80e-06s     C       16        1   Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)]
+   0.8%    89.5%       0.000s       7.90e-07s     C       32        2   Elemwise{mul}
+   0.8%    90.2%       0.000s       7.30e-07s     C       32        2   Flatten{1}
+   0.7%    91.0%       0.000s       3.50e-07s     C       64        4   Shape_i{0}
+   0.6%    91.6%       0.000s       1.15e-06s     C       16        1   ScalarFromTensor
+   ... (remaining 20 Ops account for   8.43%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  17.7%    17.7%       0.001s       3.36e-05s     16    12   DES_DiffOp{n=1, axis=-1}(B0)
+  11.4%    29.0%       0.000s       2.17e-05s     16    57   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)].0, AdvancedSubtensor1.0)
+  10.6%    39.6%       0.000s       2.01e-05s     16    50   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}.0, AdvancedSubtensor1.0)
+   7.0%    46.5%       0.000s       1.32e-05s     16    59   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)].0, AdvancedSubtensor1.0)
+   6.6%    53.2%       0.000s       1.26e-05s     16    62   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, Elemwise{true_div,no_inplace}.0, AdvancedSubtensor1.0)
+   3.0%    56.2%       0.000s       5.71e-06s     16     5   AdvancedSubtensor1(X_copy, TensorConstant{[   0   21..1578 1586]})
+   2.7%    58.9%       0.000s       5.16e-06s     16    43   Join(TensorConstant{1}, InplaceDimShuffle{0,x}.0, Elemwise{Composite{Switch(i0, (i1 * EQ(i2, i3)), i4)}}[(0, 3)].0)
+   2.6%    61.5%       0.000s       4.95e-06s     16    32   Join(TensorConstant{1}, Alloc.0, InplaceDimShuffle{0,x}.0)
+   2.6%    64.1%       0.000s       4.90e-06s     16    68   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i2) + (i0 * i2 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i3 * i0) + (i0 * ((i6 - i7) + (i6 - i7) + i10 + i11) * i2) + (i3 * i12 * i2 * i2 * i2 * i0) + (i13 * i3 * i0 * i12 * i2 * i2 * i0) + (i14 * i0 * i3 * i12 * i0 * i2 * i2) + (i3 * i0 * i12 * i0 * i2 * i0) + (i15 * ((i16 * i2 * i2) + (i3 * i0 * i2 * i12 * i2)) * i
+   2.6%    66.6%       0.000s       4.90e-06s     16    40   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, AdvancedSubtensor1.0)
+   2.3%    69.0%       0.000s       4.47e-06s     16    25   IncSubtensor{InplaceInc;int64}(Alloc.0, TensorConstant{1.0}, ScalarFromTensor.0)
+   2.0%    71.0%       0.000s       3.87e-06s     16     4   AdvancedSubtensor1(S_copy, TensorConstant{[   0   21..1578 1586]})
+   2.0%    73.0%       0.000s       3.81e-06s     16    15   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, AdvancedSubtensor1.0)
+   1.5%    74.5%       0.000s       2.85e-06s     16    42   Join(TensorConstant{1}, Elemwise{Composite{Switch(i0, (i1 * EQ(i2, i3)), i4)}}[(0, 3)].0, InplaceDimShuffle{0,x}.0)
+   1.2%    75.7%       0.000s       2.31e-06s     16    52   Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)](TensorConstant{(1, 1) of -1.0}, AdvancedSubtensor1.0, Elemwise{Sub}[(0, 1)].0, Elemwise{Sub}[(0, 1)].0)
+   1.1%    76.9%       0.000s       2.18e-06s     16    45   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}(AdvancedSubtensor1.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0)
+   1.1%    78.0%       0.000s       2.13e-06s     16    66   InplaceDimShuffle{1,0}(AdvancedIncSubtensor1{inplace,inc}.0)
+   1.0%    79.0%       0.000s       1.91e-06s     16    36   Elemwise{Composite{LT((-i0), i1)}}(InplaceDimShuffle{x,x}.0, TensorConstant{(1, 1) of 0.0})
+   1.0%    80.0%       0.000s       1.83e-06s     16    33   Join(TensorConstant{1}, InplaceDimShuffle{0,x}.0, Alloc.0)
+   1.0%    80.9%       0.000s       1.83e-06s     16    22   Elemwise{true_div,no_inplace}(AdvancedSubtensor1.0, AdvancedSubtensor1.0)
+   ... (remaining 51 Apply instances account for 19.07%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: /usr/local/lib/python2.7/site-packages/pymc3/model.py:278
+  Time in 1 calls to Function.__call__: 5.084991e-03s
+  Time in Function.fn.__call__: 4.987001e-03s (98.073%)
+  Time in thunks: 4.766941e-03s (93.745%)
+  Total compile time: 2.011129e+01s
+    Number of Apply nodes: 277
+    Theano Optimizer time: 1.230847e+01s
+       Theano validate time: 3.611104e-01s
+    Theano Linker time (includes C, CUDA code generation/compiling): 7.298794e+00s
+       Import time 4.948668e-01s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.362s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  85.3%    85.3%       0.004s       2.03e-03s     Py       2       2   theano.scan_module.scan_op.Scan
+   3.6%    88.9%       0.000s       1.81e-06s     C       95      95   theano.tensor.elemwise.Elemwise
+   2.7%    91.6%       0.000s       1.31e-05s     C       10      10   theano.tensor.subtensor.AdvancedIncSubtensor1
+   1.6%    93.3%       0.000s       1.56e-05s     Py       5       5   theano.tensor.basic.Nonzero
+   1.0%    94.2%       0.000s       1.18e-05s     Py       4       4   theano.tensor.basic.ARange
+   1.0%    95.2%       0.000s       7.59e-06s     C        6       6   theano.tensor.extra_ops.CumprodOp
+   0.8%    96.0%       0.000s       3.01e-06s     C       13      13   theano.tensor.basic.Join
+   0.8%    96.8%       0.000s       2.78e-06s     C       14      14   theano.tensor.subtensor.AdvancedSubtensor1
+   0.6%    97.4%       0.000s       2.88e-05s     Py       1       1   theano.tensor.subtensor.AdvancedIncSubtensor
+   0.6%    98.0%       0.000s       5.68e-07s     C       47      47   theano.tensor.subtensor.Subtensor
+   0.5%    98.5%       0.000s       1.27e-06s     C       18      18   theano.tensor.basic.Alloc
+   0.3%    98.8%       0.000s       1.60e-05s     Py       1       1   theano.tensor.subtensor.AdvancedSubtensor
+   0.3%    99.1%       0.000s       6.44e-06s     C        2       2   theano.tensor.elemwise.CAReduce
+   0.2%    99.3%       0.000s       1.03e-06s     C        9       9   theano.tensor.opt.MakeVector
+   0.2%    99.5%       0.000s       8.58e-07s     C       10      10   theano.tensor.basic.Reshape
+   0.1%    99.6%       0.000s       5.01e-07s     C       10      10   theano.tensor.elemwise.Sum
+   0.1%    99.7%       0.000s       5.56e-07s     C        9       9   theano.compile.ops.Shape_i
+   0.1%    99.8%       0.000s       1.01e-06s     C        4       4   theano.tensor.elemwise.All
+   0.1%    99.8%       0.000s       7.63e-07s     C        5       5   theano.tensor.basic.Flatten
+   0.1%    99.9%       0.000s       7.75e-07s     C        4       4   theano.tensor.basic.ScalarFromTensor
+   ... (remaining 3 Classes account for   0.10%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  59.9%    59.9%       0.003s       2.86e-03s     Py       1        1   for{cpu,scan_fn}
+  25.3%    85.3%       0.001s       1.21e-03s     Py       1        1   for{cpu,scan_fn}
+   1.7%    87.0%       0.000s       4.05e-05s     C        2        2   AdvancedIncSubtensor1{inplace,inc}
+   1.6%    88.6%       0.000s       1.56e-05s     Py       5        5   Nonzero
+   1.0%    89.6%       0.000s       1.18e-05s     Py       4        4   ARange{dtype='int64'}
+   1.0%    90.5%       0.000s       7.59e-06s     C        6        6   CumprodOp{0}
+   0.9%    91.4%       0.000s       5.93e-06s     C        7        7   AdvancedIncSubtensor1{inplace,set}
+   0.8%    92.2%       0.000s       3.01e-06s     C       13       13   Join
+   0.8%    93.0%       0.000s       2.78e-06s     C       14       14   AdvancedSubtensor1
+   0.6%    93.7%       0.000s       1.50e-05s     C        2        2   Elemwise{Composite{(i0 + i1 + (i2 * i3))}}
+   0.6%    94.3%       0.000s       2.88e-05s     Py       1        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   0.5%    94.8%       0.000s       1.27e-06s     C       18       18   Alloc
+   0.3%    95.1%       0.000s       8.11e-06s     C        2        2   Elemwise{Composite{(Switch(i0, (Switch(i1, i2, i3) + Switch(i4, i2, i3)), i5) + log(i6))}}
+   0.3%    95.4%       0.000s       1.60e-05s     Py       1        1   AdvancedSubtensor
+   0.3%    95.8%       0.000s       4.77e-07s     C       33       33   Subtensor{int64}
+   0.3%    96.0%       0.000s       6.44e-06s     C        2        2   Reduce{maximum}
+   0.2%    96.3%       0.000s       1.87e-06s     C        6        6   Elemwise{sqr,no_inplace}
+   0.2%    96.5%       0.000s       1.22e-06s     C        9        9   Elemwise{eq,no_inplace}
+   0.2%    96.7%       0.000s       1.03e-06s     C        9        9   MakeVector{dtype='int64'}
+   0.2%    96.9%       0.000s       1.23e-06s     C        7        7   Elemwise{sub,no_inplace}
+   ... (remaining 52 Ops account for   3.12%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  59.9%    59.9%       0.003s       2.86e-03s      1   274   for{cpu,scan_fn}(Prod{acc_dtype=int64}.0, Subtensor{int64:int64:int8}.0, Prod{acc_dtype=int64}.0, Elemwise{scalar_sigmoid}.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0, Elemwise{sqr,no_inplace}.0, Elemwise{sub}.0, Elemwise{Sub}[(0, 1)].0, Elemwise{eq,no_inplace}.0, Alloc.0, Elemwise{sqr,no_inplace}.0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Elemwise{eq,no_inplace}.0, Reshape{3}.0, Alloc.0, Elemwise{Com
+  25.3%    85.3%       0.001s       1.21e-03s      1   273   for{cpu,scan_fn}(Prod{acc_dtype=int64}.0, Subtensor{int64:int64:int8}.0, Prod{acc_dtype=int64}.0, sigmoid.0, Elemwise{scalar_sigmoid}.0, sigmoid.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0, Elemwise{sqr,no_inplace}.0, Elemwise{sub}.0, Elemwise{Sub}[(0, 1)].0, Alloc.0, Elemwise{sqr,no_inplace}.0, Elemwise{eq,no_inplace}.0, Elemwise{eq,no_inplace}.0, Reshape{3}.0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Alloc.0, Elemwise{Com
+   1.3%    86.6%       0.000s       6.20e-05s      1   179   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, TensorConstant{1}, AdvancedSubtensor1.0)
+   0.6%    87.2%       0.000s       2.91e-05s      1   185   CumprodOp{0}(Join.0)
+   0.6%    87.8%       0.000s       2.88e-05s      1    48   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}(Alloc.0, sigmoid.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   0.5%    88.3%       0.000s       2.50e-05s      1    65   Elemwise{Composite{(i0 + i1 + (i2 * i3))}}(Subtensor{int64::}.0, TensorConstant{[0 0 0 ..., 0 0 0]}, TensorConstant{(1,) of 4}, Subtensor{:int64:}.0)
+   0.5%    88.8%       0.000s       2.22e-05s      1   209   Nonzero(Elemwise{neq,no_inplace}.0)
+   0.4%    89.2%       0.000s       1.91e-05s      1   174   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, TensorConstant{1}, AdvancedSubtensor1.0)
+   0.4%    89.5%       0.000s       1.81e-05s      1   111   ARange{dtype='int64'}(TensorConstant{0}, Prod{acc_dtype=int64}.0, TensorConstant{1})
+   0.4%    89.9%       0.000s       1.79e-05s      1   121   Nonzero(AdvancedIncSubtensor1{inplace,set}.0)
+   0.3%    90.3%       0.000s       1.60e-05s      1   275   Join(TensorConstant{0}, for{cpu,scan_fn}.0, for{cpu,scan_fn}.0)
+   0.3%    90.6%       0.000s       1.60e-05s      1    91   AdvancedSubtensor(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   0.3%    90.9%       0.000s       1.41e-05s      1   208   Nonzero(Elemwise{eq,no_inplace}.0)
+   0.3%    91.2%       0.000s       1.41e-05s      1   171   Elemwise{Composite{(Switch(i0, (Switch(i1, i2, i3) + Switch(i4, i2, i3)), i5) + log(i6))}}(Elemwise{Composite{(GE(i0, i1) * LE(i0, i2))}}.0, Elemwise{eq,no_inplace}.0, TensorConstant{(1, 1) of 0}, TensorConstant{(1, 1) of 0.0}, Elemwise{eq,no_inplace}.0, TensorConstant{(1, 1) of -inf}, Elemwise{abs_,no_inplace}.0)
+   0.3%    91.5%       0.000s       1.31e-05s      1   119   Nonzero(AdvancedIncSubtensor1{inplace,set}.0)
+   0.3%    91.7%       0.000s       1.31e-05s      1   102   AdvancedIncSubtensor1{inplace,set}(Elemwise{sub,no_inplace}.0, TensorConstant{0}, TensorConstant{[  20   31..1577 1585]})
+   0.2%    92.0%       0.000s       1.12e-05s      1   117   ARange{dtype='int64'}(TensorConstant{0}, Prod{acc_dtype=int64}.0, TensorConstant{1})
+   0.2%    92.2%       0.000s       1.10e-05s      1   207   Nonzero(Elemwise{eq,no_inplace}.0)
+   0.2%    92.4%       0.000s       1.00e-05s      1   144   ARange{dtype='int64'}(TensorConstant{0}, Elemwise{Sqr}[(0, 0)].0, TensorConstant{1})
+   0.2%    92.6%       0.000s       1.00e-05s      1    99   AdvancedIncSubtensor1{inplace,set}(Elemwise{sub,no_inplace}.0, TensorConstant{0}, TensorConstant{[  20   31..1577 1585]})
+   ... (remaining 257 Apply instances account for 7.39%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 16 steps) 9.310246e-04s
+
+  Total time spent in calling the VM 8.223057e-04s (88.323%)
+  Total overhead (computing slices..) 1.087189e-04s (11.677%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.421s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  26.1%    26.1%       0.000s       5.47e-07s     C      288      18   theano.tensor.elemwise.Elemwise
+  25.7%    51.8%       0.000s       2.43e-06s     C       64       4   theano.tensor.subtensor.AdvancedIncSubtensor1
+  12.5%    64.3%       0.000s       2.35e-06s     C       32       2   theano.tensor.subtensor.AdvancedSubtensor1
+   6.6%    70.9%       0.000s       4.15e-07s     C       96       6   theano.tensor.elemwise.DimShuffle
+   6.0%    76.9%       0.000s       1.51e-07s     C      240      15   theano.compile.ops.Shape_i
+   5.6%    82.5%       0.000s       2.12e-06s     C       16       1   theano.tensor.subtensor.IncSubtensor
+   4.9%    87.4%       0.000s       3.05e-07s     C       96       6   theano.tensor.basic.Reshape
+   3.9%    91.3%       0.000s       7.38e-07s     C       32       2   theano.tensor.basic.Alloc
+   2.3%    93.5%       0.000s       1.42e-07s     C       96       6   theano.tensor.opt.Assert
+   2.1%    95.6%       0.000s       3.87e-07s     C       32       2   theano.tensor.subtensor.Subtensor
+   1.6%    97.2%       0.000s       3.05e-07s     C       32       2   theano.tensor.opt.MakeVector
+   0.9%    98.1%       0.000s       3.28e-07s     C       16       1   theano.tensor.elemwise.Prod
+   0.8%    98.9%       0.000s       3.13e-07s     C       16       1   theano.compile.ops.ViewOp
+   0.6%    99.5%       0.000s       2.38e-07s     C       16       1   theano.tensor.basic.Flatten
+   0.5%   100.0%       0.000s       1.79e-07s     C       16       1   theano.tensor.basic.ScalarFromTensor
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  20.6%    20.6%       0.000s       2.60e-06s     C       48        3   AdvancedIncSubtensor1{no_inplace,inc}
+  12.5%    33.1%       0.000s       2.35e-06s     C       32        2   AdvancedSubtensor1
+   6.8%    39.9%       0.000s       2.56e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * (i4 + i5) * i2) + (i0 * i2 * (i4 + i5) * i3 * i0) + (i0 * (i6 + i7) * i2) + (i3 * i8 * i2 * i2 * i2 * i0) + (i9 * i3 * i0 * i8 * i2 * i2 * i0) + (i0 * i10 * i2 * i3 * i2 * i11 * i8 * i0) + (i0 * i2 * i3 * i0 * i11 * i8 * i0) + (i0 * i12 * ((i13 * i2) + (i8 * i11 * i2 * i3 * i0)) * i2) + (i0 * i2 * ((i13 * i0) + (i14 * i8 * i2 * i3 * i0)) * i11) + (i9 * i3 * Composite{(Switch(i0, i1, i2) - Switch(i3
+   6.6%    46.5%       0.000s       4.15e-07s     C       96        6   InplaceDimShuffle{1,0}
+   5.6%    52.1%       0.000s       2.12e-06s     C       16        1   IncSubtensor{InplaceInc;int64}
+   5.1%    57.2%       0.000s       1.92e-06s     C       16        1   AdvancedIncSubtensor1{inplace,inc}
+   4.7%    61.9%       0.000s       2.53e-07s     C      112        7   Elemwise{eq,no_inplace}
+   4.4%    66.3%       0.000s       1.84e-07s     C      144        9   Shape_i{0}
+   3.9%    70.2%       0.000s       7.38e-07s     C       32        2   Alloc
+   3.4%    73.6%       0.000s       3.20e-07s     C       64        4   Reshape{2}
+   2.3%    75.9%       0.000s       8.79e-07s     C       16        1   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}
+   2.3%    78.2%       0.000s       1.42e-07s     C       96        6   Assert{msg='Theano Assert failed!'}
+   2.1%    80.3%       0.000s       8.05e-07s     C       16        1   Elemwise{Composite{(((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + ((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + (i0 / i4))}}[(0, 0)]
+   2.1%    82.4%       0.000s       3.87e-07s     C       32        2   Subtensor{int64}
+   2.0%    84.4%       0.000s       7.60e-07s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * i0) + (i4 * i2 * i2 * i3 * i0))}}
+   1.6%    86.0%       0.000s       1.02e-07s     C       96        6   Shape_i{1}
+   1.6%    87.6%       0.000s       3.05e-07s     C       32        2   MakeVector{dtype='int64'}
+   1.6%    89.2%       0.000s       6.11e-07s     C       16        1   Elemwise{mul}
+   1.5%    90.7%       0.000s       2.76e-07s     C       32        2   Reshape{1}
+   1.5%    92.1%       0.000s       5.51e-07s     C       16        1   Elemwise{sqr,no_inplace}
+   ... (remaining 9 Ops account for   7.86%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+   9.2%     9.2%       0.000s       3.46e-06s     16    45   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}.0, <TensorType(int32, vector)>)
+   7.1%    16.3%       0.000s       2.68e-06s     16    36   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, <TensorType(int32, vector)>)
+   6.8%    23.1%       0.000s       2.56e-06s     16    65   Elemwise{Composite{((i0 * i1 * i2 * i3 * (i4 + i5) * i2) + (i0 * i2 * (i4 + i5) * i3 * i0) + (i0 * (i6 + i7) * i2) + (i3 * i8 * i2 * i2 * i2 * i0) + (i9 * i3 * i0 * i8 * i2 * i2 * i0) + (i0 * i10 * i2 * i3 * i2 * i11 * i8 * i0) + (i0 * i2 * i3 * i0 * i11 * i8 * i0) + (i0 * i12 * ((i13 * i2) + (i8 * i11 * i2 * i3 * i0)) * i2) + (i0 * i2 * ((i13 * i0) + (i14 * i8 * i2 * i3 * i0)) * i11) + (i9 * i3 * Composite{(Switch(i0, i1, i2) - Switch(i3, i1, i2))}
+   6.3%    29.3%       0.000s       2.37e-06s     16    54   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)].0, <TensorType(int32, vector)>)
+   5.6%    34.9%       0.000s       2.12e-06s     16    24   IncSubtensor{InplaceInc;int64}(Alloc.0, TensorConstant{1.0}, ScalarFromTensor.0)
+   5.4%    40.3%       0.000s       2.03e-06s     16    21   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, <TensorType(int32, vector)>)
+   5.2%    45.5%       0.000s       1.97e-06s     16    56   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)].0, <TensorType(int32, vector)>)
+   5.1%    50.6%       0.000s       1.92e-06s     16    59   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, Elemwise{true_div,no_inplace}.0, <TensorType(int32, vector)>)
+   2.3%    52.9%       0.000s       8.79e-07s     16    41   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}(AdvancedSubtensor1.0, <TensorType(int8, matrix)>, AdvancedSubtensor1.0)
+   2.1%    55.1%       0.000s       8.05e-07s     16    37   Elemwise{Composite{(((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + ((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + (i0 / i4))}}[(0, 0)](Reshape{2}.0, <TensorType(float64, matrix)>, <TensorType(float64, matrix)>, <TensorType(float64, matrix)>, Elemwise{sqr,no_inplace}.0)
+   2.1%    57.1%       0.000s       7.75e-07s     16    22   Alloc(TensorConstant{(1,) of 0.0}, Prod{acc_dtype=int64}.0)
+   2.0%    59.1%       0.000s       7.60e-07s     16    27   Elemwise{Composite{((i0 * i1 * i2 * i3 * i0) + (i4 * i2 * i2 * i3 * i0))}}(<TensorType(float64, matrix)>, <TensorType(float64, matrix)>, <TensorType(float64, matrix)>, Reshape{2}.0, TensorConstant{(1, 1) of -1.0})
+   1.9%    61.0%       0.000s       7.00e-07s     16    17   Alloc(TensorConstant{(1, 1) of 0.0}, Shape_i{1}.0, Shape_i{0}.0)
+   1.7%    62.7%       0.000s       6.41e-07s     16    30   InplaceDimShuffle{1,0}(Elemwise{mul}.0)
+   1.6%    64.3%       0.000s       6.11e-07s     16    26   Elemwise{mul}(<TensorType(float64, matrix)>, Reshape{2}.0, <TensorType(float64, matrix)>)
+   1.6%    65.9%       0.000s       5.96e-07s     16    58   InplaceDimShuffle{1,0}(AdvancedIncSubtensor1{no_inplace,inc}.0)
+   1.5%    67.4%       0.000s       5.51e-07s     16    14   Elemwise{sqr,no_inplace}(<TensorType(float64, matrix)>)
+   1.4%    68.8%       0.000s       5.36e-07s     16    23   Elemwise{true_div,no_inplace}(<TensorType(int8, matrix)>, AdvancedSubtensor1.0)
+   1.4%    70.2%       0.000s       5.22e-07s     16    61   InplaceDimShuffle{1,0}(AdvancedIncSubtensor1{no_inplace,inc}.0)
+   1.3%    71.5%       0.000s       5.07e-07s     16    10   Subtensor{int64}(<TensorType(int64, vector)>, Constant{0})
+   ... (remaining 48 Apply instances account for 28.50%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 16 steps) 2.507925e-03s
+
+  Total time spent in calling the VM 2.329826e-03s (92.899%)
+  Total overhead (computing slices..) 1.780987e-04s (7.101%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.434s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  34.9%    34.9%       0.001s       1.11e-05s     C       64       4   theano.tensor.subtensor.AdvancedIncSubtensor1
+  14.0%    48.9%       0.000s       1.78e-05s     Py      16       1   theanoMod.DES_DiffOp
+  13.4%    62.3%       0.000s       8.15e-07s     C      336      21   theano.tensor.elemwise.Elemwise
+  12.8%    75.1%       0.000s       2.71e-06s     C       96       6   theano.tensor.basic.Reshape
+   6.2%    81.3%       0.000s       1.96e-06s     C       64       4   theano.tensor.basic.Join
+   5.8%    87.1%       0.000s       3.69e-06s     C       32       2   theano.tensor.subtensor.AdvancedSubtensor1
+   2.6%    89.7%       0.000s       1.96e-07s     C      272      17   theano.compile.ops.Shape_i
+   2.2%    92.0%       0.000s       3.58e-07s     C      128       8   theano.tensor.elemwise.DimShuffle
+   2.2%    94.2%       0.000s       2.83e-06s     C       16       1   theano.tensor.subtensor.IncSubtensor
+   2.1%    96.3%       0.000s       6.71e-07s     C       64       4   theano.tensor.basic.Alloc
+   1.0%    97.2%       0.000s       6.11e-07s     C       32       2   theano.tensor.subtensor.Subtensor
+   0.6%    97.9%       0.000s       1.37e-07s     C       96       6   theano.tensor.opt.Assert
+   0.4%    98.3%       0.000s       2.83e-07s     C       32       2   theano.tensor.opt.MakeVector
+   0.4%    98.8%       0.000s       5.66e-07s     C       16       1   theano.tensor.basic.ScalarFromTensor
+   0.4%    99.2%       0.000s       5.07e-07s     C       16       1   theano.tensor.basic.Flatten
+   0.3%    99.5%       0.000s       4.32e-07s     C       16       1   theano.tensor.elemwise.CAReduce
+   0.3%    99.9%       0.000s       4.32e-07s     C       16       1   theano.tensor.elemwise.Prod
+   0.1%   100.0%       0.000s       1.79e-07s     C       16       1   theano.compile.ops.ViewOp
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  27.7%    27.7%       0.001s       1.17e-05s     C       48        3   AdvancedIncSubtensor1{no_inplace,inc}
+  14.0%    41.6%       0.000s       1.78e-05s     Py      16        1   DES_DiffOp{n=1, axis=-1}
+  12.3%    53.9%       0.000s       3.91e-06s     C       64        4   Reshape{2}
+   7.3%    61.2%       0.000s       9.24e-06s     C       16        1   AdvancedIncSubtensor1{inplace,inc}
+   6.2%    67.3%       0.000s       1.96e-06s     C       64        4   Join
+   5.8%    73.1%       0.000s       3.69e-06s     C       32        2   AdvancedSubtensor1
+   2.8%    76.0%       0.000s       3.61e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i2) + (i0 * i2 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i3 * i0) + (i0 * ((i6 - i7) + (i6 - i7) + i10 + i11) * i2) + (i3 * i12 * i2 * i2 * i2 * i0) + (i13 * i3 * i0 * i12 * i2 * i2 * i0) + (i0 * i14 * i2 * i3 * i2 * i15 * i12 * i0) + (i0 * i2 * i3 * i0 * i15 * i12 * i0) + (i0 * i16 * ((i17 * i2) + (i12 * 
+   2.2%    78.2%       0.000s       2.83e-06s     C       16        1   IncSubtensor{InplaceInc;int64}
+   2.1%    80.3%       0.000s       6.71e-07s     C       64        4   Alloc
+   1.7%    82.0%       0.000s       3.50e-07s     C       96        6   InplaceDimShuffle{1,0}
+   1.6%    83.6%       0.000s       2.09e-07s     C      160       10   Shape_i{0}
+   1.6%    85.2%       0.000s       2.00e-06s     C       16        1   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}
+   1.5%    86.6%       0.000s       1.86e-06s     C       16        1   Elemwise{Composite{(((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + ((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + (i0 / i4))}}[(0, 0)]
+   1.2%    87.8%       0.000s       2.15e-07s     C      112        7   Elemwise{eq,no_inplace}
+   1.0%    88.8%       0.000s       1.79e-07s     C      112        7   Shape_i{1}
+   1.0%    89.8%       0.000s       6.11e-07s     C       32        2   Subtensor{int64}
+   0.9%    90.7%       0.000s       1.16e-06s     C       16        1   Elemwise{Composite{LT((-i0), i1)}}
+   0.8%    91.5%       0.000s       1.07e-06s     C       16        1   Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)]
+   0.8%    92.3%       0.000s       9.69e-07s     C       16        1   Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)]
+   0.7%    93.0%       0.000s       9.24e-07s     C       16        1   Elemwise{Composite{Switch(i0, (i1 * EQ(i2, i3)), i4)}}[(0, 3)]
+   ... (remaining 17 Ops account for   7.00%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  14.0%    14.0%       0.000s       1.78e-05s     16    17   DES_DiffOp{n=1, axis=-1}(B0)
+  11.3%    25.2%       0.000s       1.43e-05s     16    79   Reshape{2}(Assert{msg='Theano Assert failed!'}.0, <TensorType(int64, vector)>)
+  11.1%    36.3%       0.000s       1.41e-05s     16    60   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}.0, <TensorType(int32, vector)>)
+   8.8%    45.2%       0.000s       1.13e-05s     16    69   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)].0, <TensorType(int32, vector)>)
+   7.7%    52.9%       0.000s       9.80e-06s     16    71   AdvancedIncSubtensor1{no_inplace,inc}(Alloc.0, Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)].0, <TensorType(int32, vector)>)
+   7.3%    60.1%       0.000s       9.24e-06s     16    74   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, Elemwise{true_div,no_inplace}.0, <TensorType(int32, vector)>)
+   3.5%    63.6%       0.000s       4.43e-06s     16    51   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, <TensorType(int32, vector)>)
+   2.8%    66.4%       0.000s       3.61e-06s     16    80   Elemwise{Composite{((i0 * i1 * i2 * i3 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i2) + (i0 * i2 * Composite{((i0 - i1) + i2 + i3 + i4)}(i4, i5, (i6 - i7), i8, i9) * i3 * i0) + (i0 * ((i6 - i7) + (i6 - i7) + i10 + i11) * i2) + (i3 * i12 * i2 * i2 * i2 * i0) + (i13 * i3 * i0 * i12 * i2 * i2 * i0) + (i0 * i14 * i2 * i3 * i2 * i15 * i12 * i0) + (i0 * i2 * i3 * i0 * i15 * i12 * i0) + (i0 * i16 * ((i17 * i2) + (i12 * i15 * i2 * 
+   2.3%    68.8%       0.000s       2.95e-06s     16    22   AdvancedSubtensor1(InplaceDimShuffle{1,0}.0, <TensorType(int32, vector)>)
+   2.2%    71.0%       0.000s       2.83e-06s     16    31   IncSubtensor{InplaceInc;int64}(Alloc.0, TensorConstant{1.0}, ScalarFromTensor.0)
+   2.2%    73.2%       0.000s       2.82e-06s     16    50   Join(TensorConstant{1}, InplaceDimShuffle{0,x}.0, Elemwise{Composite{Switch(i0, (i1 * EQ(i2, i3)), i4)}}[(0, 3)].0)
+   1.6%    74.8%       0.000s       2.01e-06s     16    36   Join(TensorConstant{1}, InplaceDimShuffle{0,x}.0, Alloc.0)
+   1.6%    76.3%       0.000s       2.00e-06s     16    56   Elemwise{Composite{((-((i0 * i1) / i2)) / i2)}}(AdvancedSubtensor1.0, <TensorType(int8, matrix)>, AdvancedSubtensor1.0)
+   1.5%    77.8%       0.000s       1.86e-06s     16    52   Elemwise{Composite{(((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + ((-((i0 * i1 * i1) / i2)) / (i3 * i2)) + (i0 / i4))}}[(0, 0)](Reshape{2}.0, <TensorType(float64, matrix)>, <TensorType(float64, matrix)>, <TensorType(float64, matrix)>, Elemwise{sqr,no_inplace}.0)
+   1.3%    79.1%       0.000s       1.65e-06s     16    49   Join(TensorConstant{1}, Elemwise{Composite{Switch(i0, (i1 * EQ(i2, i3)), i4)}}[(0, 3)].0, InplaceDimShuffle{0,x}.0)
+   1.1%    80.2%       0.000s       1.37e-06s     16    35   Join(TensorConstant{1}, Alloc.0, InplaceDimShuffle{0,x}.0)
+   0.9%    81.1%       0.000s       1.16e-06s     16    37   Elemwise{Composite{LT((-i0), i1)}}(InplaceDimShuffle{x,x}.0, TensorConstant{(1, 1) of 0.0})
+   0.8%    81.9%       0.000s       1.07e-06s     16    63   Elemwise{Composite{((i0 * i1 * i2) / sqr(i3))}}[(0, 1)](TensorConstant{(1, 1) of -1.0}, AdvancedSubtensor1.0, <TensorType(int8, matrix)>, Elemwise{Sub}[(0, 1)].0)
+   0.8%    82.7%       0.000s       9.69e-07s     16    66   Elemwise{Composite{(Cast{float64}((-i0)) / i1)}}[(0, 1)](<TensorType(int8, matrix)>, Elemwise{Sub}[(0, 1)].0)
+   0.7%    83.4%       0.000s       9.39e-07s     16    26   Alloc(TensorConstant{(1,) of 0.0}, Prod{acc_dtype=int64}.0)
+   ... (remaining 63 Apply instances account for 16.56%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: /Users/dstuck/evidation/ContinuousTimeMarkovModel/src/ContinuousTimeMarkovModel/samplers/forwardX.py:486
+  Time in 2 calls to Function.__call__: 1.220703e-04s
+  Time in Function.fn.__call__: 7.605553e-05s (62.305%)
+  Time in thunks: 6.103516e-05s (50.000%)
+  Total compile time: 2.625899e-01s
+    Number of Apply nodes: 7
+    Theano Optimizer time: 2.822995e-02s
+       Theano validate time: 1.330376e-04s
+    Theano Linker time (includes C, CUDA code generation/compiling): 4.355812e-02s
+       Import time 3.543806e-02s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.448s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  59.0%    59.0%       0.000s       1.80e-05s     Py       2       1   theano.tensor.subtensor.AdvancedIncSubtensor
+  27.0%    85.9%       0.000s       2.06e-06s     C        8       4   theano.tensor.elemwise.Elemwise
+   7.8%    93.8%       0.000s       2.38e-06s     C        2       1   theano.compile.ops.DeepCopyOp
+   6.2%   100.0%       0.000s       1.91e-06s     C        2       1   theano.tensor.basic.Alloc
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  59.0%    59.0%       0.000s       1.80e-05s     Py       2        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+  27.0%    85.9%       0.000s       2.06e-06s     C        8        4   sigmoid
+   7.8%    93.8%       0.000s       2.38e-06s     C        2        1   DeepCopyOp
+   6.2%   100.0%       0.000s       1.91e-06s     C        2        1   Alloc
+   ... (remaining 0 Ops account for   0.00%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  59.0%    59.0%       0.000s       1.80e-05s      2     6   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}(Alloc.0, sigmoid.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+  11.7%    70.7%       0.000s       3.58e-06s      2     3   sigmoid(B_logodds_shared)
+   7.8%    78.5%       0.000s       2.38e-06s      2     5   DeepCopyOp(S_shared)
+   6.6%    85.2%       0.000s       2.03e-06s      2     1   sigmoid(Z_anchoredbeta_shared)
+   6.2%    91.4%       0.000s       1.91e-06s      2     2   Alloc(TensorConstant{(1, 1) of 1e-06}, TensorConstant{4}, TensorConstant{16})
+   5.1%    96.5%       0.000s       1.55e-06s      2     4   sigmoid(B0_logodds_shared)
+   3.5%   100.0%       0.000s       1.07e-06s      2     0   sigmoid(L_logodds_shared)
+   ... (remaining 0 Apply instances account for 0.00%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 37 steps) 3.543119e-01s
+
+  Total time spent in calling the VM 3.536651e-01s (99.817%)
+  Total overhead (computing slices..) 6.468296e-04s (0.183%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.453s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  54.7%    54.7%       0.192s       5.76e-04s     Py     333       9   theano.tensor.subtensor.AdvancedIncSubtensor
+  21.2%    75.9%       0.075s       4.69e-05s     C     1591      43   theano.tensor.elemwise.Elemwise
+  14.5%    90.4%       0.051s       1.25e-04s     Py     407      11   theano.tensor.subtensor.AdvancedSubtensor
+   6.3%    96.7%       0.022s       1.50e-04s     C      148       4   theano.tensor.elemwise.Sum
+   1.3%    98.0%       0.005s       2.06e-05s     C      222       6   theano.tensor.basic.Alloc
+   1.2%    99.3%       0.004s       5.76e-05s     C       74       2   theano.tensor.elemwise.Prod
+   0.3%    99.5%       0.001s       1.44e-06s     C      666      18   theano.tensor.elemwise.DimShuffle
+   0.2%    99.7%       0.001s       1.25e-06s     C      481      13   theano.tensor.basic.Reshape
+   0.1%    99.8%       0.000s       8.00e-06s     C       37       1   theano.tensor.subtensor.IncSubtensor
+   0.1%    99.9%       0.000s       7.36e-07s     C      333       9   theano.compile.ops.Shape_i
+   0.1%    99.9%       0.000s       1.58e-06s     C      148       4   theano.tensor.opt.MakeVector
+   0.0%    99.9%       0.000s       2.07e-06s     C       37       1   theano.tensor.subtensor.Subtensor
+   0.0%   100.0%       0.000s       8.22e-07s     C       74       2   theano.tensor.opt.Assert
+   0.0%   100.0%       0.000s       1.45e-06s     C       37       1   theano.tensor.basic.ScalarFromTensor
+   0.0%   100.0%       0.000s       6.25e-07s     C       74       2   theano.compile.ops.ViewOp
+   0.0%   100.0%       0.000s       6.02e-07s     C       74       2   theano.tensor.basic.Flatten
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  54.5%    54.5%       0.192s       6.47e-04s     Py     296        8   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}
+  14.5%    69.1%       0.051s       1.25e-04s     Py     407       11   AdvancedSubtensor
+   5.6%    74.6%       0.020s       5.29e-04s     C       37        1   Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)]
+   5.1%    79.8%       0.018s       2.43e-04s     C       74        2   Sum{axis=[0], acc_dtype=float64}
+   4.6%    84.3%       0.016s       2.17e-04s     C       74        2   Elemwise{Mul}[(0, 0)]
+   2.7%    87.0%       0.009s       8.41e-05s     C      111        3   Elemwise{true_div}
+   2.5%    89.5%       0.009s       1.18e-04s     C       74        2   Elemwise{Composite{(i0 - (i1 * i2))}}
+   2.4%    91.8%       0.008s       1.12e-04s     C       74        2   Elemwise{Composite{(-(i0 * i1))}}
+   1.8%    93.6%       0.006s       1.67e-04s     C       37        1   Elemwise{inv,no_inplace}
+   1.3%    94.9%       0.005s       2.06e-05s     C      222        6   Alloc
+   1.2%    96.1%       0.004s       5.76e-05s     C       74        2   Prod{axis=[1], acc_dtype=float64}
+   1.2%    97.3%       0.004s       5.70e-05s     C       74        2   Sum{axis=[1], acc_dtype=float64}
+   1.1%    98.4%       0.004s       1.04e-04s     C       37        1   Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)]
+   0.1%    98.5%       0.000s       4.45e-06s     C      111        3   Elemwise{mul}
+   0.1%    98.7%       0.000s       1.15e-05s     Py      37        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   0.1%    98.8%       0.000s       8.22e-06s     C       37        1   Elemwise{Composite{(((i0 * i1 * i2) / i3) * i4)}}[(0, 1)]
+   0.1%    98.8%       0.000s       8.03e-06s     C       37        1   Elemwise{Composite{(i0 * (i1 / i2) * i3)}}
+   0.1%    98.9%       0.000s       8.00e-06s     C       37        1   IncSubtensor{InplaceInc;int64}
+   0.1%    99.0%       0.000s       1.44e-06s     C      185        5   InplaceDimShuffle{0,x}
+   0.1%    99.1%       0.000s       1.58e-06s     C      148        4   MakeVector{dtype='int64'}
+   ... (remaining 35 Ops account for   0.94%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  22.2%    22.2%       0.078s       2.11e-03s     37   117   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)].0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+  21.8%    44.0%       0.077s       2.07e-03s     37    87   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Elemwise{inv,no_inplace}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.8%    49.8%       0.020s       5.48e-04s     37    52   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.6%    55.4%       0.020s       5.29e-04s     37   114   Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)](AdvancedSubtensor.0, AdvancedSubtensor.0, Elemwise{Composite{(-(i0 * i1))}}.0, InplaceDimShuffle{0,x}.0, InplaceDimShuffle{0,x}.0)
+   5.6%    60.9%       0.020s       5.28e-04s     37   103   AdvancedSubtensor(Elemwise{Composite{(-(i0 * i1))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.1%    66.0%       0.018s       4.81e-04s     37    86   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(Alloc.0, Elemwise{true_div,no_inplace}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   4.9%    70.9%       0.017s       4.67e-04s     37   116   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(Alloc.0, Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)].0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   2.6%    73.5%       0.009s       2.45e-04s     37    89   Sum{axis=[0], acc_dtype=float64}(Elemwise{Mul}[(0, 0)].0)
+   2.5%    76.0%       0.009s       2.40e-04s     37   119   Sum{axis=[0], acc_dtype=float64}(Elemwise{Mul}[(0, 0)].0)
+   2.4%    78.4%       0.008s       2.29e-04s     37    47   Elemwise{Composite{(i0 - (i1 * i2))}}(TensorConstant{(1, 1, 1) of 1.0}, Reshape{3}.0, Reshape{3}.0)
+   2.3%    80.8%       0.008s       2.19e-04s     37    88   Elemwise{Mul}[(0, 0)](AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Reshape{3}.0)
+   2.3%    83.0%       0.008s       2.15e-04s     37   118   Elemwise{Mul}[(0, 0)](AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Reshape{3}.0)
+   2.0%    85.1%       0.007s       1.93e-04s     37   102   Elemwise{Composite{(-(i0 * i1))}}(InplaceDimShuffle{x,1,2}.0, Reshape{3}.0)
+   2.0%    87.1%       0.007s       1.90e-04s     37   105   Elemwise{true_div}(AdvancedSubtensor.0, AdvancedSubtensor.0)
+   1.8%    88.8%       0.006s       1.67e-04s     37    61   Elemwise{inv,no_inplace}(AdvancedSubtensor.0)
+   1.1%    89.9%       0.004s       1.05e-04s     37   104   AdvancedSubtensor(Elemwise{Composite{(-(i0 * i1))}}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   1.1%    91.0%       0.004s       1.04e-04s     37   115   Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)](AdvancedSubtensor.0, Elemwise{Sub}[(0, 1)].0, InplaceDimShuffle{0,x}.0, Elemwise{Composite{(i0 - (i1 * i2))}}.0, AdvancedSubtensor.0, Elemwise{mul,no_inplace}.0, Elemwise{Composite{(((i0 * i1 * i2) / i3) * i4)}}[(0, 1)].0)
+   1.1%    92.1%       0.004s       1.02e-04s     37    62   Prod{axis=[1], acc_dtype=float64}(AdvancedSubtensor.0)
+   1.0%    93.1%       0.004s       9.95e-05s     37   107   Sum{axis=[1], acc_dtype=float64}(Elemwise{true_div}.0)
+   1.0%    94.2%       0.004s       9.75e-05s     37    53   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   ... (remaining 108 Apply instances account for 5.82%(0.02s) of the runtime)
+
+Function profiling
+==================
+  Message: /usr/local/lib/python2.7/site-packages/pymc3/model.py:278
+  Time in 1 calls to Function.__call__: 3.891830e-01s
+  Time in Function.fn.__call__: 3.890252e-01s (99.959%)
+  Time in thunks: 3.888369e-01s (99.911%)
+  Total compile time: 8.855845e+00s
+    Number of Apply nodes: 170
+    Theano Optimizer time: 6.054171e+00s
+       Theano validate time: 9.094548e-02s
+    Theano Linker time (includes C, CUDA code generation/compiling): 2.520192e+00s
+       Import time 2.839508e-01s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.480s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  99.8%    99.8%       0.388s       3.88e-01s     Py       1       1   theano.scan_module.scan_op.Scan
+   0.0%    99.8%       0.000s       2.49e-06s     C       63      63   theano.tensor.elemwise.Elemwise
+   0.0%    99.9%       0.000s       3.68e-05s     Py       4       4   theano.tensor.basic.Nonzero
+   0.0%    99.9%       0.000s       2.12e-05s     C        5       5   theano.tensor.subtensor.AdvancedIncSubtensor1
+   0.0%    99.9%       0.000s       6.13e-06s     C        7       7   theano.tensor.subtensor.AdvancedSubtensor1
+   0.0%    99.9%       0.000s       2.10e-05s     Py       2       2   theano.tensor.basic.ARange
+   0.0%    99.9%       0.000s       4.03e-06s     C        9       9   theano.tensor.basic.Alloc
+   0.0%   100.0%       0.000s       3.39e-05s     Py       1       1   theano.tensor.subtensor.AdvancedIncSubtensor
+   0.0%   100.0%       0.000s       1.25e-06s     C       24      24   theano.tensor.subtensor.Subtensor
+   0.0%   100.0%       0.000s       2.91e-05s     Py       1       1   theano.tensor.subtensor.AdvancedSubtensor
+   0.0%   100.0%       0.000s       9.46e-06s     C        3       3   theano.tensor.extra_ops.CumprodOp
+   0.0%   100.0%       0.000s       4.01e-06s     C        6       6   theano.tensor.basic.Join
+   0.0%   100.0%       0.000s       1.29e-05s     C        1       1   theano.tensor.elemwise.CAReduce
+   0.0%   100.0%       0.000s       1.58e-06s     C        8       8   theano.tensor.basic.Reshape
+   0.0%   100.0%       0.000s       1.11e-06s     C        9       9   theano.compile.ops.Shape_i
+   0.0%   100.0%       0.000s       1.19e-06s     C        7       7   theano.tensor.opt.MakeVector
+   0.0%   100.0%       0.000s       8.86e-07s     C        7       7   theano.tensor.elemwise.Sum
+   0.0%   100.0%       0.000s       1.43e-06s     C        4       4   theano.tensor.elemwise.DimShuffle
+   0.0%   100.0%       0.000s       8.11e-07s     C        5       5   theano.tensor.basic.Flatten
+   0.0%   100.0%       0.000s       1.55e-06s     C        2       2   theano.tensor.elemwise.All
+   ... (remaining 1 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  99.8%    99.8%       0.388s       3.88e-01s     Py       1        1   for{cpu,scan_fn}
+   0.0%    99.8%       0.000s       3.68e-05s     Py       4        4   Nonzero
+   0.0%    99.9%       0.000s       1.57e-05s     C        4        4   AdvancedIncSubtensor1{inplace,set}
+   0.0%    99.9%       0.000s       4.32e-05s     C        1        1   AdvancedIncSubtensor1{inplace,inc}
+   0.0%    99.9%       0.000s       6.13e-06s     C        7        7   AdvancedSubtensor1
+   0.0%    99.9%       0.000s       2.10e-05s     Py       2        2   ARange{dtype='int64'}
+   0.0%    99.9%       0.000s       4.03e-06s     C        9        9   Alloc
+   0.0%    99.9%       0.000s       3.39e-05s     Py       1        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   0.0%    99.9%       0.000s       2.91e-05s     Py       1        1   AdvancedSubtensor
+   0.0%    99.9%       0.000s       9.46e-06s     C        3        3   CumprodOp{0}
+   0.0%    99.9%       0.000s       2.69e-05s     C        1        1   Elemwise{Composite{(Switch(i0, (Switch(i1, i2, (i3 * log(i4))) + i5 + Switch(i6, i2, (i7 * log(i8)))), i9) + log(i10))}}
+   0.0%    99.9%       0.000s       4.01e-06s     C        6        6   Join
+   0.0%    99.9%       0.000s       1.01e-06s     C       18       18   Subtensor{int64}
+   0.0%   100.0%       0.000s       2.59e-06s     C        7        7   Elemwise{sub}
+   0.0%   100.0%       0.000s       1.29e-05s     C        1        1   Reduce{maximum}
+   0.0%   100.0%       0.000s       1.95e-06s     C        6        6   sigmoid
+   0.0%   100.0%       0.000s       3.34e-06s     C        3        3   Elemwise{Composite{(Switch((GE(i0, i1) * LE(i0, i2)), (Switch(EQ(i0, i1), i1, i3) + Switch(EQ(i4, i1), i1, i3)), i5) + log(Abs(i6)))}}[(0, 4)]
+   0.0%   100.0%       0.000s       1.00e-05s     C        1        1   Elemwise{Composite{(i0 + i1 + (i2 * i3))}}
+   0.0%   100.0%       0.000s       1.19e-06s     C        7        7   MakeVector{dtype='int64'}
+   0.0%   100.0%       0.000s       1.79e-06s     C        4        4   Elemwise{mul,no_inplace}
+   ... (remaining 41 Ops account for   0.03%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  99.8%    99.8%       0.388s       3.88e-01s      1   168   for{cpu,scan_fn}(TensorConstant{37}, TensorConstant{[ 0  1  2 .. 34 35 36]}, TensorConstant{37}, Elemwise{scalar_sigmoid}.0, sigmoid.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0, Elemwise{sub}.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{Sub}[(0, 1)].0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Reshape{3}.0, Alloc.0, AdvancedSubtensor.0, Elemwise{sub,no_inplace}.0, Elemwise{sqr,no_
+   0.0%    99.8%       0.000s       5.60e-05s      1    82   Nonzero(AdvancedIncSubtensor1{inplace,set}.0)
+   0.0%    99.8%       0.000s       4.32e-05s      1   115   AdvancedIncSubtensor1{inplace,inc}(Alloc.0, TensorConstant{1}, AdvancedSubtensor1.0)
+   0.0%    99.8%       0.000s       4.22e-05s      1   134   Nonzero(Elemwise{neq,no_inplace}.0)
+   0.0%    99.9%       0.000s       3.50e-05s      1    68   AdvancedIncSubtensor1{inplace,set}(Elemwise{sub,no_inplace}.0, TensorConstant{0}, TensorConstant{[  20   31..1577 1585]})
+   0.0%    99.9%       0.000s       3.39e-05s      1    40   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}(Alloc.0, Elemwise{scalar_sigmoid}.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   0.0%    99.9%       0.000s       2.91e-05s      1    65   AdvancedSubtensor(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   0.0%    99.9%       0.000s       2.69e-05s      1   116   Elemwise{Composite{(Switch(i0, (Switch(i1, i2, (i3 * log(i4))) + i5 + Switch(i6, i2, (i7 * log(i8)))), i9) + log(i10))}}(Elemwise{Composite{(GE(i0, i1) * LE(i0, i2) * i3 * i4)}}.0, Elemwise{Composite{AND(EQ(i0, i1), i2)}}.0, TensorConstant{(1,) of 0}, Elemwise{add,no_inplace}.0, Elemwise{sub,no_inplace}.0, Elemwise{Composite{((scalar_gammaln((i0 + i1)) - scalar_gammaln(i0)) - scalar_gammaln(i1))}}.0, Elemwise{Composite{AND(EQ(i0, i1), i2)}}.0, Elemw
+   0.0%    99.9%       0.000s       2.60e-05s      1   133   Nonzero(Elemwise{eq,no_inplace}.0)
+   0.0%    99.9%       0.000s       2.50e-05s      1    25   ARange{dtype='int64'}(TensorConstant{0}, Shape_i{0}.0, TensorConstant{1})
+   0.0%    99.9%       0.000s       2.31e-05s      1   132   Nonzero(Elemwise{eq,no_inplace}.0)
+   0.0%    99.9%       0.000s       1.69e-05s      1    98   ARange{dtype='int64'}(TensorConstant{0}, Elemwise{Sqr}[(0, 0)].0, TensorConstant{1})
+   0.0%    99.9%       0.000s       1.69e-05s      1    38   Alloc(TensorConstant{(1,) of 1.0}, Shape_i{0}.0)
+   0.0%    99.9%       0.000s       1.62e-05s      1   120   CumprodOp{0}(Join.0)
+   0.0%    99.9%       0.000s       1.41e-05s      1    23   AdvancedSubtensor1(S, TensorConstant{[   0   21..1578 1586]})
+   0.0%    99.9%       0.000s       1.29e-05s      1   161   AdvancedIncSubtensor1{inplace,set}(Alloc.0, TensorConstant{0.0}, Subtensor{int64}.0)
+   0.0%    99.9%       0.000s       1.29e-05s      1    76   Reduce{maximum}(AdvancedSubtensor1.0)
+   0.0%    99.9%       0.000s       1.00e-05s      1    36   Elemwise{Composite{(i0 + i1 + (i2 * i3))}}(Subtensor{int64::}.0, TensorConstant{[0 0 0 ..., 0 0 0]}, TensorConstant{(1,) of 4}, Subtensor{:int64:}.0)
+   0.0%    99.9%       0.000s       9.06e-06s      1   163   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Elemwise{neg,no_inplace}.0, Subtensor{int64}.0)
+   0.0%    99.9%       0.000s       8.11e-06s      1   119   CumprodOp{0}(Join.0)
+   ... (remaining 150 Apply instances account for 0.07%(0.00s) of the runtime)
+
+
+Scan Op profiling ( scan_fn )
+==================
+  Message: None
+  Time in 1 calls of the op (for a total of 37 steps) 3.866789e-01s
+
+  Total time spent in calling the VM 3.859479e-01s (99.811%)
+  Total overhead (computing slices..) 7.309914e-04s (0.189%)
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.515s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  55.5%    55.5%       0.213s       7.19e-04s     Py     296       8   theano.tensor.subtensor.AdvancedIncSubtensor
+  21.1%    76.6%       0.081s       7.55e-05s     C     1073      29   theano.tensor.elemwise.Elemwise
+  14.0%    90.6%       0.054s       1.45e-04s     Py     370      10   theano.tensor.subtensor.AdvancedSubtensor
+   6.1%    96.8%       0.024s       1.59e-04s     C      148       4   theano.tensor.elemwise.Sum
+   1.4%    98.2%       0.005s       2.95e-05s     C      185       5   theano.tensor.basic.Alloc
+   1.2%    99.4%       0.004s       5.99e-05s     C       74       2   theano.tensor.elemwise.Prod
+   0.2%    99.6%       0.001s       1.49e-06s     C      592      16   theano.tensor.elemwise.DimShuffle
+   0.1%    99.7%       0.000s       1.10e-06s     C      407      11   theano.tensor.basic.Reshape
+   0.1%    99.8%       0.000s       8.61e-06s     C       37       1   theano.tensor.subtensor.IncSubtensor
+   0.1%    99.8%       0.000s       1.38e-06s     C      185       5   theano.tensor.opt.MakeVector
+   0.1%    99.9%       0.000s       5.29e-07s     C      444      12   theano.compile.ops.Shape_i
+   0.0%    99.9%       0.000s       1.85e-06s     C       74       2   theano.tensor.subtensor.Subtensor
+   0.0%   100.0%       0.000s       5.59e-07s     C      148       4   theano.tensor.opt.Assert
+   0.0%   100.0%       0.000s       8.25e-07s     C       74       2   theano.compile.ops.ViewOp
+   0.0%   100.0%       0.000s       1.11e-06s     C       37       1   theano.tensor.basic.ScalarFromTensor
+   0.0%   100.0%       0.000s       6.89e-07s     C       37       1   theano.tensor.basic.Flatten
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  55.5%    55.5%       0.213s       7.19e-04s     Py     296        8   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}
+  14.0%    69.5%       0.054s       1.45e-04s     Py     370       10   AdvancedSubtensor
+   5.6%    75.1%       0.021s       5.79e-04s     C       37        1   Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)]
+   5.0%    80.1%       0.019s       2.60e-04s     C       74        2   Sum{axis=[0], acc_dtype=float64}
+   4.6%    84.8%       0.018s       2.41e-04s     C       74        2   Elemwise{Mul}[(0, 0)]
+   2.6%    87.4%       0.010s       1.37e-04s     C       74        2   Elemwise{Composite{(i0 - (i1 * i2))}}
+   2.5%    89.9%       0.010s       8.67e-05s     C      111        3   Elemwise{true_div}
+   2.3%    92.3%       0.009s       1.22e-04s     C       74        2   Elemwise{Composite{(-(i0 * i1))}}
+   1.8%    94.1%       0.007s       1.89e-04s     C       37        1   Elemwise{inv,no_inplace}
+   1.4%    95.5%       0.005s       2.95e-05s     C      185        5   Alloc
+   1.2%    96.7%       0.004s       5.99e-05s     C       74        2   Prod{axis=[1], acc_dtype=float64}
+   1.1%    97.8%       0.004s       5.79e-05s     C       74        2   Sum{axis=[1], acc_dtype=float64}
+   1.0%    98.8%       0.004s       1.07e-04s     C       37        1   Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)]
+   0.1%    98.9%       0.000s       5.43e-06s     C       74        2   Elemwise{mul,no_inplace}
+   0.1%    99.0%       0.000s       8.61e-06s     C       37        1   IncSubtensor{InplaceInc;int64}
+   0.1%    99.1%       0.000s       7.96e-06s     C       37        1   Elemwise{Composite{(i0 * (i1 / i2) * i3)}}
+   0.1%    99.2%       0.000s       7.72e-06s     C       37        1   Elemwise{Composite{(((i0 * i1 * i2) / i3) * i4)}}[(0, 1)]
+   0.1%    99.2%       0.000s       1.38e-06s     C      185        5   MakeVector{dtype='int64'}
+   0.1%    99.3%       0.000s       1.24e-06s     C      185        5   InplaceDimShuffle{0,x}
+   0.1%    99.3%       0.000s       2.64e-06s     C       74        2   InplaceDimShuffle{0,x}
+   ... (remaining 26 Ops account for   0.66%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  22.7%    22.7%       0.087s       2.36e-03s     37    72   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Elemwise{inv,no_inplace}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+  22.6%    45.3%       0.086s       2.34e-03s     37   102   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)].0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.6%    50.9%       0.021s       5.79e-04s     37    99   Elemwise{Composite{(((-i0) / sqr(i1)) + (i2 / (i3 * i1)) + (i4 / i1))}}[(0, 0)](AdvancedSubtensor.0, AdvancedSubtensor.0, Elemwise{Composite{(-(i0 * i1))}}.0, InplaceDimShuffle{0,x}.0, InplaceDimShuffle{0,x}.0)
+   5.5%    56.4%       0.021s       5.73e-04s     37    35   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.4%    61.8%       0.021s       5.57e-04s     37    88   AdvancedSubtensor(Elemwise{Composite{(-(i0 * i1))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   5.2%    67.0%       0.020s       5.44e-04s     37    71   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(Alloc.0, Elemwise{true_div,no_inplace}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   4.4%    71.5%       0.017s       4.61e-04s     37   101   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}(Alloc.0, Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)].0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   2.6%    74.1%       0.010s       2.68e-04s     37    30   Elemwise{Composite{(i0 - (i1 * i2))}}(TensorConstant{(1, 1, 1) of 1.0}, <TensorType(int8, (False, True, False))>, Reshape{3}.0)
+   2.5%    76.6%       0.010s       2.63e-04s     37   104   Sum{axis=[0], acc_dtype=float64}(Elemwise{Mul}[(0, 0)].0)
+   2.5%    79.1%       0.010s       2.57e-04s     37    74   Sum{axis=[0], acc_dtype=float64}(Elemwise{Mul}[(0, 0)].0)
+   2.3%    81.4%       0.009s       2.43e-04s     37    73   Elemwise{Mul}[(0, 0)](AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, <TensorType(int8, (False, True, False))>)
+   2.3%    83.7%       0.009s       2.38e-04s     37   103   Elemwise{Mul}[(0, 0)](AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=False}.0, <TensorType(int8, (False, True, False))>)
+   2.0%    85.7%       0.008s       2.09e-04s     37    87   Elemwise{Composite{(-(i0 * i1))}}(InplaceDimShuffle{x,1,2}.0, <TensorType(int8, (False, True, False))>)
+   1.9%    87.6%       0.007s       1.92e-04s     37    90   Elemwise{true_div}(AdvancedSubtensor.0, AdvancedSubtensor.0)
+   1.8%    89.4%       0.007s       1.89e-04s     37    42   Elemwise{inv,no_inplace}(AdvancedSubtensor.0)
+   1.1%    90.5%       0.004s       1.12e-04s     37    36   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   1.0%    91.5%       0.004s       1.07e-04s     37   100   Elemwise{Composite{(((i0 * i1 * i2) / (i3 * i4 * i4)) + (i5 / (i3 * i3 * i4)) + (i6 / i4))}}[(0, 0)](AdvancedSubtensor.0, Elemwise{Sub}[(0, 1)].0, InplaceDimShuffle{0,x}.0, Elemwise{Composite{(i0 - (i1 * i2))}}.0, AdvancedSubtensor.0, Elemwise{mul,no_inplace}.0, Elemwise{Composite{(((i0 * i1 * i2) / i3) * i4)}}[(0, 1)].0)
+   1.0%    92.5%       0.004s       1.07e-04s     37    89   AdvancedSubtensor(Elemwise{Composite{(-(i0 * i1))}}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   1.0%    93.6%       0.004s       1.05e-04s     37    43   Prod{axis=[1], acc_dtype=float64}(AdvancedSubtensor.0)
+   1.0%    94.5%       0.004s       1.02e-04s     37    92   Sum{axis=[1], acc_dtype=float64}(Elemwise{true_div}.0)
+   ... (remaining 93 Apply instances account for 5.46%(0.02s) of the runtime)
+
+Function profiling
+==================
+  Message: /usr/local/lib/python2.7/site-packages/pymc3/model.py:278
+  Time in 3 calls to Function.__call__: 3.649950e-03s
+  Time in Function.fn.__call__: 3.190041e-03s (87.400%)
+  Time in thunks: 2.963543e-03s (81.194%)
+  Total compile time: 5.235450e-01s
+    Number of Apply nodes: 57
+    Theano Optimizer time: 2.269330e-01s
+       Theano validate time: 1.139402e-02s
+    Theano Linker time (includes C, CUDA code generation/compiling): 8.675790e-02s
+       Import time 3.723192e-02s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.541s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  78.5%    78.5%       0.002s       2.58e-04s     C        9       3   theano.tensor.subtensor.AdvancedIncSubtensor1
+   7.7%    86.2%       0.000s       2.55e-05s     Py       9       3   theano.tensor.basic.Nonzero
+   3.2%    89.4%       0.000s       1.57e-05s     Py       6       2   theano.tensor.basic.ARange
+   2.5%    91.9%       0.000s       1.43e-06s     C       51      17   theano.tensor.elemwise.Elemwise
+   1.8%    93.6%       0.000s       1.74e-05s     Py       3       1   theano.tensor.subtensor.AdvancedIncSubtensor
+   1.6%    95.2%       0.000s       1.60e-05s     C        3       1   theano.tensor.extra_ops.CumprodOp
+   1.3%    96.5%       0.000s       4.27e-06s     C        9       3   theano.tensor.basic.Join
+   1.2%    97.7%       0.000s       1.46e-06s     C       24       8   theano.compile.ops.DeepCopyOp
+   0.7%    98.4%       0.000s       2.33e-06s     C        9       3   theano.tensor.basic.Alloc
+   0.4%    98.8%       0.000s       4.29e-06s     C        3       1   theano.tensor.basic.Reshape
+   0.4%    99.3%       0.000s       9.93e-07s     C       12       4   theano.tensor.subtensor.Subtensor
+   0.3%    99.5%       0.000s       4.37e-07s     C       18       6   theano.compile.ops.ViewOp
+   0.2%    99.8%       0.000s       1.19e-06s     C        6       2   theano.tensor.elemwise.DimShuffle
+   0.1%    99.9%       0.000s       6.76e-07s     C        6       2   theano.compile.ops.Shape_i
+   0.1%   100.0%       0.000s       1.03e-06s     C        3       1   theano.tensor.opt.MakeVector
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  78.5%    78.5%       0.002s       2.58e-04s     C        9        3   AdvancedIncSubtensor1{inplace,set}
+   7.7%    86.2%       0.000s       2.55e-05s     Py       9        3   Nonzero
+   3.2%    89.4%       0.000s       1.57e-05s     Py       6        2   ARange{dtype='int64'}
+   1.8%    91.2%       0.000s       1.74e-05s     Py       3        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   1.6%    92.8%       0.000s       1.60e-05s     C        3        1   CumprodOp{0}
+   1.3%    94.1%       0.000s       4.27e-06s     C        9        3   Join
+   1.2%    95.3%       0.000s       1.46e-06s     C       24        8   DeepCopyOp
+   0.7%    96.0%       0.000s       1.46e-06s     C       15        5   sigmoid
+   0.7%    96.7%       0.000s       2.33e-06s     C        9        3   Alloc
+   0.4%    97.1%       0.000s       4.29e-06s     C        3        1   Reshape{2}
+   0.3%    97.4%       0.000s       2.78e-06s     C        3        1   Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}
+   0.3%    97.7%       0.000s       4.37e-07s     C       18        6   ViewOp
+   0.3%    97.9%       0.000s       1.27e-06s     C        6        2   Elemwise{eq,no_inplace}
+   0.2%    98.2%       0.000s       1.19e-06s     C        6        2   InplaceDimShuffle{x}
+   0.2%    98.4%       0.000s       7.42e-07s     C        9        3   Subtensor{int64}
+   0.2%    98.6%       0.000s       1.75e-06s     C        3        1   Subtensor{:int64:}
+   0.2%    98.8%       0.000s       1.67e-06s     C        3        1   Elemwise{add,no_inplace}
+   0.2%    98.9%       0.000s       1.67e-06s     C        3        1   Elemwise{neg,no_inplace}
+   0.2%    99.1%       0.000s       1.67e-06s     C        3        1   Elemwise{neq,no_inplace}
+   0.1%    99.2%       0.000s       1.43e-06s     C        3        1   Elemwise{Composite{Switch(LT(i0, i1), i0, i1)}}[(0, 1)]
+   ... (remaining 7 Ops account for   0.76%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  70.1%    70.1%       0.002s       6.92e-04s      3    52   AdvancedIncSubtensor1{inplace,set}(Alloc.0, TensorConstant{0.0}, Subtensor{int64}.0)
+   7.9%    77.9%       0.000s       7.77e-05s      3    53   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Elemwise{neg,no_inplace}.0, Subtensor{int64}.0)
+   3.1%    81.1%       0.000s       3.07e-05s      3    46   Nonzero(Elemwise{neq,no_inplace}.0)
+   2.5%    83.6%       0.000s       2.47e-05s      3    45   Nonzero(Elemwise{eq,no_inplace}.0)
+   2.2%    85.7%       0.000s       2.16e-05s      3    23   ARange{dtype='int64'}(TensorConstant{0}, Shape_i{0}.0, TensorConstant{1})
+   2.1%    87.9%       0.000s       2.10e-05s      3    44   Nonzero(Elemwise{eq,no_inplace}.0)
+   1.8%    89.6%       0.000s       1.74e-05s      3    17   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}(Alloc.0, sigmoid.0, TensorConstant{[0 0 0 0 0..3 3 3 3 3]}, TensorConstant{[ 3  5  7 .. 11 12 13]})
+   1.6%    91.2%       0.000s       1.60e-05s      3    43   CumprodOp{0}(Join.0)
+   1.0%    92.2%       0.000s       9.78e-06s      3    35   ARange{dtype='int64'}(TensorConstant{0}, Elemwise{Sqr}[(0, 0)].0, TensorConstant{1})
+   0.5%    92.8%       0.000s       5.40e-06s      3    34   Join(TensorConstant{0}, Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}.0, Alloc.0)
+   0.5%    93.3%       0.000s       5.32e-06s      3    54   AdvancedIncSubtensor1{inplace,set}(AdvancedIncSubtensor1{inplace,set}.0, Subtensor{:int64:}.0, Subtensor{int64}.0)
+   0.5%    93.8%       0.000s       5.09e-06s      3    21   Join(TensorConstant{0}, sigmoid.0, TensorConstant{(1,) of 0.0})
+   0.4%    94.3%       0.000s       4.29e-06s      3    55   Reshape{2}(AdvancedIncSubtensor1{inplace,set}.0, MakeVector{dtype='int64'}.0)
+   0.3%    94.6%       0.000s       3.02e-06s      3     4   Alloc(TensorConstant{(1, 1) of 1e-06}, TensorConstant{4}, TensorConstant{16})
+   0.3%    94.9%       0.000s       2.78e-06s      3    28   Elemwise{Composite{scalar_sigmoid((i0 + (-log((i1 - i2)))))}}(pi_stickbreaking, InplaceDimShuffle{x}.0, ARange{dtype='int64'}.0)
+   0.2%    95.1%       0.000s       2.38e-06s      3    15   DeepCopyOp(S)
+   0.2%    95.3%       0.000s       2.30e-06s      3    39   Join(TensorConstant{0}, Alloc.0, Elemwise{Sub}[(0, 1)].0)
+   0.2%    95.6%       0.000s       2.30e-06s      3    32   Alloc(TensorConstant{1.0}, Elemwise{Composite{Switch(LT(i0, i1), i0, i1)}}[(0, 1)].0)
+   0.2%    95.8%       0.000s       2.23e-06s      3    13   DeepCopyOp(pi_stickbreaking)
+   0.2%    96.0%       0.000s       1.99e-06s      3    14   DeepCopyOp(X)
+   ... (remaining 37 Apply instances account for 4.01%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: /usr/local/lib/python2.7/site-packages/pymc3/model.py:278
+  Time in 2 calls to Function.__call__: 3.673697e-02s
+  Time in Function.fn.__call__: 3.641200e-02s (99.115%)
+  Time in thunks: 3.526282e-02s (95.987%)
+  Total compile time: 3.254599e+00s
+    Number of Apply nodes: 245
+    Theano Optimizer time: 2.409953e+00s
+       Theano validate time: 1.907713e-01s
+    Theano Linker time (includes C, CUDA code generation/compiling): 5.894091e-01s
+       Import time 3.534467e-01s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.553s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  75.6%    75.6%       0.027s       9.52e-04s     Py      28      14   theano.tensor.slinalg.Expm
+  12.0%    87.6%       0.004s       2.46e-05s     C      172      86   theano.tensor.elemwise.Elemwise
+   7.4%    95.1%       0.003s       2.62e-04s     Py      10       5   theano.tensor.subtensor.AdvancedSubtensor
+   1.0%    96.1%       0.000s       8.88e-05s     C        4       2   theano.tensor.elemwise.Prod
+   0.6%    96.7%       0.000s       2.82e-05s     Py       8       4   theano.tensor.basic.Nonzero
+   0.4%    97.1%       0.000s       1.54e-05s     C       10       5   theano.tensor.subtensor.AdvancedIncSubtensor1
+   0.4%    97.6%       0.000s       2.61e-06s     C       56      28   theano.tensor.elemwise.Sum
+   0.4%    98.0%       0.000s       6.90e-05s     Py       2       1   theano.tensor.basic.Tri
+   0.4%    98.3%       0.000s       2.87e-06s     C       44      22   theano.tensor.subtensor.Subtensor
+   0.3%    98.6%       0.000s       1.15e-05s     C       10       5   theano.tensor.basic.Alloc
+   0.3%    98.9%       0.000s       5.20e-05s     Py       2       1   theanoMod.DES_DiffOp
+   0.3%    99.2%       0.000s       5.13e-06s     C       18       9   theano.tensor.subtensor.AdvancedSubtensor1
+   0.2%    99.4%       0.000s       1.42e-05s     Py       4       2   theano.tensor.basic.ARange
+   0.1%    99.5%       0.000s       2.15e-05s     Py       2       1   theano.tensor.subtensor.AdvancedIncSubtensor
+   0.1%    99.6%       0.000s       3.87e-06s     C        8       4   theano.tensor.elemwise.CAReduce
+   0.1%    99.7%       0.000s       5.05e-06s     C        6       3   theano.tensor.basic.Join
+   0.1%    99.7%       0.000s       1.30e-06s     C       20      10   theano.tensor.basic.Reshape
+   0.1%    99.8%       0.000s       1.16e-05s     C        2       1   theano.tensor.extra_ops.CumprodOp
+   0.1%    99.8%       0.000s       1.11e-06s     C       18       9   theano.tensor.elemwise.DimShuffle
+   0.1%    99.9%       0.000s       1.16e-06s     C       16       8   theano.tensor.opt.MakeVector
+   ... (remaining 5 Classes account for   0.10%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  75.6%    75.6%       0.027s       9.52e-04s     Py      28       14   Expm
+   7.4%    83.1%       0.003s       2.62e-04s     Py      10        5   AdvancedSubtensor
+   5.8%    88.9%       0.002s       1.03e-03s     C        2        1   Elemwise{Composite{(i0 + i1 + i2 + i3 + i4 + Switch(LT(i5, i6), i7, i8) + Switch(LT(i9, i10), (i11 * i12), i8) + Switch((i13 * i14), i15, i7) + i16 + i17 + i18 + i19 + i20 + i21 + i22 + i23 + i24 + i25 + i26 + i27 + i28 + i29 + i30 + i31 + i32 + i33 + i34 + i35 + i36 + i37)}}[(0, 0)]
+   3.0%    91.9%       0.001s       5.26e-04s     C        2        1   Elemwise{Composite{(i0 - (i1 * i2))}}
+   1.8%    93.7%       0.001s       3.17e-04s     C        2        1   Elemwise{Composite{log(((i0 - i1) * i2))}}[(0, 1)]
+   1.0%    94.7%       0.000s       8.88e-05s     C        4        2   Prod{axis=[1], acc_dtype=float64}
+   0.6%    95.3%       0.000s       2.82e-05s     Py       8        4   Nonzero
+   0.4%    95.7%       0.000s       2.61e-06s     C       56       28   Sum{acc_dtype=float64}
+   0.4%    96.1%       0.000s       6.90e-05s     Py       2        1   Tri{dtype='float64'}
+   0.3%    96.5%       0.000s       3.21e-06s     C       36       18   Subtensor{int64}
+   0.3%    96.8%       0.000s       1.15e-05s     C       10        5   Alloc
+   0.3%    97.1%       0.000s       5.20e-05s     Py       2        1   DES_DiffOp{n=1, axis=-1}
+   0.3%    97.4%       0.000s       5.05e-05s     C        2        1   Elemwise{Composite{log((i0 - ((i0 - i1) * i2)))}}[(0, 1)]
+   0.3%    97.6%       0.000s       5.13e-06s     C       18        9   AdvancedSubtensor1
+   0.2%    97.9%       0.000s       1.07e-05s     C        8        4   AdvancedIncSubtensor1{inplace,set}
+   0.2%    98.1%       0.000s       2.49e-06s     C       28       14   Elemwise{Composite{(i0 * log((i1 + i2)))}}[(0, 1)]
+   0.2%    98.3%       0.000s       3.40e-05s     C        2        1   AdvancedIncSubtensor1{inplace,inc}
+   0.2%    98.4%       0.000s       1.42e-05s     Py       4        2   ARange{dtype='int64'}
+   0.1%    98.5%       0.000s       2.15e-05s     Py       2        1   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   0.1%    98.7%       0.000s       1.41e-06s     C       30       15   Elemwise{mul,no_inplace}
+   ... (remaining 55 Ops account for   1.34%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+   7.1%     7.1%       0.003s       1.25e-03s      2   208   Expm(Elemwise{mul,no_inplace}.0)
+   6.7%    13.8%       0.002s       1.18e-03s      2   207   Expm(Elemwise{mul,no_inplace}.0)
+   6.1%    19.9%       0.002s       1.07e-03s      2   204   Expm(Elemwise{mul,no_inplace}.0)
+   5.8%    25.7%       0.002s       1.03e-03s      2   244   Elemwise{Composite{(i0 + i1 + i2 + i3 + i4 + Switch(LT(i5, i6), i7, i8) + Switch(LT(i9, i10), (i11 * i12), i8) + Switch((i13 * i14), i15, i7) + i16 + i17 + i18 + i19 + i20 + i21 + i22 + i23 + i24 + i25 + i26 + i27 + i28 + i29 + i30 + i31 + i32 + i33 + i34 + i35 + i36 + i37)}}[(0, 0)](Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Reduce{minimum}.0, TensorConstant{0.00
+   5.6%    31.4%       0.002s       9.91e-04s      2   212   Expm(Elemwise{mul,no_inplace}.0)
+   5.6%    36.9%       0.002s       9.81e-04s      2   213   Expm(Elemwise{mul,no_inplace}.0)
+   5.2%    42.1%       0.002s       9.19e-04s      2   209   Expm(Elemwise{mul,no_inplace}.0)
+   5.2%    47.3%       0.002s       9.12e-04s      2   205   Expm(Elemwise{mul,no_inplace}.0)
+   5.1%    52.4%       0.002s       9.05e-04s      2   215   Expm(Elemwise{Mul}[(0, 1)].0)
+   5.1%    57.5%       0.002s       9.01e-04s      2   210   Expm(Elemwise{mul,no_inplace}.0)
+   5.0%    62.5%       0.002s       8.77e-04s      2   214   Expm(Elemwise{mul,no_inplace}.0)
+   5.0%    67.5%       0.002s       8.74e-04s      2   203   Expm(Elemwise{mul,no_inplace}.0)
+   4.9%    72.4%       0.002s       8.59e-04s      2   211   Expm(Elemwise{mul,no_inplace}.0)
+   4.9%    77.2%       0.002s       8.59e-04s      2   115   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   4.7%    82.0%       0.002s       8.35e-04s      2   206   Expm(Elemwise{mul,no_inplace}.0)
+   4.4%    86.3%       0.002s       7.71e-04s      2   188   Expm(Q)
+   3.0%    89.3%       0.001s       5.26e-04s      2   101   Elemwise{Composite{(i0 - (i1 * i2))}}(TensorConstant{(1, 1, 1) of 1.0}, Reshape{3}.0, Reshape{3}.0)
+   1.8%    91.1%       0.001s       3.17e-04s      2   134   Elemwise{Composite{log(((i0 - i1) * i2))}}[(0, 1)](TensorConstant{(1,) of 1.0}, AdvancedSubtensor.0, Prod{axis=[1], acc_dtype=float64}.0)
+   1.2%    92.3%       0.000s       2.16e-04s      2   117   AdvancedSubtensor(Reshape{2}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   0.9%    93.2%       0.000s       1.59e-04s      2   116   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1607 1608]}, TensorConstant{[ 1  4  5 .. 12 13  3]})
+   ... (remaining 225 Apply instances account for 6.76%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: Sum of all(7) printed profiles at exit excluding Scan op profile.
+  Time in 12 calls to Function.__call__: 4.391849e-01s
+  Time in Function.fn.__call__: 4.378743e-01s (99.702%)
+  Time in thunks: 4.356565e-01s (99.197%)
+  Total compile time: 4.727326e+01s
+    Number of Apply nodes: 188
+    Theano Optimizer time: 2.939923e+01s
+       Theano validate time: 7.817996e-01s
+    Theano Linker time (includes C, CUDA code generation/compiling): 1.594806e+01s
+       Import time 2.241578e+00s
+
+Time in all call to theano.grad() 1.062549e+01s
+Time since theano import 624.597s
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  90.5%    90.5%       0.394s       9.86e-02s     Py       4       4   theano.scan_module.scan_op.Scan
+   6.1%    96.6%       0.027s       9.52e-04s     Py      28      14   theano.tensor.slinalg.Expm
+   1.2%    97.8%       0.005s       1.03e-05s     C      490     351   theano.tensor.elemwise.Elemwise
+   0.7%    98.5%       0.003s       6.52e-05s     C       45      31   theano.tensor.subtensor.AdvancedIncSubtensor1
+   0.6%    99.1%       0.003s       2.08e-04s     Py      13       8   theano.tensor.subtensor.AdvancedSubtensor
+   0.3%    99.3%       0.001s       3.04e-05s     Py      36      23   theano.tensor.basic.Nonzero
+   0.1%    99.4%       0.000s       1.66e-05s     Py      23      15   theano.tensor.basic.ARange
+   0.1%    99.5%       0.000s       5.95e-05s     C        6       4   theano.tensor.elemwise.Prod
+   0.1%    99.6%       0.000s       1.55e-06s     C      161     127   theano.tensor.subtensor.Subtensor
+   0.1%    99.6%       0.000s       2.45e-05s     Py      10       6   theano.tensor.subtensor.AdvancedIncSubtensor
+   0.1%    99.7%       0.000s       3.90e-06s     C       62      48   theano.tensor.basic.Alloc
+   0.1%    99.7%       0.000s       5.04e-06s     C       46      37   theano.tensor.subtensor.AdvancedSubtensor1
+   0.0%    99.8%       0.000s       9.67e-06s     C       19      15   theano.tensor.extra_ops.CumprodOp
+   0.0%    99.8%       0.000s       3.78e-06s     C       46      34   theano.tensor.basic.Join
+   0.0%    99.8%       0.000s       2.13e-06s     C       80      52   theano.tensor.elemwise.Sum
+   0.0%    99.9%       0.000s       6.90e-05s     Py       2       1   theano.tensor.basic.Tri
+   0.0%    99.9%       0.000s       5.20e-05s     Py       2       1   theanoMod.DES_DiffOp
+   0.0%    99.9%       0.000s       1.71e-06s     C       51      38   theano.tensor.basic.Reshape
+   0.0%    99.9%       0.000s       5.40e-06s     C       12       8   theano.tensor.elemwise.CAReduce
+   0.0%   100.0%       0.000s       1.29e-06s     C       47      36   theano.tensor.opt.MakeVector
+   ... (remaining 9 Classes account for   0.05%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  89.1%    89.1%       0.388s       3.88e-01s     Py       1        1   for{cpu,scan_fn}
+   6.1%    95.2%       0.027s       9.52e-04s     Py      28       14   Expm
+   0.7%    95.9%       0.003s       2.86e-03s     Py       1        1   for{cpu,scan_fn}
+   0.6%    96.5%       0.003s       2.08e-04s     Py      13        8   AdvancedSubtensor
+   0.6%    97.1%       0.003s       7.09e-05s     C       38       25   AdvancedIncSubtensor1{inplace,set}
+   0.5%    97.6%       0.002s       2.15e-03s     Py       1        1   for{cpu,scan_fn}
+   0.5%    98.1%       0.002s       1.03e-03s     C        2        1   Elemwise{Composite{(i0 + i1 + i2 + i3 + i4 + Switch(LT(i5, i6), i7, i8) + Switch(LT(i9, i10), (i11 * i12), i8) + Switch((i13 * i14), i15, i7) + i16 + i17 + i18 + i19 + i20 + i21 + i22 + i23 + i24 + i25 + i26 + i27 + i28 + i29 + i30 + i31 + i32 + i33 + i34 + i35 + i36 + i37)}}[(0, 0)]
+   0.3%    98.3%       0.001s       1.21e-03s     Py       1        1   for{cpu,scan_fn}
+   0.3%    98.6%       0.001s       3.04e-05s     Py      36       23   Nonzero
+   0.2%    98.8%       0.001s       5.26e-04s     C        2        1   Elemwise{Composite{(i0 - (i1 * i2))}}
+   0.1%    99.0%       0.001s       3.17e-04s     C        2        1   Elemwise{Composite{log(((i0 - i1) * i2))}}[(0, 1)]
+   0.1%    99.1%       0.000s       1.66e-05s     Py      23       15   ARange{dtype='int64'}
+   0.1%    99.1%       0.000s       8.88e-05s     C        4        2   Prod{axis=[1], acc_dtype=float64}
+   0.1%    99.2%       0.000s       2.45e-05s     Py      10        6   AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}
+   0.1%    99.3%       0.000s       3.90e-06s     C       62       48   Alloc
+   0.1%    99.3%       0.000s       5.04e-06s     C       46       37   AdvancedSubtensor1
+   0.1%    99.4%       0.000s       3.85e-05s     C        6        5   AdvancedIncSubtensor1{inplace,inc}
+   0.0%    99.4%       0.000s       1.59e-06s     C      121       94   Subtensor{int64}
+   0.0%    99.5%       0.000s       9.67e-06s     C       19       15   CumprodOp{0}
+   0.0%    99.5%       0.000s       3.78e-06s     C       46       34   Join
+   ... (remaining 89 Ops account for   0.51%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  89.1%    89.1%       0.388s       3.88e-01s      1   168   for{cpu,scan_fn}(TensorConstant{37}, TensorConstant{[ 0  1  2 .. 34 35 36]}, TensorConstant{37}, Elemwise{scalar_sigmoid}.0, sigmoid.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0, Elemwise{sub}.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{Sub}[(0, 1)].0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Reshape{3}.0, Alloc.0, AdvancedSubtensor.0, Elemwise{sub,no_inplace}.0, Elemwise{sqr,no_
+   0.7%    89.7%       0.003s       2.86e-03s      1   274   for{cpu,scan_fn}(Prod{acc_dtype=int64}.0, Subtensor{int64:int64:int8}.0, Prod{acc_dtype=int64}.0, Elemwise{scalar_sigmoid}.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, AdvancedSubtensor1.0, Elemwise{sqr,no_inplace}.0, Elemwise{sub}.0, Elemwise{Sub}[(0, 1)].0, Elemwise{eq,no_inplace}.0, Alloc.0, Elemwise{sqr,no_inplace}.0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Elemwise{eq,no_inplace}.0, Reshape{3}.0, Alloc.0, Elemwise{Com
+   0.6%    90.3%       0.003s       1.25e-03s      2   208   Expm(Elemwise{mul,no_inplace}.0)
+   0.5%    90.9%       0.002s       1.18e-03s      2   207   Expm(Elemwise{mul,no_inplace}.0)
+   0.5%    91.3%       0.002s       2.15e-03s      1   186   for{cpu,scan_fn}(Subtensor{int64}.0, Subtensor{int64:int64:int8}.0, Subtensor{int64}.0, AdvancedSubtensor1.0, sigmoid.0, sigmoid.0, sigmoid.0, AdvancedSubtensor1.0, Elemwise{Sub}[(0, 1)].0, AdvancedIncSubtensor{inplace=False,  set_instead_of_inc=True}.0, Reshape{3}.0, AdvancedSubtensor1.0, sigmoid.0, Elemwise{Exp}[(0, 0)].0, Elemwise{sub,no_inplace}.0, Elemwise{sub}.0, Join.0, Elemwise{Exp}[(0, 0)].0, Elemwise{add,no_inplace}.0, Elemwise{Composite{(
+   0.5%    91.8%       0.002s       1.07e-03s      2   204   Expm(Elemwise{mul,no_inplace}.0)
+   0.5%    92.3%       0.002s       6.92e-04s      3    52   AdvancedIncSubtensor1{inplace,set}(Alloc.0, TensorConstant{0.0}, Subtensor{int64}.0)
+   0.5%    92.8%       0.002s       1.03e-03s      2   244   Elemwise{Composite{(i0 + i1 + i2 + i3 + i4 + Switch(LT(i5, i6), i7, i8) + Switch(LT(i9, i10), (i11 * i12), i8) + Switch((i13 * i14), i15, i7) + i16 + i17 + i18 + i19 + i20 + i21 + i22 + i23 + i24 + i25 + i26 + i27 + i28 + i29 + i30 + i31 + i32 + i33 + i34 + i35 + i36 + i37)}}[(0, 0)](Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Sum{acc_dtype=float64}.0, Reduce{minimum}.0, TensorConstant{0.00
+   0.5%    93.2%       0.002s       9.91e-04s      2   212   Expm(Elemwise{mul,no_inplace}.0)
+   0.5%    93.7%       0.002s       9.81e-04s      2   213   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    94.1%       0.002s       9.19e-04s      2   209   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    94.5%       0.002s       9.12e-04s      2   205   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    95.0%       0.002s       9.05e-04s      2   215   Expm(Elemwise{Mul}[(0, 1)].0)
+   0.4%    95.4%       0.002s       9.01e-04s      2   210   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    95.8%       0.002s       8.77e-04s      2   214   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    96.2%       0.002s       8.74e-04s      2   203   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    96.6%       0.002s       8.59e-04s      2   211   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    97.0%       0.002s       8.59e-04s      2   115   AdvancedSubtensor(Elemwise{Composite{(i0 - (i1 * i2))}}.0, TensorConstant{[   0    0..1608 1608]}, TensorConstant{[ 0  2  3 .. 13 14 15]})
+   0.4%    97.3%       0.002s       8.35e-04s      2   206   Expm(Elemwise{mul,no_inplace}.0)
+   0.4%    97.7%       0.002s       7.71e-04s      2   188   Expm(Q)
+   ... (remaining 964 Apply instances account for 2.30%(0.01s) of the runtime)
